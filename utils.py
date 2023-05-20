@@ -64,6 +64,9 @@ def get_trade_days(login=False):
 def to_str_date(int_date):
     return datetime.datetime.strptime(str(int_date), "%Y%m%d").strftime("%Y-%m-%d")
     
+def to_date(int_date):
+    return datetime.datetime.strptime(str(int_date), "%Y%m%d")
+
 def get_last_update_date(login=False):
     get_trade_days(login=login)
     trade_days = joblib.load(TRADE_DAYS_PKL)

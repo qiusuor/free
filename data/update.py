@@ -103,6 +103,7 @@ def update_one(code, login=False, frequency="d", adjustflag="1"):
         
     for col in list("open,high,low,close,preclose,volume,amount,adjustflag,turn,tradestatus,pctChg,peTTM,pbMRQ,psTTM,pcfNcfTTM,isST,factor".split(",")):
         result[col] = pd.to_numeric(result[col])
+    result["price"]=result["amount"]/(result['volume']+1e-9)
     make_dir(data_path)
     result.to_csv(data_path)
 
