@@ -20,7 +20,7 @@ def mine_waves(start_day, end_day, recent_day, chip_slice_len, exp_decay_rate, i
         data = data[data["volume"] != 0]
         
         if data.index[-1] < end_day: continue
-        if len(data) <= 500: continue 
+        if len(data) <= 200: continue 
 
         date = data.index
         close = data.close.values
@@ -38,9 +38,9 @@ def mine_waves(start_day, end_day, recent_day, chip_slice_len, exp_decay_rate, i
             print("skip :", file)
             continue
         
-        for i in range(start_index, end_index + 1):
-            if price[i] / price[i-increase_day] > increase_rate:
-                main_wave.append([code, date[i-increase_day], price[i] / price[i-increase_day]])
+        for i in range(start_index, end_index-1):
+            if max(price[i+1:i+increase_day+1]) / price[i] > increase_rate:
+                main_wave.append([code, date[i], max(price[i+1:i+increase_day+1]) / price[i]])
 
     main_wave = pd.DataFrame(data=main_wave, columns=columns)
     main_wave.to_csv(GT_MAIN_WAVE, index=False)
