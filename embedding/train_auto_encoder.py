@@ -45,7 +45,7 @@ def load_data(train_split=0.7, train_day_end=20220501, test_day_start=20220801):
     print("train samples: {}".format(Counter(y_train)))
     print("test samples: {}".format(Counter(y_test)))
     
-    return np.array(x_train)[:,:,np.newaxis,:].astype(np.float32), y_train, np.array(x_test)[:,:,np.newaxis,:].astype(np.float32), y_test          
+    return np.array(x_train).astype(np.float32).transpose((0, 2, 1)), y_train, np.array(x_test).astype(np.float32).transpose((0, 2, 1)), y_test          
         
 
 if __name__ == "__main__":
@@ -84,7 +84,7 @@ if __name__ == "__main__":
     best_model_path = "rank/models/checkpoint/tcn.pth"
 
     torch.set_default_dtype(torch.float32)
-    device = torch.device("mps")
+    device = torch.device("cuda")
     print("training on device: ", device)
 
     x_train, y_train, x_test, y_test = load_data()
@@ -93,10 +93,10 @@ if __name__ == "__main__":
     print("class weight:", list(class_weights))
     criterion = nn.CrossEntropyLoss(weight=torch.tensor(class_weights, dtype=torch.float, device=device))
     # print(x_train.shape)
-    x_train = DataLoader(x_train, batch_size=batch_size)
-    y_train = DataLoader(y_train, batch_size=batch_size)
-    x_test = DataLoader(x_test, batch_size=batch_size)
-    y_test = DataLoader(y_test, batch_size=batch_size)
+    x_train = DataLoader(x_train, batch_size=batch_size, drop_last=True)
+    y_train = DataLoader(y_train, batch_size=batch_size, drop_last=True)
+    x_test = DataLoader(x_test, batch_size=batch_size//4, drop_last=True)
+    y_test = DataLoader(y_test, batch_size=batch_size//4, drop_last=True)
 
     # model = TCN(feature_size, num_outputs=num_outputs, return_sequences=False)
     model = AutoEncoder(input_size=feature_size, output_size=num_outputs, lat_size=64)
@@ -125,6 +125,7 @@ if __name__ == "__main__":
             inputs = torch.FloatTensor(inputs).to(device)
             targets = torch.LongTensor(targets).to(device)
             o, yhat, lat = model(inputs)
+            # print(inputs.shape, yhat.shape, targets.shape)
 
             loss = criterion(yhat, targets)
 
@@ -147,9 +148,9 @@ if __name__ == "__main__":
 
                 inputs_v = torch.FloatTensor(inputs_v).to(device)
                 targets_v = torch.LongTensor(targets_v).to(device)
-                o, yhat_v, lat = model(inputs)
+                o, yhat_v, lat = model(inputs_v)
 
-
+                print(inputs_v.shape, yhat_v.shape, targets_v.shape)
                 vloss = criterion(yhat_v, targets_v)
                 vloss_.append(vloss.data.item())
 
