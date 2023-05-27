@@ -11,7 +11,10 @@ import bisect
 import pyecharts.options as opts
 from pyecharts.charts import Line
 import datetime
+import torch
 
+def addGaussianNoise(x, std=0.05):
+    return x + torch.normal(x, std)
 
 def make_dir(file_name):
     dir_name = os.path.dirname(file_name)

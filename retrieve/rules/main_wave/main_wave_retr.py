@@ -35,7 +35,7 @@ def plot_chip_div(argv):
     retr_df = []
     for i, (cur_end_day, cur_chip_div, index) in enumerate(zip(cur_days, chip_divs, indexs)):
         if main_wave_retrieve(closes, chip_divs, i, recent_days):
-            if cur_end_day >= 20220601:
+            if cur_end_day >= to_date(20220601):
                 closes_slice = data.close.iloc[:index]
                 highest_day_index = closes_slice.argmax()
                 retr_df.append([code, cur_end_day, cur_chip_div, closes[i], len(
@@ -89,8 +89,12 @@ def plot_chip_divs(start_day, end_day, recent_day, slice_len, exp_decay_rate):
     pool.join()
 
 
-if __name__ == "__main__":
+def main_wave_retr():
     trade_days, last_trade_day = get_last_update_date()
-    start_day, end_day, recent_day, slice_len, exp_decay_rate = 20220101, last_trade_day, 250, 22, 0.997
+    start_day, end_day, recent_day, slice_len, exp_decay_rate = to_date(20220101), last_trade_day, 250, 22, 0.997
     plot_chip_divs(start_day, end_day, recent_day,
                    slice_len, exp_decay_rate)
+    
+
+if __name__ == "__main__":
+    main_wave_retr()
