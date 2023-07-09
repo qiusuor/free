@@ -14,7 +14,7 @@ from config import *
 import pandas as pd
 from utils import *
 from sklearn.metrics import average_precision_score, roc_auc_score
-from auto_encoder import AutoEncoder
+from auto_encoder import LSTMAutoEncoder
 
 def sigmoid(x):
     s = 1 / (1 + np.exp(-x))
@@ -99,7 +99,7 @@ if __name__ == "__main__":
     y_test = DataLoader(y_test, batch_size=batch_size//4, drop_last=True)
 
     # model = TCN(feature_size, num_outputs=num_outputs, return_sequences=False)
-    model = AutoEncoder(input_size=feature_size, output_size=num_outputs, lat_size=64)
+    model = LSTMAutoEncoder(input_size=feature_size, output_size=num_outputs, lat_size=64)
     model.to(device)
     print(model)
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)

@@ -6,6 +6,7 @@ import bisect
 import tqdm
 from config import DAILY_DIR, ALL_STOCKS
 from utils import is_index, not_concern, fetch_stock_codes, make_dir
+from multiprocessing import Pool
 
 """
 adjustflag:
@@ -48,7 +49,14 @@ def calRehab(result, result_factor, adjustflag):
     result['factor'] = result['factor'].apply(factor).astype("float")
     result["volume"] = result["volume"] / result['factor']
 
-def fetch_one(code, login=False, frequency="d", adjustflag="1"):
+def fetch_one_wrapper(argv):
+    try:
+        fetch_one(argv)
+    except:
+        fetch_one_wrapper(argv)
+
+def fetch_one(argv):
+    code, login, frequency, adjustflag = argv
     if not login:
         lg=bs.login()
         assert lg.error_code != 0, "Login filed!"
@@ -79,9 +87,9 @@ def fetch_one(code, login=False, frequency="d", adjustflag="1"):
     while (rs_factor.error_code == '0') & rs_factor.next():
         rs_list.append(rs_factor.get_row_data())
     result_factor = pd.DataFrame(rs_list, columns=rs_factor.fields)
-    dealTime(result_factor)
         
     if not is_index(code):
+        dealTime(result_factor)
         calRehab(result, result_factor, adjustflag=adjustflag)
     else:
         result["factor"] = 1.0
@@ -101,15 +109,17 @@ def fetch_one(code, login=False, frequency="d", adjustflag="1"):
 
 def fetch(adjustflag='2', freqs=['m', 'w', 'd', '60', '30', '15', '5'], code_list=[]):
     fetch_stock_codes()
-    lg = bs.login()
-    assert lg.error_code != 0, "Login filed!"
     stockes = pd.read_csv(ALL_STOCKS)
 
+    code_list = []
     for freq in freqs:
         for code in tqdm.tqdm(code_list or stockes.code):
             if not_concern(code): continue
-            fetch_one(code, login=True, frequency=freq, adjustflag=adjustflag)
-    bs.logout()
+            code_list.append([code, False, freq, adjustflag])
+    pool = Pool(64)
+    pool.map(fetch_one_wrapper, code_list)
+    pool.close()
+    pool.join()
 
 def fetch_daily():
     fetch(freqs=['d'])
