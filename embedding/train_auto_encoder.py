@@ -16,6 +16,9 @@ from utils import *
 from sklearn.metrics import average_precision_score, roc_auc_score
 from auto_encoder import LSTMAutoEncoder
 
+batch_size = 128
+feature_size = 7
+
 def sigmoid(x):
     s = 1 / (1 + np.exp(-x))
     return s
@@ -49,39 +52,9 @@ def load_data(train_split=0.7, train_day_end=20220501, test_day_start=20220801):
         
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='training')
-    parser.add_argument('--feature_size',
-                        action='store',
-                        type=int,
-                        default=4,
-                        help='feature_size')
-    parser.add_argument('--batch_size',
-                        action='store',
-                        default=256,
-                        type=int,
-                        help='batch size')
-    parser.add_argument('--epochs',
-                        action='store',
-                        default=2000,
-                        type=int,
-                        help='number of epochs')
-    parser.add_argument('--timesteps',
-                        action='store',
-                        default=second_wave_feature_len,
-                        type=int,
-                        help='number of timesteps')
-   
-    args = parser.parse_args()
-
-    feature_size = args.feature_size
-    timesteps = args.timesteps
-
-    # Params
-    batch_size = args.batch_size
-    epochs = args.epochs
-
+ 
     best_score = 0
-    best_model_path = "rank/models/checkpoint/tcn.pth"
+    best_model_path = "rank/models/checkpoint/lstm_encoder.pth"
 
     torch.set_default_dtype(torch.float32)
     device = torch.device("cuda")
@@ -94,9 +67,9 @@ if __name__ == "__main__":
     criterion = nn.CrossEntropyLoss(weight=torch.tensor(class_weights, dtype=torch.float, device=device))
     # print(x_train.shape)
     x_train = DataLoader(x_train, batch_size=batch_size, drop_last=True)
-    y_train = DataLoader(y_train, batch_size=batch_size, drop_last=True)
+    # y_train = DataLoader(y_train, batch_size=batch_size, drop_last=True)
     x_test = DataLoader(x_test, batch_size=batch_size//4, drop_last=True)
-    y_test = DataLoader(y_test, batch_size=batch_size//4, drop_last=True)
+    # y_test = DataLoader(y_test, batch_size=batch_size//4, drop_last=True)
 
     # model = TCN(feature_size, num_outputs=num_outputs, return_sequences=False)
     model = LSTMAutoEncoder(input_size=feature_size, output_size=num_outputs, lat_size=64)

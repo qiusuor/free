@@ -1,6 +1,6 @@
 import os
 
-THREAD_NUM = 4
+THREAD_NUM = 16
 CHECK_DAY = "20990101"
 
 ROOT_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -8,6 +8,7 @@ DATA_DIR = os.path.join(ROOT_DIR, "data/data")
 TICK_DIR = os.path.join(DATA_DIR, "tick")
 DAILY_DIR = os.path.join(DATA_DIR, "daily")
 FEAT_DIR = os.path.join(DATA_DIR, "features")
+KMER_RAR = os.path.join(FEAT_DIR, "kmer_{}.npz")
 
 TRADE_DAYS = os.path.join(DATA_DIR, "market/trade_days.csv")
 TRADE_DAYS_PKL = os.path.join(DATA_DIR, "market/trade_days.pkl")

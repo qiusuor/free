@@ -31,17 +31,17 @@ class LSTMAutoEncoder(nn.Module):
         )
         self.decoder = LSTM(hidden_size, hidden_size, num_layers, batch_first=batch_first, dropout=dropout, bidirectional=bidirectional)
         self.post = nn.Linear(self.D*hidden_size, output_size)
-        self.classifier = nn.Sequential(
-            nn.Linear(lat_size, hidden_size),
-            nn.LeakyReLU(),
-            nn.Linear(hidden_size, hidden_size),
-            nn.LeakyReLU(),
-            nn.Linear(hidden_size, hidden_size),
-            nn.LeakyReLU(),
-            nn.Linear(hidden_size, hidden_size),
-            nn.LeakyReLU(),
-            nn.Linear(hidden_size, n_class),
-        )
+        # self.classifier = nn.Sequential(
+        #     nn.Linear(lat_size, hidden_size),
+        #     nn.LeakyReLU(),
+        #     nn.Linear(hidden_size, hidden_size),
+        #     nn.LeakyReLU(),
+        #     nn.Linear(hidden_size, hidden_size),
+        #     nn.LeakyReLU(),
+        #     nn.Linear(hidden_size, hidden_size),
+        #     nn.LeakyReLU(),
+        #     nn.Linear(hidden_size, n_class),
+        # )
         
 
     def forward(self, seq):
@@ -53,9 +53,9 @@ class LSTMAutoEncoder(nn.Module):
         o = self.l2c(lat)
         o, (h, c) = self.decoder(torch.zeros(seq.size(0), seq.size(1), self.hidden_size).cuda(), (o[:,:self.D*self.num_layers*self.hidden_size].reshape(-1, N, self.hidden_size), o[:,self.D*self.num_layers*self.hidden_size:].reshape(-1, N, self.hidden_size)))
         o = self.post(o)
-        y = self.classifier(lat)
+        # y = self.classifier(lat)
         
-        return o, y, lat
+        return o, lat
         
     
 
