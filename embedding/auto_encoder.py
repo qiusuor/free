@@ -44,14 +44,14 @@ class LSTMAutoEncoder(nn.Module):
         # )
         
 
-    def forward(self, seq):
+    def forward(self, seq, device):
         N = seq.size(0)
         # print(seq.shape)
         o = self.pre(seq)
         _, (h, c) = self.encoder(o)
         lat = self.e2l(torch.cat([h, c], dim=0).reshape(N, -1))
         o = self.l2c(lat)
-        o, (h, c) = self.decoder(torch.zeros(seq.size(0), seq.size(1), self.hidden_size).cuda(), (o[:,:self.D*self.num_layers*self.hidden_size].reshape(-1, N, self.hidden_size), o[:,self.D*self.num_layers*self.hidden_size:].reshape(-1, N, self.hidden_size)))
+        o, (h, c) = self.decoder(torch.zeros(seq.size(0), seq.size(1), self.hidden_size).to(device), (o[:,:self.D*self.num_layers*self.hidden_size].reshape(-1, N, self.hidden_size), o[:,self.D*self.num_layers*self.hidden_size:].reshape(-1, N, self.hidden_size)))
         o = self.post(o)
         # y = self.classifier(lat)
         
