@@ -31,6 +31,8 @@ class LSTMAutoEncoder(nn.Module):
         )
         self.decoder = LSTM(hidden_size, hidden_size, num_layers, batch_first=batch_first, dropout=dropout, bidirectional=bidirectional)
         self.post = nn.Linear(self.D*hidden_size, output_size)
+        
+        # self.start_tocken = torch.
         # self.classifier = nn.Sequential(
         #     nn.Linear(lat_size, hidden_size),
         #     nn.LeakyReLU(),
@@ -49,14 +51,14 @@ class LSTMAutoEncoder(nn.Module):
         # print(seq.shape)
         o = self.pre(seq)
         _, (h, c) = self.encoder(o)
-        lat = self.e2l(torch.cat([h, c], dim=0).reshape(N, -1))
-        o = self.l2c(lat)
+        # lat = self.e2l(torch.cat([h, c], dim=0).reshape(N, -1))
+        # o = self.l2c(lat)
+        o = torch.cat([h, c], dim=0).reshape(N, -1)
         o, (h, c) = self.decoder(torch.zeros(seq.size(0), seq.size(1), self.hidden_size).to(device), (o[:,:self.D*self.num_layers*self.hidden_size].reshape(-1, N, self.hidden_size), o[:,self.D*self.num_layers*self.hidden_size:].reshape(-1, N, self.hidden_size)))
         o = self.post(o)
         # y = self.classifier(lat)
         
-        return o, lat
-        
+        return o, o
     
 
 class TransformerAutoEncoder(nn.Module):

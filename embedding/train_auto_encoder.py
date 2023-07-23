@@ -18,7 +18,7 @@ from auto_encoder import LSTMAutoEncoder
 from collections import Counter
 
 batch_size = 128
-feature_size = 7
+feature_size = 6
 epochs = 20
 
 # def sigmoid(x):
@@ -47,7 +47,7 @@ if __name__ == "__main__":
     best_model_path = "rank/models/checkpoint/lstm_autoencoder.pth"
 
     torch.set_default_dtype(torch.float32)
-    device = torch.device("mps")
+    device = torch.device("cuda")
     print("training on device: ", device)
 
     x_train, x_test = load_data()
@@ -62,7 +62,7 @@ if __name__ == "__main__":
     print(f'Trainable params: {trainable_params}')
 
     optimizer = torch.optim.Adam(model.parameters(),
-                                lr=0.0005,
+                                lr=0.05,
                                 betas=[0.9, 0.999],
                                 weight_decay = 0.0,
                                 amsgrad=False)
@@ -77,7 +77,6 @@ if __name__ == "__main__":
         model.train()
         loss_ = []
         for i, inputs in enumerate(x_train):
-            print('\r    BATCH {} / {}'.format(i + 1, num_data), end="")
             inputs = torch.FloatTensor(inputs).to(device)
             # targets = torch.LongTensor(targets).to(device)
             o, lat = model(inputs, device)
@@ -89,6 +88,8 @@ if __name__ == "__main__":
             loss.backward()
             optimizer.step()
             loss_.append(loss.data.item())
+            print('\r    BATCH {} / {} loss: {}'.format(i + 1, num_data, loss.data.item()), end="")
+            
         scheduler.step()
         avg_loss = np.mean(loss_)
 
@@ -121,6 +122,7 @@ if __name__ == "__main__":
 
             # Print scores
             avg_vloss = np.mean(vloss_)
+            print("\nTrain avg loss: {} Val avg loss: {}".format(avg_loss, avg_vloss))
             # avg_vacc = accuracy_score(targets_v_, yhat_v_)
             # avg_vbacc = balanced_accuracy_score(targets_v_, yhat_v_)
             # avg_vf1 = f1_score(targets_v_, yhat_v_, average='macro')
