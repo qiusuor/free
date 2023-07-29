@@ -37,8 +37,8 @@ def generate():
             turn = data.turn.values
             
             for i in range(k, len(close)):
-                train_data.append([high[i-k:i], open[i-k:i], low[i-k:i], close[i-k:i], price[i-k:i], turn[i-k:i]])
-            
+                train_data.append([high[i-k:i], open[i-k:i], low[i-k:i], close[i-k:i], price[i-k:i], turn[i-k:i], amount[i-k:i]])
+        
         train_data = np.array(train_data)
         np.savez(KMER_RAR.format(k), train_data)
         print(train_data.shape)

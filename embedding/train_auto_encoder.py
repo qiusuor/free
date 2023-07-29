@@ -14,12 +14,13 @@ from config import *
 import pandas as pd
 from utils import *
 from sklearn.metrics import average_precision_score, roc_auc_score
-from auto_encoder import LSTMAutoEncoder
+from auto_encoder import LSTMAutoEncoder, MLPAutoEncoder
 from collections import Counter
+import platform
 
-batch_size = 128
-feature_size = 6
-epochs = 20
+batch_size = 1024
+feature_size = 7
+epochs = 300
 
 # def sigmoid(x):
 #     s = 1 / (1 + np.exp(-x))
@@ -27,6 +28,9 @@ epochs = 20
 
 def load_data(k=5, train_val_split=0.7):
     data = np.load(KMER_RAR.format(k))["arr_0"]
+    mean = data.mean(0)
+    std = data.std(0)
+    data = (data-mean)/(std+1e-9)
     # print(data)
     # print(data.keys())
     np.random.shuffle(data)
@@ -47,29 +51,35 @@ if __name__ == "__main__":
     best_model_path = "rank/models/checkpoint/lstm_autoencoder.pth"
 
     torch.set_default_dtype(torch.float32)
-    device = torch.device("cuda")
+    device = torch.device("mps") if platform.machine() == 'arm64' else torch.device("cuda")
     print("training on device: ", device)
 
     x_train, x_test = load_data()
-    criterion = nn.MSELoss()
-    x_train = DataLoader(x_train, batch_size=batch_size, drop_last=True)
+    criterion = nn.MSELoss(reduction="sum")
+    x_train = DataLoader(x_train, batch_size=batch_size, drop_last=True, shuffle=True)
     x_test = DataLoader(x_test, batch_size=batch_size, drop_last=True)
 
-    model = LSTMAutoEncoder(input_size=feature_size, output_size=feature_size, lat_size=16)
+    model = MLPAutoEncoder(input_size=feature_size, lat_size=7)
     model.to(device)
     print(model)
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print(f'Trainable params: {trainable_params}')
 
     optimizer = torch.optim.Adam(model.parameters(),
-                                lr=0.05,
+                                lr=0.001,
                                 betas=[0.9, 0.999],
                                 weight_decay = 0.0,
                                 amsgrad=False)
 
-    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[500, 1000, 1500], gamma=0.1)
+    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[50, 100, 200], gamma=0.1)
 
     num_data = len(x_train)
+    
+    k=5
+    data = torch.from_numpy(np.load(KMER_RAR.format(k))["arr_0"]).transpose(1,2)
+    
+    mean = data.mean(0)
+    std = data.std(0)
 
     for epoch in range(epochs):
         print('EPOCH {} / {}:'.format(epoch + 1, epochs))
@@ -101,7 +111,7 @@ if __name__ == "__main__":
             targets_v_ = []
             raw_y_hat_v_ = []
 
-            for _, inputs_v in enumerate(x_test):
+            for j, inputs_v in enumerate(x_test):
 
                 inputs_v = torch.FloatTensor(inputs_v).to(device)
                 # targets_v = torch.LongTensor(targets_v).to(device)
@@ -110,7 +120,10 @@ if __name__ == "__main__":
                 # print(inputs_v.shape, yhat_v.shape, targets_v.shape)
                 vloss = criterion(inputs_v, o)
                 vloss_.append(vloss.data.item())
-
+                
+                if j%200==0:
+                    print(inputs_v.cpu()[0]*(std+1e-9)+mean, o.cpu()[0]*(std+1e-9)+mean)
+                    print("LLLLLL")
                 # yhat_v = torch.softmax(yhat_v, -1)
                 # raw_y_hat_v_.append(yhat_v.cpu())
                 
@@ -142,7 +155,7 @@ if __name__ == "__main__":
             #             avg_vloss, avg_vacc, avg_vbacc, avg_vf1, auc))
 
             # Save best model
-            if avg_vloss > best_score:
+            if avg_vloss < best_score:
                 best_score = avg_vloss
                 model_path = best_model_path
                 print('    ---> New Best Score: {}. Saving model to {}'.format(best_score, model_path))

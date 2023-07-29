@@ -60,6 +60,31 @@ class LSTMAutoEncoder(nn.Module):
         
         return o, o
     
+class MLPAutoEncoder(nn.Module):
+    def __init__(self, input_size, lat_size, hidden_size=16):
+        super().__init__()
+        self.input_size = input_size
+        self.lat_size = lat_size
+        
+        self.encoder = nn.Sequential(
+            nn.Linear(input_size, hidden_size),
+            nn.LeakyReLU(),
+            nn.Linear(hidden_size, lat_size),
+            # nn.LeakyReLU(),
+        )
+        self.decoder = nn.Sequential(
+            nn.Linear(lat_size, hidden_size),
+            nn.LeakyReLU(),
+            nn.Linear(hidden_size, input_size),
+            # nn.LeakyReLU(),
+        )
+    def forward(self, x, device):
+        # print(x.shape)
+        lat = self.encoder(x)
+        # print(lat.shape)
+        x = self.decoder(lat)
+        # print(x.shape)
+        return x, lat
 
 class TransformerAutoEncoder(nn.Module):
     def __init__(self, input_size, output_size, lat_size, hidden_size=128, num_layers=3, dropout=0, batch_first=True, bidirectional=True, n_class=3):
