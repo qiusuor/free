@@ -27,6 +27,7 @@ epochs = 300
 #     return s
 
 def load_data(k=5, train_val_split=0.7):
+    global feature_size
     data = np.load(KMER_RAR.format(k))["arr_0"]
     mean = data.mean(0)
     std = data.std(0)
@@ -38,6 +39,7 @@ def load_data(k=5, train_val_split=0.7):
     x_train, x_test = torch.from_numpy(data[:int(N*train_val_split),:,:]), torch.from_numpy(data[int(N*train_val_split):,:,:])
     x_train = x_train.transpose(1, 2).float()
     x_test = x_test.transpose(1, 2).float()
+    feature_size = x_train.shape[-1]
     
     print("train samples: {}".format(len(x_train)))
     print("test samples: {}".format(len(x_test)))
@@ -59,7 +61,8 @@ if __name__ == "__main__":
     x_train = DataLoader(x_train, batch_size=batch_size, drop_last=True, shuffle=True)
     x_test = DataLoader(x_test, batch_size=batch_size, drop_last=True)
 
-    model = MLPAutoEncoder(input_size=feature_size, lat_size=7)
+    # model = LSTMAutoEncoder(input_size=feature_size, output_size=feature_size, lat_size=7)
+    model = MLPAutoEncoder(input_size=feature_size, lat_size=2)
     model.to(device)
     print(model)
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -91,7 +94,7 @@ if __name__ == "__main__":
             # targets = torch.LongTensor(targets).to(device)
             o, lat = model(inputs, device)
             # print(inputs.shape, yhat.shape, targets.shape)
-
+            # print(inputs.shape, o.shape)
             loss = criterion(inputs, o)
 
             optimizer.zero_grad()
@@ -122,7 +125,7 @@ if __name__ == "__main__":
                 vloss_.append(vloss.data.item())
                 
                 if j%200==0:
-                    print(inputs_v.cpu()[0]*(std+1e-9)+mean, o.cpu()[0]*(std+1e-9)+mean)
+                    print(list(zip((inputs_v.cpu()[0]*(std+1e-9)+mean).view(-1).numpy().tolist(), (o.cpu()[0]*(std+1e-9)+mean).view(-1).numpy().tolist())))
                     print("LLLLLL")
                 # yhat_v = torch.softmax(yhat_v, -1)
                 # raw_y_hat_v_.append(yhat_v.cpu())
