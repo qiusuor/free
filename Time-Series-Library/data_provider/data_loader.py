@@ -714,20 +714,19 @@ class UEAloader(Dataset):
 
 
 class StockDataset(Dataset):
-    def __init__(self, flag) -> None:
-        super().__init__()
-        self.data = np.load("three_days_increase_train.npz") if flag == "train" else np.load("three_days_increase_val.npz")
-        self.x = torch.from_numpy(self.data["x"]).transpose(1, 2).float()
-        self.y = torch.from_numpy(self.data["y"])
+    def __init__(self, flag):
+        self.dataset = np.load("three_days_increase_train.npz") if flag == "train" else np.load("three_days_increase_val.npz")
+        self.x = torch.from_numpy(self.dataset["x"]).transpose(1, 2).float()
+        self.y = torch.from_numpy(self.dataset["y"])
         self.max_seq_len = self.x.shape[1]
         self.input_dim = self.x.shape[2]
         self.class_names = ["GOOD", "BAD", "NORMAL"]
-        print(self.x.shape)
+        # print(self.x.shape)
     
     def __len__(self):
         return len(self.x)
     
     def __getitem__(self, index):
-        return self.x[index], self.y[index]
+        return self.x[index], self.y[index], torch.ones_like(self.x[index]), 
     
     

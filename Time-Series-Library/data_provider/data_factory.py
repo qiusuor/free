@@ -54,7 +54,7 @@ def data_provider(args, flag):
             drop_last=drop_last)
         return data_set, data_loader
     elif args.task_name == 'classification':
-        drop_last = False
+        drop_last = True
         data_set = Data(
             # root_path=args.root_path,
             flag=flag,
@@ -65,7 +65,7 @@ def data_provider(args, flag):
             batch_size=batch_size,
             shuffle=shuffle_flag,
             num_workers=args.num_workers,
-            drop_last=drop_last,
+            drop_last=drop_last
         )
         return data_set, data_loader
     else:
