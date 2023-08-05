@@ -18,15 +18,15 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='TimesNet')
 
     # basic config
-    parser.add_argument('--task_name', type=str, required=True, default='long_term_forecast',
+    parser.add_argument('--task_name', type=str, default='classification',
                         help='task name, options:[long_term_forecast, short_term_forecast, imputation, classification, anomaly_detection]')
-    parser.add_argument('--is_training', type=int, required=True, default=1, help='status')
-    parser.add_argument('--model_id', type=str, required=True, default='test', help='model id')
-    parser.add_argument('--model', type=str, required=True, default='Autoformer',
+    parser.add_argument('--is_training', type=int, default=1, help='status')
+    parser.add_argument('--model_id', type=str, default='train', help='model id')
+    parser.add_argument('--model', type=str, default='TimesNet',
                         help='model name, options: [Autoformer, Transformer, TimesNet]')
 
     # data loader
-    parser.add_argument('--data', type=str, required=True, default='ETTm1', help='dataset type')
+    parser.add_argument('--data', type=str, default='Stock', help='dataset type')
     parser.add_argument('--root_path', type=str, default='./data/ETT/', help='root path of the data file')
     parser.add_argument('--data_path', type=str, default='ETTh1.csv', help='data file')
     parser.add_argument('--features', type=str, default='M',
@@ -65,28 +65,28 @@ if __name__ == '__main__':
                         help='whether to use distilling in encoder, using this argument means not using distilling',
                         default=True)
     parser.add_argument('--dropout', type=float, default=0.1, help='dropout')
-    parser.add_argument('--embed', type=str, default='timeF',
+    parser.add_argument('--embed', type=str, default='fixed',
                         help='time features encoding, options:[timeF, fixed, learned]')
     parser.add_argument('--activation', type=str, default='gelu', help='activation')
     parser.add_argument('--output_attention', action='store_true', help='whether to output attention in ecoder')
 
     # optimization
-    parser.add_argument('--num_workers', type=int, default=10, help='data loader num workers')
+    parser.add_argument('--num_workers', type=int, default=4, help='data loader num workers')
     parser.add_argument('--itr', type=int, default=1, help='experiments times')
-    parser.add_argument('--train_epochs', type=int, default=10, help='train epochs')
+    parser.add_argument('--train_epochs', type=int, default=25, help='train epochs')
     parser.add_argument('--batch_size', type=int, default=32, help='batch size of train input data')
     parser.add_argument('--patience', type=int, default=3, help='early stopping patience')
     parser.add_argument('--learning_rate', type=float, default=0.0001, help='optimizer learning rate')
     parser.add_argument('--des', type=str, default='test', help='exp description')
     parser.add_argument('--loss', type=str, default='MSE', help='loss function')
-    parser.add_argument('--lradj', type=str, default='type1', help='adjust learning rate')
+    parser.add_argument('--lradj', type=str, default='type2', help='adjust learning rate')
     parser.add_argument('--use_amp', action='store_true', help='use automatic mixed precision training', default=False)
 
     # GPU
     parser.add_argument('--use_gpu', type=bool, default=True, help='use gpu')
     parser.add_argument('--gpu', type=int, default=0, help='gpu')
     parser.add_argument('--use_multi_gpu', action='store_true', help='use multiple gpus', default=False)
-    parser.add_argument('--devices', type=str, default='0,1,2,3', help='device ids of multile gpus')
+    parser.add_argument('--devices', type=str, default='0', help='device ids of multile gpus')
 
     # de-stationary projector params
     parser.add_argument('--p_hidden_dims', type=int, nargs='+', default=[128, 128],

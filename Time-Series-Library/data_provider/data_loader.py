@@ -9,7 +9,6 @@ from sklearn.preprocessing import StandardScaler
 from utils.timefeatures import time_features
 from data_provider.m4 import M4Dataset, M4Meta
 from data_provider.uea import subsample, interpolate_missing, Normalizer
-from sktime.datasets import load_from_tsfile_to_dataframe
 import warnings
 
 warnings.filterwarnings('ignore')
@@ -712,3 +711,23 @@ class UEAloader(Dataset):
 
     def __len__(self):
         return len(self.all_IDs)
+
+
+class StockDataset(Dataset):
+    def __init__(self, flag) -> None:
+        super().__init__()
+        self.data = np.load("three_days_increase_train.npz") if flag == "train" else np.load("three_days_increase_val.npz")
+        self.x = torch.from_numpy(self.data["x"]).transpose(1, 2).float()
+        self.y = torch.from_numpy(self.data["y"])
+        self.max_seq_len = self.x.shape[1]
+        self.input_dim = self.x.shape[2]
+        self.class_names = ["GOOD", "BAD", "NORMAL"]
+        print(self.x.shape)
+    
+    def __len__(self):
+        return len(self.x)
+    
+    def __getitem__(self, index):
+        return self.x[index], self.y[index]
+    
+    

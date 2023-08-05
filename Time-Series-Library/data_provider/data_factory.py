@@ -1,5 +1,5 @@
 from data_provider.data_loader import Dataset_ETT_hour, Dataset_ETT_minute, Dataset_Custom, Dataset_M4, PSMSegLoader, \
-    MSLSegLoader, SMAPSegLoader, SMDSegLoader, SWATSegLoader, UEAloader
+    MSLSegLoader, SMAPSegLoader, SMDSegLoader, SWATSegLoader, UEAloader, StockDataset
 from data_provider.uea import collate_fn
 from torch.utils.data import DataLoader
 
@@ -15,7 +15,8 @@ data_dict = {
     'SMAP': SMAPSegLoader,
     'SMD': SMDSegLoader,
     'SWAT': SWATSegLoader,
-    'UEA': UEAloader
+    'UEA': UEAloader,
+    "Stock": StockDataset,
 }
 
 
@@ -55,7 +56,7 @@ def data_provider(args, flag):
     elif args.task_name == 'classification':
         drop_last = False
         data_set = Data(
-            root_path=args.root_path,
+            # root_path=args.root_path,
             flag=flag,
         )
 
@@ -65,7 +66,6 @@ def data_provider(args, flag):
             shuffle=shuffle_flag,
             num_workers=args.num_workers,
             drop_last=drop_last,
-            collate_fn=lambda x: collate_fn(x, max_len=args.seq_len)
         )
         return data_set, data_loader
     else:
