@@ -27,6 +27,7 @@ def plot_chip_div(argv):
     file, code, start_day, end_day, recent_days, slice_len, exp_decay_rate = argv
     path = os.path.join(DAILY_DIR, file)
     data = joblib.load(path)
+    data = data[data.volume != 0]
     if data.index[-1] < end_day:
         return
     cur_days, chip_divs, chip_avgs, prices, opens, highs, lows, closes, indexs = calc_chip_div(

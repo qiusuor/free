@@ -1,2 +1,5 @@
 data/data
 *.pyc
+retrieve/rules/main_wave/html_main_wave_retr
+retrieve/rules/main_wave/report_main_wave_retr
+retrieve/rules/main_wave/today_report_main_wave_retr

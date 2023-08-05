@@ -120,15 +120,20 @@ def calc_chip_div(data, code, start_day=20220101, end_day=20230317, slice_len=12
     opens = []
     indexs = []
 
-    date = data.index.values
+    date = data.index
     close = data.close.values
     high = data.high.values
     open = data.open.values
     low = data.low.values
     price = data.price.values
-    vol = data.vol.values
+    vol = data.volume.values
     amount = data.amount.values
 
+    # if isinstance(start_day, int):
+    #     print(start_day)
+    # if isinstance(date[0], int):
+    #     print(date)
+    # print(type(date[0]), type(start_day))
     start_index = bisect.bisect_left(date, start_day)
     start_index = max(start_index, slice_len)
     end_index = bisect.bisect_left(date, end_day)
