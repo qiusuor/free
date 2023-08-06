@@ -8,10 +8,10 @@ from utils import *
 import _pickle as cPickle
 from tqdm import tqdm
 
-seq_len = 120
+seq_len = 30
 hold_day = 5
 expect_gain = 1.08
-tolerent_pay = 0.95
+tolerent_pay = 0.92
 train_val_split = 0.7
 assert seq_len >= 3
 assert hold_day >= 2
@@ -73,6 +73,8 @@ def generate():
     val_data_x = np.array(val_data_x)
     train_data_y = np.array(train_data_y)
     val_data_y = np.array(val_data_y)
+    from collections import Counter
+    print(Counter(train_data_y))
     np.savez("three_days_increase_train.npz", x=train_data_x, y=train_data_y)
     np.savez("three_days_increase_val.npz", x=val_data_x, y=val_data_y)
     print(train_data_x.shape)

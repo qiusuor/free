@@ -721,12 +721,11 @@ class StockDataset(Dataset):
         self.max_seq_len = self.x.shape[1]
         self.input_dim = self.x.shape[2]
         self.class_names = ["GOOD", "BAD", "NORMAL"]
-        # print(self.x.shape)
     
     def __len__(self):
         return len(self.x)
     
     def __getitem__(self, index):
-        return self.x[index], self.y[index], torch.ones_like(self.x[index]), 
+        return self.x[index], self.y[index], torch.ones(len(self.x[index])), 
     
     

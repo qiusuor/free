@@ -192,6 +192,7 @@ class Model(nn.Module):
         output = self.act(enc_out)
         output = self.dropout(output)
         # zero-out padding embeddings
+    # print(x_mark_enc.shape, output.shape)
         output = output * x_mark_enc.unsqueeze(-1)
         # (batch_size, seq_length * d_model)
         output = output.reshape(output.shape[0], -1)

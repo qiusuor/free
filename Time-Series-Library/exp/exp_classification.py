@@ -79,7 +79,6 @@ class Exp_Classification(Exp_Basic):
         train_data, train_loader = self._get_data(flag='train')
         vali_data, vali_loader = self._get_data(flag='val')
         # test_data, test_loader = self._get_data(flag='TEST')
-        print(len(train_loader))
 
         path = os.path.join(self.args.checkpoints, setting)
         if not os.path.exists(path):
@@ -101,7 +100,6 @@ class Exp_Classification(Exp_Basic):
             epoch_time = time.time()
 
             for i, (batch_x, label, padding_mask) in enumerate(train_loader):
-                print(i)
                 iter_count += 1
                 model_optim.zero_grad()
 
@@ -128,11 +126,11 @@ class Exp_Classification(Exp_Basic):
             print("Epoch: {} cost time: {}".format(epoch + 1, time.time() - epoch_time))
             train_loss = np.average(train_loss)
             vali_loss, val_accuracy = self.vali(vali_data, vali_loader, criterion)
-            # test_loss, test_accuracy = self.vali(test_data, test_loader, criterion)
+            train_loss, train_accuracy = self.vali(train_data, train_loader, criterion)
 
             print(
-                "Epoch: {0}, Steps: {1} | Train Loss: {2:.3f} Vali Loss: {3:.3f} Vali Acc: {4:.3f}"
-                .format(epoch + 1, train_steps, train_loss, vali_loss, val_accuracy))
+                "Epoch: {0}, Steps: {1} | Train Loss: {2:.3f} Train Acc: {3:.3f} Vali Loss: {4:.3f} Vali Acc: {5:.3f}"
+                .format(epoch + 1, train_steps, train_loss, train_accuracy, vali_loss, val_accuracy))
             early_stopping(-val_accuracy, self.model, path)
             if early_stopping.early_stop:
                 print("Early stopping")
