@@ -116,8 +116,8 @@ def fetch(adjustflag='2', freqs=['m', 'w', 'd', '60', '30', '15', '5'], code_lis
         for code in tqdm.tqdm(code_list or stockes.code):
             if not_concern(code): continue
             code_list.append([code, False, freq, adjustflag])
-    pool = Pool(32)
-    pool.map(fetch_one_wrapper, code_list)
+    pool = Pool(256)
+    pool.imap_unordered(fetch_one_wrapper, code_list)
     pool.close()
     pool.join()
 

@@ -8,10 +8,10 @@ from utils import *
 import _pickle as cPickle
 from tqdm import tqdm
 
-seq_len = 30
-hold_day = 5
-expect_gain = 1.08
-tolerent_pay = 0.92
+seq_len = 120
+hold_day = 2
+expect_gain = 1.05
+tolerent_pay = 0.97
 train_val_split = 0.7
 assert seq_len >= 3
 assert hold_day >= 2
@@ -65,7 +65,8 @@ def generate():
         
         for i in range(seq_len, len(close)-hold_day):
             if amount[i] / turn[i] >= 50000000000: continue
-            if not three_days_increase_retr(i, open, close, high, low, price, turn): continue
+            if high[i] / low[i] == 1: continue
+            # if not three_days_increase_retr(i, open, close, high, low, price, turn): continue
             x.append([open[i-seq_len:i], close[i-seq_len:i], high[i-seq_len:i], low[i-seq_len:i], price[i-seq_len:i], turn[i-seq_len:i]])
             y.append(get_label(i, open, close, high, low, price, turn))
             

@@ -40,10 +40,13 @@ class Exp_Classification(Exp_Basic):
         return model_optim
 
     def _select_criterion(self):
-        criterion = nn.CrossEntropyLoss()
+        criterion = nn.CrossEntropyLoss(weight=torch.tensor([1.0, 5.0, 10.0]).to(self.device))
         return criterion
+    
+    def get_topK_postive(self, prob_label, k=5, postive=2):
+        return sum([y[1]==postive for y in prob_label[:k]])
 
-    def vali(self, vali_data, vali_loader, criterion):
+    def vali(self, vali_data, vali_loader, criterion, dataset_name="val"):
         total_loss = []
         preds = []
         trues = []
@@ -56,18 +59,23 @@ class Exp_Classification(Exp_Basic):
 
                 outputs = self.model(batch_x, padding_mask, None, None)
 
-                pred = outputs.detach().cpu()
-                loss = criterion(pred, label.long().squeeze().cpu())
-                total_loss.append(loss)
+                pred = outputs.detach()
+                loss = criterion(pred, label.long().squeeze())
+                total_loss.append(loss.cpu())
 
-                preds.append(outputs.detach())
-                trues.append(label)
+                preds.append(outputs.detach().cpu())
+                trues.append(label.cpu())
 
         total_loss = np.average(total_loss)
 
         preds = torch.cat(preds, 0)
         trues = torch.cat(trues, 0)
         probs = torch.nn.functional.softmax(preds)  # (total_samples, num_classes) est. prob. for each class and sample
+        prob_label = list(zip(probs.cpu().numpy().tolist(), trues.cpu().numpy().tolist()))
+        prob_label = sorted(prob_label, key=lambda x:-x[0][2])
+        prob_label = [(x[0][2], x[1]) for x in prob_label]
+        print("{} Top-5: {} Top-10: {} Top-20: {} Top-50: {} Top-100: {}".format(dataset_name, self.get_topK_postive(prob_label, 5), self.get_topK_postive(prob_label, 10), self.get_topK_postive(prob_label, 20), self.get_topK_postive(prob_label, 50), self.get_topK_postive(prob_label, 100)))
+        # print(prob_label[:10])
         predictions = torch.argmax(probs, dim=1).cpu().numpy()  # (total_samples,) int class index for each sample
         trues = trues.flatten().cpu().numpy()
         accuracy = cal_accuracy(predictions, trues)
@@ -125,8 +133,8 @@ class Exp_Classification(Exp_Basic):
 
             print("Epoch: {} cost time: {}".format(epoch + 1, time.time() - epoch_time))
             train_loss = np.average(train_loss)
-            vali_loss, val_accuracy = self.vali(vali_data, vali_loader, criterion)
-            train_loss, train_accuracy = self.vali(train_data, train_loader, criterion)
+            vali_loss, val_accuracy = self.vali(vali_data, vali_loader, criterion, "train")
+            train_loss, train_accuracy = self.vali(train_data, train_loader, criterion, "valid")
 
             print(
                 "Epoch: {0}, Steps: {1} | Train Loss: {2:.3f} Train Acc: {3:.3f} Vali Loss: {4:.3f} Vali Acc: {5:.3f}"
