@@ -31,6 +31,9 @@ def get_label(i, open, close, high, low, price, turn):
         if low[j] / open[i+1] < tolerent_pay: return 0
     return 1
 
+def add_features(df):
+    df[""]
+    
 def generate():
     trade_days, last_trade_day = get_last_update_date()
     
@@ -47,6 +50,7 @@ def generate():
         path = os.path.join(DAILY_DIR, file)
         data = joblib.load(path)
         data = data[data["volume"] != 0]
+        add_features(data)
         
         if data.index[-1] < to_date(last_trade_day): continue
         if len(data) <= 200: continue 
