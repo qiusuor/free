@@ -224,3 +224,38 @@ def render_html(code, data, html_path):
         .render(html_path)
     )
 
+
+
+def get_up_label(i, open, close, high, low, price, turn, hold_day=2, expect_gain=1.07):
+    for j in range(i+2, i+hold_day+1):
+        if high[j] / close[i+1] > expect_gain: return 1
+    return 0
+
+def get_down_label(i, open, close, high, low, price, turn, hold_day=2, tolerent_pay=0.97):
+    for j in range(i+2, i+hold_day+1):
+        if low[j] / close[i+1] < tolerent_pay: return 1
+    return 0
+
+def get_labels(open, close, high, low, price, turn, hold_day=2, expect_gain=1.07, tolerent_pay=0.97, up=True):
+    labels = []
+    N = len(open)
+    for i in range(N):
+        if i + hold_day < N:
+            if up:
+                labels.append(get_up_label(i, open, close, high, low, price, turn, hold_day, expect_gain))
+            else:
+                labels.append(get_down_label(i, open, close, high, low, price, turn, hold_day, tolerent_pay))
+        else:
+            labels.append(0)
+    return labels
+        
+    
+def explain_label(label):
+    label = label.split("_")
+    up = label[0] == "y"
+    nday = int(label[1])
+    ratio = float(label[2]) / 100
+    
+    return up, nday, ratio
+
+

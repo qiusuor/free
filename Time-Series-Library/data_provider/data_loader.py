@@ -720,7 +720,7 @@ class StockDataset(Dataset):
         self.y = torch.from_numpy(self.dataset["y"])
         self.max_seq_len = self.x.shape[1]
         self.input_dim = self.x.shape[2]
-        self.class_names = ["GOOD", "BAD", "NORMAL"]
+        self.class_names = ["BAD", "GOOD"]
     
     def __len__(self):
         return len(self.x)
