@@ -61,7 +61,7 @@ class RetThread(threading.Thread):
     def run(self):
         self.result = self.func(*self.args)
     def get_result(self):
-        threading.Thread.join(self)  # 等待线程执行完毕
+        threading.Thread.join(self) 
         try:
             return self.result
         except Exception:
@@ -81,7 +81,6 @@ def fetch_one_wrapper(argv):
 
 def fetch_one(code, login, frequency, adjustflag):
     try:
-        # code, login, frequency, adjustflag = argv
         if not login:
             lg=bs.login()
             assert lg.error_code != 0, "Login filed!"
@@ -132,7 +131,6 @@ def fetch_one(code, login, frequency, adjustflag):
         return 0
     except:
         time.sleep(np.random.randint(10))
-        print("KKKKKKK")
         return fetch_one(code, login, frequency, adjustflag)
 
 
