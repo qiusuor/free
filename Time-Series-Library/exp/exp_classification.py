@@ -10,6 +10,7 @@ import warnings
 import numpy as np
 import pdb
 from tqdm import tqdm
+from sklearn.metrics import roc_auc_score, average_precision_score
 
 warnings.filterwarnings('ignore')
 
@@ -41,7 +42,7 @@ class Exp_Classification(Exp_Basic):
         return model_optim
 
     def _select_criterion(self):
-        criterion = nn.CrossEntropyLoss(weight=torch.tensor([1.0, 10.0]).to(self.device))
+        criterion = nn.CrossEntropyLoss(weight=torch.tensor([1.0, 1.0]).to(self.device))
         return criterion
     
     def get_topK_postive(self, prob_label, k=5, postive=1):
@@ -72,6 +73,9 @@ class Exp_Classification(Exp_Basic):
         preds = torch.cat(preds, 0)
         trues = torch.cat(trues, 0)
         probs = torch.nn.functional.softmax(preds)  # (total_samples, num_classes) est. prob. for each class and sample
+        
+        auc_score = roc_auc_score(trues.cpu().numpy(), probs.cpu().numpy()[:,1])
+        ap = average_precision_score(trues.cpu().numpy(), probs.cpu().numpy()[:,1], )
         prob_label = list(zip(probs.cpu().numpy().tolist(), trues.cpu().numpy().tolist()))
         prob_label = sorted(prob_label, key=lambda x:-x[0][1])
         prob_label = [(x[0][1], x[1]) for x in prob_label]
@@ -82,7 +86,7 @@ class Exp_Classification(Exp_Basic):
         accuracy = cal_accuracy(predictions, trues)
 
         self.model.train()
-        return total_loss, accuracy
+        return total_loss, accuracy, auc_score, ap
 
     def train(self, setting):
         train_data, train_loader = self._get_data(flag='train')
@@ -133,13 +137,13 @@ class Exp_Classification(Exp_Basic):
 
             print("Epoch: {} cost time: {}".format(epoch + 1, time.time() - epoch_time))
             train_loss = np.average(train_loss)
-            train_loss, train_accuracy = self.vali(train_data, train_loader, criterion, "train")
-            vali_loss, val_accuracy = self.vali(vali_data, vali_loader, criterion, "valid")
+            train_loss, train_accuracy, train_auc, train_ap = self.vali(train_data, train_loader, criterion, "train")
+            vali_loss, val_accuracy, val_auc, val_ap = self.vali(vali_data, vali_loader, criterion, "valid")
 
             print(
-                "Epoch: {0}, Steps: {1} | Train Loss: {2:.3f} Train Acc: {3:.3f} Vali Loss: {4:.3f} Vali Acc: {5:.3f}"
-                .format(epoch + 1, train_steps, train_loss, train_accuracy, vali_loss, val_accuracy))
-            early_stopping(-val_accuracy, self.model, path)
+                "Epoch: {0}, Steps: {1} | Train Loss: {2:.3f} Train Acc: {3:.3f} Train AUC: {4:.3f} Train AP: {5:.3f} Vali Loss: {6:.3f} Vali Acc: {7:.3f} Vali AUC: {8:.3f} Vali AP: {9:.3f}"
+                .format(epoch + 1, train_steps, train_loss, train_accuracy, train_auc, train_ap, vali_loss, val_accuracy, val_auc, val_ap))
+            early_stopping(-val_ap, self.model, path)
             if early_stopping.early_stop:
                 print("Early stopping")
                 break
