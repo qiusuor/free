@@ -75,7 +75,7 @@ def get_last_update_date(login=False):
     trade_days = joblib.load(TRADE_DAYS_PKL)
     import time
     now_time = time.localtime(time.time())
-    if now_time.tm_hour < 17:
+    if now_time.tm_hour < 20:
         last_trade_day = trade_days[-2]
     else:
         last_trade_day = trade_days[-1]

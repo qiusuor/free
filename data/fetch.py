@@ -10,6 +10,7 @@ from multiprocessing import Pool
 import threading
 import time
 import numpy as np
+import shutil
 
 """
 adjustflag:
@@ -137,13 +138,13 @@ def fetch_one(code, login, frequency, adjustflag):
 def fetch(adjustflag='2', freqs=['m', 'w', 'd', '60', '30', '15', '5'], code_list=[]):
     fetch_stock_codes()
     stockes = pd.read_csv(ALL_STOCKS)
-
+    shutil.rmtree(DAILY_DIR)
     code_list = []
     for freq in freqs:
         for code in tqdm.tqdm(code_list or stockes.code):
             if not_concern(code): continue
             code_list.append([code, False, freq, adjustflag])
-    pool = Pool(64)
+    pool = Pool(16)
     pool.imap_unordered(fetch_one_wrapper, code_list)
     pool.close()
     pool.join()
