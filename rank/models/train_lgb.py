@@ -44,9 +44,9 @@ def train_lightgbm():
         "max_depth": 7,
         "num_iterations": 5000,
         "early_stopping_rounds": 100,
-        "device": 'gpu',
-        "gpu_platform_id": 0,
-        "gpu_device_id": 0,
+        # "device": 'gpu',
+        # "gpu_platform_id": 0,
+        # "gpu_device_id": 0,
         "min_gain_to_split": 0,
         "num_threads": 128,
     }
@@ -83,7 +83,7 @@ def train_lightgbm():
     
     
 if __name__ == "__main__":
-    fetch_daily()
-    inject_features()
-    inject_labels()
+    # fetch_daily()
+    # inject_features()
+    # inject_labels()
     train_lightgbm()

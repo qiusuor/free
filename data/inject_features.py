@@ -101,6 +101,7 @@ def inject_ta_features(df):
     
     if "macd" not in df.columns:
         df = pd.concat([df, abstract.MACD(df, fastperiod=10, slowperiod=22, signalperiod=5)], axis=1)
+    return df
     
 def inject_chip_features(df):
     chip_div_avg_period = [3, 5, 10, 30, 60, 120, 240]
@@ -120,7 +121,7 @@ def inject_chip_features(df):
     for period in chip_div_avg_period:
         df["chip_avg_{}".format(period)] = df["close"].rolling(period).apply(calc_chip_avg, raw=False)
         df["chip_div_{}".format(period)] = df["close"].rolling(period).apply(calc_chip_div, raw=False)
-        
+    return df
     
 def inject_price_turn_features(df):
     max_min_period = [3, 5, 10, 30, 60, 120, 240]
@@ -145,11 +146,11 @@ def inject_price_turn_features(df):
     
     turn_period = [3, 5, 10, 30, 60, 120, 240]
     for period in turn_period:
-        df["mean_turn_{}".format(period)] = df["turn"].rolling[period].mean()
-        df["max_turn_{}".format(period)] = df["turn"].rolling[period].max()
-        df["min_turn_{}".format(period)] = df["turn"].rolling[period].min()
-        df["std_turn_{}".format(period)] = df["turn"].rolling[period].std()
-       
+        df["mean_turn_{}".format(period)] = df["turn"].rolling(period).mean()
+        df["max_turn_{}".format(period)] = df["turn"].rolling(period).max()
+        df["min_turn_{}".format(period)] = df["turn"].rolling(period).min()
+        df["std_turn_{}".format(period)] = df["turn"].rolling(period).std()
+    return df
     
 def inject_alpha_features(df):
     
@@ -165,7 +166,7 @@ def inject_alpha_features(df):
     
     df["alpha_{}".format(1)] = df["close"].rolling(7).apply(alpha_001, raw=False)
     
-    
+    return df
     
 def inject_one(path):
     df = joblib.load(path)
@@ -194,6 +195,7 @@ def inject_features():
         path = os.path.join(DAILY_DIR, file)
         paths.append(path)
     # inject_one(paths[0])
+    # print(paths[0])
     pool.imap_unordered(inject_one, paths)
     pool.close()
     pool.join()
