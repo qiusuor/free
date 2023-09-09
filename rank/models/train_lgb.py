@@ -13,9 +13,16 @@ import hashlib
 import copy
 import bisect
 import random
+from utils import *
 
+features = get_feature_cols()
+label = "y_03_109"
 
-if __name__ == "__main__":
+train_val_split_day = to_date(20230801)
+
+up, nday, ratio = explain_label(label)
+
+def train_lightgbm():
     params = {
         'task': 'train',
         'boosting_type': 'gbdt',
@@ -32,19 +39,34 @@ if __name__ == "__main__":
         "max_depth": 7,
         "num_iterations": 5000,
         "early_stopping_rounds": 100,
-        # "device": 'gpu',
-        # "gpu_platform_id": 0,
-        # "gpu_device_id": 0,
+        "device": 'gpu',
+        "gpu_platform_id": 0,
+        "gpu_device_id": 0,
         "min_gain_to_split": 0,
         "num_threads": 128,
     }
     
-    train_dataset = np.load("three_days_increase_train_lgb.npz") 
-    val_dataset = np.load("three_days_increase_val_lgb.npz")
+    train_dataset = []
+    val_dataset = []
+    for file in tqdm(os.listdir(DAILY_DIR)):
+        code = file.split("_")[0]
+        if not_concern(code) or is_index(code):
+            continue
+        if not file.endswith(".pkl"):
+            continue
+        path = os.path.join(DAILY_DIR, file)
+        df = joblib.load(path)
+        label_vis_day = get_offset_trade_day(get_last_trade_day(update=False), -nday)
+        label_vis_day = to_date(label_vis_day)
+        df = df[:label_vis_day]
+        train_dataset.append(df[:train_val_split_day])
+        val_dataset.append(df[train_val_split_day:])
+        
+    train_dataset = pd.concat(train_dataset, axis=0)
+    val_dataset = pd.concat(val_dataset, axis=0)
     
-    train_x, train_y = train_dataset["x"], train_dataset["y"]
-    val_x, val_y = val_dataset["x"], val_dataset["y"]
-    
+    train_x, train_y = train_dataset[features], train_dataset[label]
+    val_x, val_y = val_dataset[features], val_dataset[label]
     lgb_train = lgb.Dataset(train_x, train_y)
     lgb_eval = lgb.Dataset(val_x, val_y, reference=lgb_train)
     
@@ -53,3 +75,7 @@ if __name__ == "__main__":
                     num_boost_round=5000,
                     valid_sets=(lgb_train, lgb_eval),
                     )
+    
+    
+if __name__ == "__main__":
+    train_lightgbm()

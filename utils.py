@@ -64,7 +64,12 @@ def get_trade_days(login=False):
     joblib.dump(trade_days, TRADE_DAYS_PKL)
     if not login:
         bs.logout()
+    return trade_days
 
+def get_offset_trade_day(day, n):
+    trade_days = joblib.load(TRADE_DAYS_PKL)
+    day_index = bisect.bisect_left(trade_days, day)
+    return trade_days[day_index+n]
 
 def to_str_date(int_date):
     return datetime.datetime.strptime(str(int_date), "%Y%m%d").strftime("%Y-%m-%d")
@@ -72,21 +77,20 @@ def to_str_date(int_date):
 def to_date(int_date):
     return datetime.datetime.strptime(str(int_date), "%Y%m%d")
 
-def get_last_update_date(login=False):
-    get_trade_days(login=login)
+def to_int_date(date):
+    return int(date.strftime("%Y%m%d"))
+
+def get_last_trade_day(login=False, update=True):
+    if update:
+        get_trade_days(login=login)
     trade_days = joblib.load(TRADE_DAYS_PKL)
-    import time
-    now_time = time.localtime(time.time())
-    if now_time.tm_hour < 18:
-        last_trade_day = trade_days[-2]
-    else:
-        last_trade_day = trade_days[-1]
-    return trade_days, last_trade_day
+    last_trade_day = trade_days[-1]
+    return last_trade_day
 
 
 def fetch_stock_codes():
     lg = bs.login()
-    last_trade_day = to_str_date(get_last_update_date(login=True)[1])
+    last_trade_day = to_str_date(get_last_trade_day)
     assert lg.error_code != 0, "Login failed!"
     rs = bs.query_all_stock(day=last_trade_day)
     data_list = []
@@ -210,7 +214,5 @@ def get_feature_cols():
         df = joblib.load(path)
         no_feature_cols = set(["code", "adjustflag", "tradestatus"] + [col for col in df.columns if col.startswith("y") or col.startswith("dy")])
         feature_cols = [col for col in df.columns if col not in no_feature_cols]
-        print(feature_cols)
-        print(len(feature_cols))
         return feature_cols
     
