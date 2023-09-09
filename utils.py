@@ -95,79 +95,6 @@ def fetch_stock_codes():
     result.to_csv(ALL_STOCKS, index=False)
     bs.logout()
 
-
-def exp_decay(pre_i_day, decay_rate=0.99):
-    return decay_rate ** pre_i_day
-
-def guass_decay(pre_i_day, sigma=120):
-    return math.exp(-pre_i_day * pre_i_day / sigma / sigma)
-
-def get_decay_coef(n, rate=0.99, sigma=120, which="exp"):
-    if which == "exp":
-        return [exp_decay(n - i - 1, rate) for i in range(n)]
-    elif which == "guass":
-        return [guass_decay(n - i - 1, sigma) for i in range(n)]
-    else:
-        raise NotImplementedError
-
-
-def calc_chip_div(data, code, start_day=20220101, end_day=20230317, slice_len=12, exp_decay_rate=0.996):
-    decay_coef = get_decay_coef(
-        slice_len, rate=exp_decay_rate, which="exp")
-
-    cur_days = []
-    prices = []
-    chip_avgs = []
-    chip_divs = []
-    closes = []
-    highs = []
-    lows = []
-    opens = []
-    indexs = []
-
-    date = data.index
-    close = data.close.values
-    high = data.high.values
-    open = data.open.values
-    low = data.low.values
-    price = data.price.values
-    vol = data.volume.values
-    amount = data.amount.values
-
-    # if isinstance(start_day, int):
-    #     print(start_day)
-    # if isinstance(date[0], int):
-    #     print(date)
-    # print(type(date[0]), type(start_day))
-    start_index = bisect.bisect_left(date, start_day)
-    start_index = max(start_index, slice_len)
-    end_index = bisect.bisect_left(date, end_day)
-    assert end_index < len(date), (date, code, end_index, len(date), end_day)
-
-    for i in range(start_index, end_index + 1):
-        amount_slice = amount[i-slice_len:i]
-        amount_slice *= decay_coef
-        vol_slice = vol[i-slice_len:i]
-        vol_slice *= decay_coef
-        sum_vol_slice = sum(vol_slice)
-        price_slice = price[i-slice_len:i]
-        chip_avg = sum(amount_slice) / sum_vol_slice
-        chip_div = 0
-        for p, v in zip(price_slice, vol_slice):
-            chip_div += (1 - p / chip_avg) ** 2 * v / sum_vol_slice
-
-        chip_avgs.append(chip_avg)
-        chip_divs.append(chip_div * 1000)
-        prices.append(price[i])
-        cur_days.append(date[i])
-        closes.append(close[i])
-        highs.append(high[i])
-        opens.append(open[i])
-        lows.append(low[i])
-        indexs.append(i)
-
-    return cur_days, chip_divs, chip_avgs, prices, opens, highs, lows, closes, indexs
-
 def render_html(code, data, html_path):
     (
         Line(init_opts=opts.InitOpts(width="1450px",
@@ -230,7 +157,6 @@ def render_html(code, data, html_path):
     )
 
 
-
 def get_up_label(i, open, close, high, low, price, turn, hold_day=2, expect_gain=1.07):
     for j in range(i+2, i+hold_day+1):
         if high[j] / close[i+1] > expect_gain: return 1
@@ -251,10 +177,9 @@ def get_labels(open, close, high, low, price, turn, hold_day=2, expect_gain=1.07
             else:
                 labels.append(get_down_label(i, open, close, high, low, price, turn, hold_day, tolerent_pay))
         else:
-            labels.append(0)
+            labels.append(-1)
     return labels
         
-    
 def explain_label(label):
     label = label.split("_")
     up = label[0] == "y"
@@ -264,3 +189,10 @@ def explain_label(label):
     return up, nday, ratio
 
 
+def pandas_rolling_agg(ref=None):
+    def rolling(func):
+        def agg(df_w):
+            dfi =  ref[(ref.index >= df_w.index[0]) & (ref.index <= df_w.index[-1])]
+            return func(dfi) 
+        return agg
+    return rolling

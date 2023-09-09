@@ -36,6 +36,8 @@ def inject_one(path):
     for n_day in future_n_day_high_low:
         df["y_next_{}_d_high".format(n_day)] = df["high"].rolling(n_day).max().shift(-n_day)
         df["y_next_{}_d_low".format(n_day)] = df["low"].rolling(n_day).min().shift(-n_day)
+        df["y_next_{}_d_close".format(n_day)] = df["close"].rolling(n_day).min().shift(-n_day)
+        df["y_next_{}_d_open".format(n_day)] = df["open"].rolling(n_day).min().shift(-n_day)
         
     df.to_csv(path.replace(".pkl", ".csv"))
     dump(df, path)
@@ -58,5 +60,5 @@ def inject():
     pool.join()
      
 if __name__ == "__main__":
-    # print(talib.get_function_groups())
     inject()
+    

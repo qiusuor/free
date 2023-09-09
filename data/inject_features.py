@@ -11,16 +11,18 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
-def inject_one(path):
-    df = joblib.load(path)
-    df = df[df["volume"] != 0]
-    
+def inject_ta_features(df):
+    df["ma_3"] = abstract.SMA(df, timeperiod=3)
     df["ma_5"] = abstract.SMA(df, timeperiod=5)
+    df["ma_6"] = abstract.SMA(df, timeperiod=6)
     df["ma_10"] = abstract.SMA(df, timeperiod=10)
+    df["ma_12"] = abstract.SMA(df, timeperiod=12)
+    df["ma_24"] = abstract.SMA(df, timeperiod=24)
     df["ma_30"] = abstract.SMA(df, timeperiod=30)
     df["ma_60"] = abstract.SMA(df, timeperiod=60)
     df["ma_120"] = abstract.SMA(df, timeperiod=120)
     df["ma_240"] = abstract.SMA(df, timeperiod=240)
+    df["ma_bbi"] = (df["ma_3"] + df["ma_6"] + df["ma_12"] + df["ma_24"]) / 4
     
     df["dema_5"] = abstract.DEMA(df, timeperiod=5)
     df["dema_10"] = abstract.DEMA(df, timeperiod=10)
@@ -87,39 +89,6 @@ def inject_one(path):
     df["var_120"] = abstract.VAR(df, timeperiod=120, nbdev=1.)
     df["var_240"] = abstract.VAR(df, timeperiod=240, nbdev=1.)
     
-    
-    max_min_period = [3, 5, 10, 30, 60, 120, 240]
-    max_name = ["close", "high"]
-    min_name = ["close", "low"]
-    
-    for period in max_min_period:
-        for name in max_name:
-            df["max_{}_{}".format(name, period)] = df[name].rolling(period).max()
-        for name in min_name:
-            df["min_{}_{}".format(name, period)] = df[name].rolling(period).min()
-            
-    chip_div_avg_period = [3, 5, 10, 30, 60, 120, 240]
-    
-    def calc_chip_avg_wrapper(df):
-        def calc_chip_avg(df_w):
-            dfi =  df[(df.index >= df_w.index[0]) & (df.index <= df_w.index[-1])]
-            avg = sum(dfi["amount"]) / sum(dfi["volume"])
-            return avg
-        return calc_chip_avg
-    
-    def calc_chip_div_wrapper(df):
-        def calc_chip_div(df_w):
-            dfi =  df[(df.index >= df_w.index[0]) & (df.index <= df_w.index[-1])]
-            avg = sum(dfi["amount"]) / sum(dfi["volume"])
-            sum_vol = sum(dfi["volume"])
-            div = sum((1 - dfi["price"] / avg) ** 2 * dfi["volume"] / sum_vol)
-            return div * 1000
-        return calc_chip_div
-    
-    for period in chip_div_avg_period:
-        df["chip_avg_{}".format(period)] = df["close"].rolling(period).apply(calc_chip_avg_wrapper(df), raw=False)
-        df["chip_div_{}".format(period)] = df["close"].rolling(period).apply(calc_chip_div_wrapper(df), raw=False)
-    
     for metric in talib.get_function_groups()["Pattern Recognition"]:
         df[metric] = abstract.Function(metric)(df)
 
@@ -132,7 +101,81 @@ def inject_one(path):
     
     if "macd" not in df.columns:
         df = pd.concat([df, abstract.MACD(df, fastperiod=10, slowperiod=22, signalperiod=5)], axis=1)
+    
+def inject_chip_features(df):
+    chip_div_avg_period = [3, 5, 10, 30, 60, 120, 240]
+    
+    @pandas_rolling_agg(df)
+    def calc_chip_avg(dfi):
+        avg = sum(dfi["amount"]) / sum(dfi["volume"])
+        return avg
+    
+    @pandas_rolling_agg(df)
+    def calc_chip_div(dfi):
+        avg = sum(dfi["amount"]) / sum(dfi["volume"])
+        sum_vol = sum(dfi["volume"])
+        div = sum((1 - dfi["price"] / avg) ** 2 * dfi["volume"] / sum_vol)
+        return div * 1000
+    
+    for period in chip_div_avg_period:
+        df["chip_avg_{}".format(period)] = df["close"].rolling(period).apply(calc_chip_avg, raw=False)
+        df["chip_div_{}".format(period)] = df["close"].rolling(period).apply(calc_chip_div, raw=False)
+        
+    
+def inject_price_turn_features(df):
+    max_min_period = [3, 5, 10, 30, 60, 120, 240]
+    max_name = ["close", "high"]
+    min_name = ["close", "low"]
+    
+    for period in max_min_period:
+        for name in max_name:
+            df["max_{}_{}".format(name, period)] = df[name].rolling(period).max()
+        for name in min_name:
+            df["min_{}_{}".format(name, period)] = df[name].rolling(period).min()
+    
+    pct_period = [3, 5, 10, 30, 60, 120, 240]
+    
+    def calc_rank_pct(df_w):
+        return df_w.rank(pct=True)[-1]
+    
+    for period in pct_period:
+         df["pct_close_{}".format(period)] = df["close"].rolling(period).apply(calc_rank_pct, raw=False)
+         df["pct_low_{}".format(period)] = df["low"].rolling(period).apply(calc_rank_pct, raw=False)
+         df["pct_price_{}".format(period)] = df["price"].rolling(period).apply(calc_rank_pct, raw=False)
+    
+    turn_period = [3, 5, 10, 30, 60, 120, 240]
+    for period in turn_period:
+        df["mean_turn_{}".format(period)] = df["turn"].rolling[period].mean()
+        df["max_turn_{}".format(period)] = df["turn"].rolling[period].max()
+        df["min_turn_{}".format(period)] = df["turn"].rolling[period].min()
+        df["std_turn_{}".format(period)] = df["turn"].rolling[period].std()
        
+    
+def inject_alpha_features(df):
+    
+    @pandas_rolling_agg(df)
+    def alpha_001(df_w):
+        """
+            (-1 * CORR(RANK(DELTA(LOG(VOLUME),1)),RANK(((CLOSE-OPEN)/OPEN)),6)
+            window = 7
+        """
+        rank1 = df_w["volume"].apply(np.log).rolling(2).apply(lambda x:x[1]-x[0])[1:].rank()
+        rank2 = ((df_w["close"] - df_w["open"]) / df_w["open"])[1:].rank()
+        return -rank1.corr(rank2)
+    
+    df["alpha_{}".format(1)] = df["close"].rolling(7).apply(alpha_001, raw=False)
+    
+    
+    
+def inject_one(path):
+    df = joblib.load(path)
+    df = df[df["volume"] != 0]
+    
+    inject_ta_features(df)
+    inject_chip_features(df)
+    inject_price_turn_features(df)
+    inject_alpha_features(df)
+    
     df.to_csv(path.replace(".pkl", ".csv"))
     # print(df)
     # print(list(df.columns))
