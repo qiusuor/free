@@ -90,7 +90,7 @@ def get_last_trade_day(login=False, update=True):
 
 def fetch_stock_codes():
     lg = bs.login()
-    last_trade_day = to_str_date(get_last_trade_day)
+    last_trade_day = to_str_date(get_last_trade_day(login=True))
     assert lg.error_code != 0, "Login failed!"
     rs = bs.query_all_stock(day=last_trade_day)
     data_list = []

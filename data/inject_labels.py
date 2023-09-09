@@ -43,7 +43,7 @@ def inject_one(path):
     dump(df, path)
     
 
-def inject():
+def inject_labels():
     pool = Pool(THREAD_NUM)
     paths = []
     for file in tqdm(os.listdir(DAILY_DIR)):
@@ -60,5 +60,5 @@ def inject():
     pool.join()
      
 if __name__ == "__main__":
-    inject()
+    inject_labels()
     

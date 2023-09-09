@@ -14,6 +14,11 @@ import copy
 import bisect
 import random
 from utils import *
+from data.fetch import fetch_daily
+from data.inject_features import inject_features
+from data.inject_labels import inject_labels
+
+
 
 features = get_feature_cols()
 label = "y_03_109"
@@ -78,4 +83,7 @@ def train_lightgbm():
     
     
 if __name__ == "__main__":
+    fetch_daily()
+    inject_features()
+    inject_labels()
     train_lightgbm()

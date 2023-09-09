@@ -102,8 +102,10 @@ def fetch_one(code, login, frequency, adjustflag):
         while (rs.error_code == '0') & rs.next():
             data_list.append(rs.get_row_data())
         if(len(data_list)<=0):return
-
-        result = pd.DataFrame(data_list, columns=rs.fields)
+        
+        result = np.array(data_list)
+        result = np.unique(result, axis=0)
+        result = pd.DataFrame(result, columns=rs.fields)
         result.replace("", "0", inplace=True)
         dealTime(result)
 
@@ -138,12 +140,14 @@ def fetch_one(code, login, frequency, adjustflag):
 def fetch(adjustflag='2', freqs=['m', 'w', 'd', '60', '30', '15', '5'], code_list=[]):
     fetch_stock_codes()
     stockes = pd.read_csv(ALL_STOCKS)
-    shutil.rmtree(DAILY_DIR)
+    if os.path.exists(DAILY_DIR):
+        shutil.rmtree(DAILY_DIR)
     code_list = []
     for freq in freqs:
         for code in tqdm.tqdm(code_list or stockes.code):
             if not_concern(code): continue
             code_list.append([code, False, freq, adjustflag])
+    # fetch_one(*code_list[0])
     pool = Pool(16)
     pool.imap_unordered(fetch_one_wrapper, code_list)
     pool.close()

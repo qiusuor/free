@@ -182,7 +182,7 @@ def inject_one(path):
     dump(df, path)
     
 
-def inject():
+def inject_features():
     pool = Pool(THREAD_NUM)
     paths = []
     for file in tqdm(os.listdir(DAILY_DIR)):
@@ -200,4 +200,4 @@ def inject():
      
 if __name__ == "__main__":
     # print(talib.get_function_groups())
-    inject()
+    inject_features()
