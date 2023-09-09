@@ -12,6 +12,8 @@ import pyecharts.options as opts
 from pyecharts.charts import Line
 import datetime
 import torch
+from tqdm import tqdm
+
 
 def addGaussianNoise(x, std=0.05):
     return x + torch.normal(x, std)
@@ -196,3 +198,19 @@ def pandas_rolling_agg(ref=None):
             return func(dfi) 
         return agg
     return rolling
+
+def get_feature_cols():
+    for file in os.listdir(DAILY_DIR):
+        code = file.split("_")[0]
+        if not_concern(code) or is_index(code):
+            continue
+        if not file.endswith(".pkl"):
+            continue
+        path = os.path.join(DAILY_DIR, file)
+        df = joblib.load(path)
+        no_feature_cols = set(["code", "adjustflag", "tradestatus"] + [col for col in df.columns if col.startswith("y") or col.startswith("dy")])
+        feature_cols = [col for col in df.columns if col not in no_feature_cols]
+        print(feature_cols)
+        print(len(feature_cols))
+        return feature_cols
+    
