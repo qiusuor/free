@@ -36,8 +36,6 @@ def inject_one(path):
         df["y_next_{}_d_high_ratio".format(n_day)] = df["y_next_{}_d_high".format(n_day)] / df["close"]
         df["y_next_{}_d_low".format(n_day)] = df["low"].rolling(n_day).min().shift(-n_day)
         df["y_next_{}_d_low_ratio".format(n_day)] = df["y_next_{}_d_low".format(n_day)] / df["close"]
-        df["y_next_{}_d_close".format(n_day)] = df["close"].rolling(n_day).min().shift(-n_day)
-        df["y_next_{}_d_open".format(n_day)] = df["open"].rolling(n_day).min().shift(-n_day)
         
     df.to_csv(path.replace(".pkl", ".csv"))
     dump(df, path)
@@ -54,7 +52,7 @@ def inject_labels():
             continue
         path = os.path.join(DAILY_DIR, file)
         paths.append(path)
-    inject_one(paths[0])
+    # inject_one(paths[0])
     pool.imap_unordered(inject_one, paths)
     pool.close()
     pool.join()

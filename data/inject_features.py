@@ -45,7 +45,12 @@ def inject_ta_features(df):
     df["rsi_120"] = abstract.RSI(df, timeperiod=120)
     df["rsi_240"] = abstract.RSI(df, timeperiod=240)
     
+    df["adx_2"] = abstract.ADX(df, timeperiod=2)
+    df["adx_5"] = abstract.ADX(df, timeperiod=5)
+    df["adx_7"] = abstract.ADX(df, timeperiod=7)
     df["adx_14"] = abstract.ADX(df, timeperiod=14)
+    df["adx_30"] = abstract.ADX(df, timeperiod=30)
+    df["natr_5"] = abstract.NATR(df, timeperiod=5)
     df["natr_14"] = abstract.NATR(df, timeperiod=14)
     df["obv"] = abstract.OBV(df)
     df["type_price"] = abstract.TYPPRICE(df)
@@ -55,8 +60,25 @@ def inject_ta_features(df):
     df["ht_dc_period"] = abstract.HT_DCPERIOD(df)
     
     df["ht_trend_mode"] = abstract.HT_TRENDMODE(df)
+    df["beta_2"] = abstract.BETA(df, timeperiod=2)
+    df["beta_3"] = abstract.BETA(df, timeperiod=3)
     df["beta_5"] = abstract.BETA(df, timeperiod=5)
+    df["beta_7"] = abstract.BETA(df, timeperiod=7)
+    df["beta_10"] = abstract.BETA(df, timeperiod=10)
+    df["beta_22"] = abstract.BETA(df, timeperiod=22)
+    df["beta_30"] = abstract.BETA(df, timeperiod=30)
+    df["beta_60"] = abstract.BETA(df, timeperiod=60)
+    df["beta_120"] = abstract.BETA(df, timeperiod=120)
+    df["beta_240"] = abstract.BETA(df, timeperiod=240)
+    df["correl_2"] = abstract.CORREL(df, timeperiod=2)
+    df["correl_3"] = abstract.CORREL(df, timeperiod=3)
+    df["correl_5"] = abstract.CORREL(df, timeperiod=5)
+    df["correl_10"] = abstract.CORREL(df, timeperiod=10)
+    df["correl_22"] = abstract.CORREL(df, timeperiod=22)
     df["correl_30"] = abstract.CORREL(df, timeperiod=30)
+    df["correl_60"] = abstract.CORREL(df, timeperiod=60)
+    df["correl_120"] = abstract.CORREL(df, timeperiod=120)
+    df["correl_240"] = abstract.CORREL(df, timeperiod=240)
     df["linear_reg_5"] = abstract.LINEARREG(df, timeperiod=5)
     df["linear_reg_10"] = abstract.LINEARREG(df, timeperiod=10)
     df["linear_reg_22"] = abstract.LINEARREG(df, timeperiod=22)
@@ -163,8 +185,18 @@ def inject_alpha_features(df):
         rank1 = df_w["volume"].apply(np.log).rolling(2).apply(lambda x:x[1]-x[0])[1:].rank()
         rank2 = ((df_w["close"] - df_w["open"]) / df_w["open"])[1:].rank()
         return -rank1.corr(rank2)
+    df["alpha_001"] = df["close"].rolling(7).apply(alpha_001, raw=False)
     
-    df["alpha_{}".format(1)] = df["close"].rolling(7).apply(alpha_001, raw=False)
+    
+    def alpha_002(df):
+        """
+            -1 * delta((((close-low)-(high-close))/((high-low)),1))
+            window = 2
+        """
+        v1 = ((df["close"] - df["low"]) - (df["high"] - df["close"])) / (df["high"] - df["low"])
+        return -v1.rolling(2).apply(lambda x:x[1]-x[0])
+    df["alpha_002"] = alpha_002(df)
+        
     
     return df
     

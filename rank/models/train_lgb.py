@@ -17,31 +17,24 @@ from utils import *
 from data.fetch import fetch_daily
 from data.inject_features import inject_features
 from data.inject_labels import inject_labels
+from data.inject_joint_label import injecto_joint_label
 
 
-
-features = get_feature_cols()
-label = "y_03_109"
-
-train_val_split_day = to_date(20230801)
-
-up, nday, ratio = explain_label(label)
-
-def train_lightgbm():
+def train_lightgbm(features, label, train_start_day, train_val_split_day, val_end_day):
     params = {
         'task': 'train',
         'boosting_type': 'gbdt',
         'objective': 'binary',
         'metric': {"auc", "average_precision"},
-        'num_leaves': 255,
-        "min_data_in_leaf": 23,
+        'num_leaves': 1023,
+        "min_data_in_leaf": 7,
         'learning_rate': 0.05,
-        'feature_fraction': 0.999,
+        'feature_fraction': 0.9,
         'bagging_fraction': 0.9,
         'bagging_freq': 2,
         'verbose': 1,
         "train_metric": True,
-        "max_depth": 15,
+        "max_depth": 21,
         "num_iterations": 5000,
         "early_stopping_rounds": 100,
         "device": 'gpu',
@@ -61,11 +54,9 @@ def train_lightgbm():
             continue
         path = os.path.join(DAILY_DIR, file)
         df = joblib.load(path)
-        label_vis_day = get_offset_trade_day(get_last_trade_day(update=False), -nday)
-        label_vis_day = to_date(label_vis_day)
-        df = df[:label_vis_day]
-        train_dataset.append(df[:train_val_split_day])
-        val_dataset.append(df[train_val_split_day:])
+
+        train_dataset.append(df[train_start_day:train_val_split_day])
+        val_dataset.append(df[train_val_split_day:val_end_day])
         
     train_dataset = pd.concat(train_dataset, axis=0)
     val_dataset = pd.concat(val_dataset, axis=0)
@@ -80,10 +71,22 @@ def train_lightgbm():
                     num_boost_round=5000,
                     valid_sets=(lgb_train, lgb_eval),
                     )
+    gbm.save_model("{}_{}_{}.txt".format(label, train_val_split_day, val_end_day))
+    # joblib.dump(gbm, "{}_{}_{}.pkl".format(label, train_val_split_day, val_end_day))
     
     
 if __name__ == "__main__":
     # fetch_daily()
     # inject_features()
     # inject_labels()
-    train_lightgbm()
+    # injecto_joint_label()
+    
+    features = get_feature_cols()
+    label = "y_2_d_high_rank_30%"
+    anchor = 20230801
+    
+    train_val_split_day = to_date(anchor)
+    train_start_day = to_date(get_offset_trade_day(anchor, -5))
+    val_end_day = to_date(get_offset_trade_day(anchor, 5))
+    
+    train_lightgbm(features, label, train_start_day, train_val_split_day, val_end_day)
