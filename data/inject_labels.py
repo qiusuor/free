@@ -11,9 +11,6 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
-
-
-
 def inject_one(path):
     df = joblib.load(path)
     df = df[df["volume"] != 0]
@@ -31,11 +28,14 @@ def inject_one(path):
     for label in labels:
         up, nday, ratio = explain_label(label=label)
         df[label] = get_labels(open, close, high, low, price, turn, hold_day=nday, expect_gain=ratio, tolerent_pay=ratio, up=up)
-    future_n_day_high_low = [1, 3, 5, 10, 22]
+        
+    future_n_day_high_low = [1, 2, 3, 5, 10, 22]
     
     for n_day in future_n_day_high_low:
         df["y_next_{}_d_high".format(n_day)] = df["high"].rolling(n_day).max().shift(-n_day)
+        df["y_next_{}_d_high_ratio".format(n_day)] = df["y_next_{}_d_high".format(n_day)] / df["close"]
         df["y_next_{}_d_low".format(n_day)] = df["low"].rolling(n_day).min().shift(-n_day)
+        df["y_next_{}_d_low_ratio".format(n_day)] = df["y_next_{}_d_low".format(n_day)] / df["close"]
         df["y_next_{}_d_close".format(n_day)] = df["close"].rolling(n_day).min().shift(-n_day)
         df["y_next_{}_d_open".format(n_day)] = df["open"].rolling(n_day).min().shift(-n_day)
         
