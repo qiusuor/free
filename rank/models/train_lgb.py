@@ -35,7 +35,7 @@ def topk_shot(label, k=10):
 
 
 def train_lightgbm(argv):
-    features, label, train_start_day, train_end_day, val_start_day, val_end_day, pred_start_day, pred_end_day = argv
+    features, label, train_start_day, train_end_day, val_start_day, val_end_day = argv
     save_dir = "{}/{}/{}".format(EXP_DIR, label, to_int_date(val_start_day))
     if os.path.exists(save_dir):
         shutil.rmtree(os.path.dirname(save_dir))
@@ -44,8 +44,8 @@ def train_lightgbm(argv):
         'task': 'train',
         'boosting_type': 'gbdt',
         'objective': 'binary',
-        'metric': {"auc", "average_precision"},
-        'num_leaves': 63,
+        'metric': {"average_precision"},
+        'num_leaves': 7,
         "min_data_in_leaf": 7,
         'learning_rate': 0.05,
         'feature_fraction': 0.8,
@@ -53,9 +53,9 @@ def train_lightgbm(argv):
         'bagging_freq': 2,
         'verbose': 1,
         "train_metric": True,
-        "max_depth": 9,
-        "num_iterations": 1000,
-        "early_stopping_rounds": 100,
+        "max_depth": 5,
+        "num_iterations": 3,
+        # "early_stopping_rounds": 100,
         "device": 'gpu',
         "gpu_platform_id": 0,
         "gpu_device_id": 0,
@@ -65,7 +65,7 @@ def train_lightgbm(argv):
 
     train_dataset = []
     val_dataset = []
-    pred_dataset = []
+    # pred_dataset = []
     for file in tqdm(os.listdir(DAILY_DIR)):
         code = file.split("_")[0]
         if not_concern(code) or is_index(code):
@@ -79,15 +79,16 @@ def train_lightgbm(argv):
 
         train_dataset.append(df[train_start_day:train_end_day])
         val_dataset.append(df[val_start_day:val_end_day])
-        pred_dataset.append(df[pred_start_day:pred_end_day])
+        # pred_dataset.append(df[pred_start_day:])
+        # pred_dataset.append(df[pred_start_day:pred_end_day])
 
     train_dataset = pd.concat(train_dataset, axis=0)
     val_dataset = pd.concat(val_dataset, axis=0)
-    pred_dataset = pd.concat(pred_dataset, axis=0)
+    # pred_dataset = pd.concat(pred_dataset, axis=0)
 
     train_x, train_y = train_dataset[features], train_dataset[label]
     val_x, val_y = val_dataset[features], val_dataset[label]
-    pred_x, pred_y = pred_dataset[features], pred_dataset[label]
+    # pred_x, pred_y = pred_dataset[features], pred_dataset[label]
     lgb_train = lgb.Dataset(train_x, train_y)
     lgb_eval = lgb.Dataset(val_x, val_y, reference=lgb_train)
 
@@ -95,17 +96,20 @@ def train_lightgbm(argv):
                     lgb_train,
                     num_boost_round=5000,
                     valid_sets=(lgb_train, lgb_eval),
-                    categorical_feature=["industry"])
+                    # valid_sets=(lgb_eval),
+                    categorical_feature=["industry"]
+                    )
 
     gbm.save_model(os.path.join(save_dir, "model.txt"))
     joblib.dump(gbm, os.path.join(save_dir, "model.pkl"))
+    epoch = gbm.best_iteration
 
-    val_y_pred = gbm.predict(val_x, num_iteration=gbm.best_iteration)
-    pred_y_pred = gbm.predict(pred_x, num_iteration=gbm.best_iteration)
-    # train_y_pred = gbm.predict(train_x, num_iteration=gbm.best_iteration)
-    # train_dataset["pred"] = train_y_pred
-    # train_dataset[["pred", "code", "price",
-    #                label]].to_csv(os.path.join(save_dir, "train_set.csv"))
+    val_y_pred = gbm.predict(val_x, num_iteration=epoch)
+    # pred_y_pred = gbm.predict(pred_x, num_iteration=gbm.best_iteration)
+    train_y_pred = gbm.predict(train_x, num_iteration=epoch)
+    train_dataset["pred"] = train_y_pred
+    train_dataset.sort_values(by="pred", inplace=True, ascending=False)
+    train_dataset[["code", "pred", label, "y_next_2_d_high_ratio", "y_next_2_d_low_ratio", "price"]].to_csv(os.path.join(save_dir, "train_set_epoch_{}.csv".format(epoch)))
     fpr, tpr, thresh = roc_curve(val_y, val_y_pred)
     roc_auc = auc(fpr, tpr)
     plt.clf()
@@ -126,9 +130,9 @@ def train_lightgbm(argv):
     # make_dir(val_dir)
     # make_dir(pred_dir)
     val_dataset["pred"] = val_y_pred
-    pred_dataset["pred"] = pred_y_pred
-    res_val = val_dataset[["pred", "code", "price", label]]
-    res_pred = pred_dataset[["pred", "code", "price", label]]
+    # pred_dataset["pred"] = pred_y_pred
+    res_val = val_dataset[["code", "pred", label, "y_next_2_d_high_ratio", "y_next_2_d_low_ratio", "price"]]
+    # res_pred = pred_dataset[["pred", "code", "price", label]]
     for i, res_i in res_val.groupby("date"):
         res_i.sort_values(by="pred", inplace=True, ascending=False)
         top3_miss, top3_shot = topk_shot(res_i[label], k=3)
@@ -139,16 +143,16 @@ def train_lightgbm(argv):
         ap = average_precision_score(res_i[label], res_i.pred)
         save_file = f"{to_int_date(i)}_T3_{top3_miss}_T5_{top5_miss}_T10_{top10_miss}_AP_{ap}_AUC_{auc_score}.csv"
         res_i.to_csv(os.path.join(save_dir, save_file))
-    for i, res_i in res_pred.groupby("date"):
-        res_i.sort_values(by="pred", inplace=True, ascending=False)
-        top3_miss, top3_shot = topk_shot(res_i[label], k=3)
-        top5_miss, top5_shot = topk_shot(res_i[label], k=5)
-        top10_miss, top10_shot = topk_shot(res_i[label], k=10)
-        fpr, tpr, thresh = roc_curve(res_i[label], res_i.pred)
-        auc_score = auc(fpr, tpr)
-        ap = average_precision_score(res_i[label], res_i.pred)
-        save_file = f"{to_int_date(i)}_T3_{top3_miss}_T5_{top5_miss}_T10_{top10_miss}_AP_{ap}_AUC_{auc_score}.csv"
-        res_i.to_csv(os.path.join(save_dir, save_file))
+    # for i, res_i in res_pred.groupby("date"):
+    #     res_i.sort_values(by="pred", inplace=True, ascending=False)
+    #     top3_miss, top3_shot = topk_shot(res_i[label], k=3)
+    #     top5_miss, top5_shot = topk_shot(res_i[label], k=5)
+    #     top10_miss, top10_shot = topk_shot(res_i[label], k=10)
+    #     fpr, tpr, thresh = roc_curve(res_i[label], res_i.pred)
+    #     auc_score = auc(fpr, tpr)
+    #     ap = average_precision_score(res_i[label], res_i.pred)
+    #     save_file = f"{to_int_date(i)}_T3_{top3_miss}_T5_{top5_miss}_T10_{top10_miss}_AP_{ap}_AUC_{auc_score}.csv"
+    #     res_i.to_csv(os.path.join(pred_dir, save_file))
 
 
 def prepare_data():
@@ -162,21 +166,20 @@ def prepare_data():
 if __name__ == "__main__":
     # prepare_data()
 
-    for train_val_split_day in get_trade_days()[-120:-2]:
+    for train_val_split_day in get_trade_days()[-10:-2]:
         features = get_feature_cols()
-        # label = "y_2_d_high_rank_20%"
-        label = "y_02_101"
-
-        # train_val_split_day = 20230821
+        # label = "y_2_d_high_rank_30%"
+        label = "y_02_103"
+        # print(train_val_split_day)
+        # train_val_split_day = 20230822
         train_start_day = to_date(get_offset_trade_day(train_val_split_day,
-                                                       -5))
-        train_end_day = to_date(get_offset_trade_day(train_val_split_day, -1))
-        val_start_day = to_date(train_val_split_day)
-        val_end_day = to_date(get_offset_trade_day(train_val_split_day, 0))
-        pred_start_day = to_date(get_offset_trade_day(train_val_split_day, 1))
-        pred_end_day = to_date(get_offset_trade_day(train_val_split_day, 2))
-
+                                                       -1))
+        train_end_day = to_date(get_offset_trade_day(train_val_split_day, 0))
+        val_start_day = to_date(get_offset_trade_day(train_val_split_day, 1))
+        val_end_day = to_date(get_offset_trade_day(train_val_split_day, 2))
+        # pred_start_day = to_date(get_offset_trade_day(train_val_split_day, 1))
+        # pred_end_day = to_date(get_offset_trade_day(train_val_split_day, 2))
         train_lightgbm([
             features, label, train_start_day, train_end_day, val_start_day,
-            val_end_day, pred_start_day, pred_end_day
+            val_end_day
         ])
