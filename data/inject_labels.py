@@ -29,13 +29,13 @@ def inject_one(path):
         up, nday, ratio = explain_label(label=label)
         df[label] = get_labels(open, close, high, low, price, turn, hold_day=nday, expect_gain=ratio, tolerent_pay=ratio, up=up)
         
-    future_n_day_high_low = [1, 2, 3, 5, 10, 22]
+    future_n_day_high_low = [2, 3, 5, 10, 22]
     
     for n_day in future_n_day_high_low:
-        df["y_next_{}_d_high".format(n_day)] = df["high"].rolling(n_day).max().shift(-n_day)
-        df["y_next_{}_d_high_ratio".format(n_day)] = df["y_next_{}_d_high".format(n_day)] / df["close"]
-        df["y_next_{}_d_low".format(n_day)] = df["low"].rolling(n_day).min().shift(-n_day)
-        df["y_next_{}_d_low_ratio".format(n_day)] = df["y_next_{}_d_low".format(n_day)] / df["close"]
+        df["y_next_{}_d_high".format(n_day)] = df["high"].rolling(n_day).apply(lambda x:max(x[1:])).shift(-n_day)
+        df["y_next_{}_d_high_ratio".format(n_day)] = df["y_next_{}_d_high".format(n_day)] / df["close"].shift(-1)
+        df["y_next_{}_d_low".format(n_day)] = df["low"].rolling(n_day).apply(lambda x:min(x[1:])).shift(-n_day)
+        df["y_next_{}_d_low_ratio".format(n_day)] = df["y_next_{}_d_low".format(n_day)] / df["close"].shift(-1)
         
     df.to_csv(path.replace(".pkl", ".csv"))
     dump(df, path)

@@ -18,9 +18,20 @@ from data.fetch import fetch_daily
 from data.inject_features import inject_features
 from data.inject_labels import inject_labels
 from data.inject_joint_label import injecto_joint_label
+from matplotlib import pyplot as plt
 
+def topk_shot(res, k=10):
+    gt_labels=res.label.values[:k]
+    shot_cnt = 0
+    miss_cnt = 0
+    for label in gt_labels:
+        if label:
+            shot_cnt += 1
+        else:
+            miss_cnt += 1
+    return miss_cnt, shot_cnt
 
-def train_lightgbm(features, label, train_start_day, train_val_split_day, val_end_day):
+def train_lightgbm(features, label, train_start_day, train_end_day, val_start_day, val_end_day):
     params = {
         'task': 'train',
         'boosting_type': 'gbdt',
@@ -41,7 +52,7 @@ def train_lightgbm(features, label, train_start_day, train_val_split_day, val_en
         "gpu_platform_id": 0,
         "gpu_device_id": 0,
         "min_gain_to_split": 0,
-        "num_threads": 256,
+        "num_threads": 16,
     }
     
     train_dataset = []
@@ -55,8 +66,8 @@ def train_lightgbm(features, label, train_start_day, train_val_split_day, val_en
         path = os.path.join(DAILY_DIR, file)
         df = joblib.load(path)
 
-        train_dataset.append(df[train_start_day:train_val_split_day])
-        val_dataset.append(df[train_val_split_day:val_end_day])
+        train_dataset.append(df[train_start_day:train_end_day])
+        val_dataset.append(df[val_start_day:val_end_day])
         
     train_dataset = pd.concat(train_dataset, axis=0)
     val_dataset = pd.concat(val_dataset, axis=0)
@@ -71,22 +82,56 @@ def train_lightgbm(features, label, train_start_day, train_val_split_day, val_en
                     num_boost_round=5000,
                     valid_sets=(lgb_train, lgb_eval),
                     )
-    gbm.save_model("{}_{}_{}.txt".format(label, train_val_split_day, val_end_day))
-    # joblib.dump(gbm, "{}_{}_{}.pkl".format(label, train_val_split_day, val_end_day))
+    save_name = "{}_{}_{}.txt".format(label, to_int_date(val_start_day), to_int_date(val_end_day))
+    gbm.save_model(save_name)
+    joblib.dump(gbm, save_name.replace("txt", "pkl"))
+    
+    
+    val_y_pred = gbm.predict(val_x, num_iteration=gbm.best_iteration)
+    train_y_pred = gbm.predict(train_x, num_iteration=gbm.best_iteration)
+    train_dataset["pred"] = train_y_pred
+    train_dataset[["pred", "code", "price", label]].to_csv("train_set.csv")
+    fpr,tpr,thresh=roc_curve(val_y, val_y_pred)
+    roc_auc = auc(fpr, tpr)
+    plt.plot(fpr, tpr, 'k--', label='ROC (area = {0:.2f})'.format(roc_auc), lw=2)
+    plt.xlim([-0.05, 1.05])
+    plt.ylim([-0.05, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('ROC Curve')
+    plt.legend(loc="lower right")
+    plt.savefig(save_name.replace("txt", "png"))
+    
+    
+    val_dataset["pred"] = val_y_pred
+    res = val_dataset[["pred", "code", "price", label]]
+    for i, res_i in res.groupby("date"):
+        res_i.sort_values(by="pred", inplace=True, ascending=False)
+        res_i.to_csv("{}.csv".format(to_int_date(i)))
+    
+    
+
     
     
 if __name__ == "__main__":
     # fetch_daily()
+    import time
+    t1 = time.time()
     # inject_features()
+    t2 = time.time()
+    print((t2-t1)/3600)
     # inject_labels()
     # injecto_joint_label()
     
     features = get_feature_cols()
     label = "y_2_d_high_rank_30%"
-    anchor = 20230801
     
-    train_val_split_day = to_date(anchor)
-    train_start_day = to_date(get_offset_trade_day(anchor, -5))
-    val_end_day = to_date(get_offset_trade_day(anchor, 5))
+    train_val_split_day = 20230818
+    train_start_day = to_date(get_offset_trade_day(train_val_split_day, -7))
+    train_end_day = to_date(get_offset_trade_day(train_val_split_day, -1))
+    val_start_day = to_date(train_val_split_day)
+    val_end_day = to_date(get_offset_trade_day(train_val_split_day, 2))
     
-    train_lightgbm(features, label, train_start_day, train_val_split_day, val_end_day)
+    train_lightgbm(features, label, train_start_day, train_end_day, val_start_day, val_end_day)
+    t3 = time.time()
+    print((t3-t2)/3600)
