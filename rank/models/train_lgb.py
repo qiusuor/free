@@ -82,7 +82,10 @@ def train_lightgbm(features, label, train_start_day, train_end_day, val_start_da
                     num_boost_round=5000,
                     valid_sets=(lgb_train, lgb_eval),
                     )
-    save_name = "{}_{}_{}.txt".format(label, to_int_date(val_start_day), to_int_date(val_end_day))
+    
+    save_name = "{}/{}/{}_{}_{}.txt".format(EXP_DIR, label, label, to_int_date(val_start_day), to_int_date(val_end_day))
+    make_dir(save_name)
+    
     gbm.save_model(save_name)
     joblib.dump(gbm, save_name.replace("txt", "pkl"))
     
@@ -90,7 +93,7 @@ def train_lightgbm(features, label, train_start_day, train_end_day, val_start_da
     val_y_pred = gbm.predict(val_x, num_iteration=gbm.best_iteration)
     train_y_pred = gbm.predict(train_x, num_iteration=gbm.best_iteration)
     train_dataset["pred"] = train_y_pred
-    train_dataset[["pred", "code", "price", label]].to_csv("train_set.csv")
+    train_dataset[["pred", "code", "price", label]].to_csv("{}/{}/train_set.csv".format(EXP_DIR, label))
     fpr,tpr,thresh=roc_curve(val_y, val_y_pred)
     roc_auc = auc(fpr, tpr)
     plt.plot(fpr, tpr, 'k--', label='ROC (area = {0:.2f})'.format(roc_auc), lw=2)
@@ -107,7 +110,7 @@ def train_lightgbm(features, label, train_start_day, train_end_day, val_start_da
     res = val_dataset[["pred", "code", "price", label]]
     for i, res_i in res.groupby("date"):
         res_i.sort_values(by="pred", inplace=True, ascending=False)
-        res_i.to_csv("{}.csv".format(to_int_date(i)))
+        res_i.to_csv("{}/{}/{}.csv".format(EXP_DIR, label, to_int_date(i)))
     
     
 
@@ -117,22 +120,23 @@ if __name__ == "__main__":
     # fetch_daily()
     
     import time
-    t1 = time.time()
-    inject_labels()
-    injecto_joint_label()
-    inject_features()
+    # t1 = time.time()
+    # inject_labels()
+    # injecto_joint_label()
+    # inject_features()
+    # print((t2-t1)/3600)
+    
     t2 = time.time()
-    print((t2-t1)/3600)
 
     
     features = get_feature_cols()
     label = "y_2_d_high_rank_30%"
     
     train_val_split_day = 20230818
-    train_start_day = to_date(get_offset_trade_day(train_val_split_day, -7))
+    train_start_day = to_date(get_offset_trade_day(train_val_split_day, -3))
     train_end_day = to_date(get_offset_trade_day(train_val_split_day, -1))
     val_start_day = to_date(train_val_split_day)
-    val_end_day = to_date(get_offset_trade_day(train_val_split_day, 2))
+    val_end_day = to_date(get_offset_trade_day(train_val_split_day, 0))
     
     train_lightgbm(features, label, train_start_day, train_end_day, val_start_day, val_end_day)
     t3 = time.time()

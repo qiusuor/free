@@ -19,7 +19,10 @@ def addGaussianNoise(x, std=0.05):
     return x + torch.normal(x, std)
 
 def make_dir(file_name):
-    dir_name = os.path.dirname(file_name)
+    if "." in os.path.basename(file_name):
+        dir_name = os.path.dirname(file_name)
+    else:
+        dir_name = file_name
     if not os.path.exists(dir_name):
         os.makedirs(dir_name)
         
