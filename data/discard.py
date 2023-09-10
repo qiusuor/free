@@ -15,7 +15,7 @@ def discard_one(path):
     df = joblib.load(path)
     df = df[df["volume"] != 0]
     
-    keep_columns = [c for c in df.columns if not c.startswith("y") and not c.startswith("dy")]
+    keep_columns = "code,open,high,low,close,preclose,volume,amount,adjustflag,turn,tradestatus,pctChg,peTTM,pbMRQ,psTTM,pcfNcfTTM,isST,factor,price".split(",")
     df = df[keep_columns]
     df.to_csv(path.replace(".pkl", ".csv"))
     dump(df, path)
