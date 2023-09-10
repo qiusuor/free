@@ -115,13 +115,15 @@ def train_lightgbm(features, label, train_start_day, train_end_day, val_start_da
     
 if __name__ == "__main__":
     # fetch_daily()
+    
     import time
     t1 = time.time()
-    # inject_features()
+    inject_labels()
+    injecto_joint_label()
+    inject_features()
     t2 = time.time()
     print((t2-t1)/3600)
-    # inject_labels()
-    # injecto_joint_label()
+
     
     features = get_feature_cols()
     label = "y_2_d_high_rank_30%"
