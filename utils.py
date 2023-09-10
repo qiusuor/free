@@ -12,8 +12,6 @@ import pyecharts.options as opts
 from pyecharts.charts import Line
 import datetime
 import torch
-from tqdm import tqdm
-
 
 def addGaussianNoise(x, std=0.05):
     return x + torch.normal(x, std)
@@ -87,8 +85,10 @@ def get_last_trade_day(login=False, update=True):
     if update:
         get_trade_days(login=login)
     trade_days = joblib.load(TRADE_DAYS_PKL)
-    last_trade_day = trade_days[-1]
-    return last_trade_day
+    localtime = datetime.datetime.now()
+    if localtime.hour < 18 and to_int_date(localtime) in trade_days:
+        return trade_days[-2]
+    return trade_days[-1]
 
 
 def fetch_stock_codes():
