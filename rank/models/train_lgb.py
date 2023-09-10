@@ -35,6 +35,9 @@ def topk_shot(label, k=10):
 
 def train_lightgbm(features, label, train_start_day, train_end_day,
                    val_start_day, val_end_day):
+    save_dir = "{}/{}/{}".format(EXP_DIR, label, to_int_date(val_start_day))
+    shutil.rmtree(os.path.dirname(save_dir))
+    make_dir(save_dir)
     params = {
         'task': 'train',
         'boosting_type': 'gbdt',
@@ -87,20 +90,15 @@ def train_lightgbm(features, label, train_start_day, train_end_day,
         valid_sets=(lgb_train, lgb_eval),
     )
 
-    save_name = "{}/{}/{}_{}_{}.txt".format(EXP_DIR, label, label,
-                                            to_int_date(val_start_day),
-                                            to_int_date(val_end_day))
-    shutil.rmtree(os.path.dirname(save_name))
-    make_dir(save_name)
 
-    gbm.save_model(save_name)
-    joblib.dump(gbm, save_name.replace("txt", "pkl"))
+    gbm.save_model(os.path.join(save_dir, "model.txt"))
+    joblib.dump(gbm, os.path.join(save_dir, "model.pkl"))
 
     val_y_pred = gbm.predict(val_x, num_iteration=gbm.best_iteration)
     train_y_pred = gbm.predict(train_x, num_iteration=gbm.best_iteration)
     train_dataset["pred"] = train_y_pred
     train_dataset[["pred", "code", "price",
-                   label]].to_csv("{}/{}/train_set.csv".format(EXP_DIR, label))
+                   label]].to_csv(os.path.join(save_dir, "train_set.cs v"))
     fpr, tpr, thresh = roc_curve(val_y, val_y_pred)
     roc_auc = auc(fpr, tpr)
     plt.plot(fpr,
@@ -114,7 +112,7 @@ def train_lightgbm(features, label, train_start_day, train_end_day,
     plt.ylabel('True Positive Rate')
     plt.title('ROC Curve')
     plt.legend(loc="lower right")
-    plt.savefig(save_name.replace("txt", "png"))
+    plt.savefig(os.path.join(save_dir, "roc_curve.png"))
 
     val_dataset["pred"] = val_y_pred
     res = val_dataset[["pred", "code", "price", label]]
@@ -126,9 +124,8 @@ def train_lightgbm(features, label, train_start_day, train_end_day,
         fpr, tpr, thresh = roc_curve(res_i[label], res_i.pred)
         auc_score = auc(fpr, tpr)
         ap = average_precision_score(res_i[label], res_i.pred)
-        des = f"T3_{top3_miss}_T5_{top5_miss}_T10_{top10_miss}_AP_{ap}_AUC_{auc_score}"
-        res_i.to_csv("{}/{}/{}.csv".format(EXP_DIR, label,
-                                           des + str(to_int_date(i))))
+        save_file = f"{to_int_date(i)}_T3_{top3_miss}_T5_{top5_miss}_T10_{top10_miss}_AP_{ap}_AUC_{auc_score}.csv"
+        res_i.to_csv(os.path.join(save_dir, save_file))
 
 
 if __name__ == "__main__":
@@ -146,7 +143,7 @@ if __name__ == "__main__":
     features = get_feature_cols()
     label = "y_2_d_high_rank_30%"
 
-    train_val_split_day = 20230818
+    train_val_split_day = 20230821
     train_start_day = to_date(get_offset_trade_day(train_val_split_day, -5))
     train_end_day = to_date(get_offset_trade_day(train_val_split_day, -1))
     val_start_day = to_date(train_val_split_day)
