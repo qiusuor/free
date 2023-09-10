@@ -36,7 +36,8 @@ def topk_shot(label, k=10):
 def train_lightgbm(features, label, train_start_day, train_end_day,
                    val_start_day, val_end_day):
     save_dir = "{}/{}/{}".format(EXP_DIR, label, to_int_date(val_start_day))
-    shutil.rmtree(os.path.dirname(save_dir))
+    if os.path.exists(save_dir):
+        shutil.rmtree(os.path.dirname(save_dir))
     make_dir(save_dir)
     params = {
         'task': 'train',
