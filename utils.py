@@ -186,7 +186,7 @@ def get_labels(open, close, high, low, price, turn, hold_day=2, expect_gain=1.07
             else:
                 labels.append(get_down_label(i, open, close, high, low, price, turn, hold_day, tolerent_pay))
         else:
-            labels.append(-1)
+            labels.append(0)
     return labels
         
 def explain_label(label):

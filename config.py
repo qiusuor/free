@@ -45,6 +45,7 @@ second_wave_feature_len = 80
 
 
 labels = [
+    "y_02_101",
     "y_02_103",
     "y_02_105",
     "y_02_107",
