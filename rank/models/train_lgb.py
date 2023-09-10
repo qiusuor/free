@@ -89,6 +89,7 @@ def train_lightgbm(features, label, train_start_day, train_end_day,
         lgb_train,
         num_boost_round=5000,
         valid_sets=(lgb_train, lgb_eval),
+        categorical_feature=["industry"]
     )
 
 
@@ -128,18 +129,14 @@ def train_lightgbm(features, label, train_start_day, train_end_day,
         save_file = f"{to_int_date(i)}_T3_{top3_miss}_T5_{top5_miss}_T10_{top10_miss}_AP_{ap}_AUC_{auc_score}.csv"
         res_i.to_csv(os.path.join(save_dir, save_file))
 
+def prepare_data():
+    fetch_daily()
+    inject_labels()
+    injecto_joint_label()
+    inject_features()
 
 if __name__ == "__main__":
-    # fetch_daily()
-
-    import time
-    # t1 = time.time()
-    # inject_labels()
-    # injecto_joint_label()
-    # inject_features()
-    # print((t2-t1)/60)
-
-    t2 = time.time()
+    # prepare_data()
 
     features = get_feature_cols()
     label = "y_2_d_high_rank_30%"
@@ -152,5 +149,4 @@ if __name__ == "__main__":
 
     train_lightgbm(features, label, train_start_day, train_end_day,
                    val_start_day, val_end_day)
-    t3 = time.time()
-    print((t3 - t2) / 60)
+

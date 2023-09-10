@@ -219,3 +219,21 @@ def get_feature_cols():
         feature_cols = [col for col in df.columns if col not in no_feature_cols]
         return feature_cols
     
+def get_industry_info():
+    lg = bs.login()
+
+    rs = bs.query_stock_industry()
+
+    industry_list = []
+    while (rs.error_code == '0') & rs.next():
+        industry_list.append(rs.get_row_data())
+    result = pd.DataFrame(industry_list, columns=rs.fields)
+    ind = dict()
+    ind_mapping = dict()
+    for updateDate,code,code_name,industry,industryClassification in result.values:
+        if industry not in ind_mapping:
+            ind_mapping[industry] = len(ind_mapping)
+        ind[code] = ind_mapping[industry]
+    joblib.dump(ind, INDUSTRY_INFO)
+
+    

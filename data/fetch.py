@@ -148,7 +148,7 @@ def fetch(adjustflag='2', freqs=['m', 'w', 'd', '60', '30', '15', '5'], code_lis
             if not_concern(code): continue
             code_list.append([code, False, freq, adjustflag])
     # fetch_one(*code_list[0])
-    pool = Pool(128)
+    pool = Pool(32)
     pool.imap_unordered(fetch_one_wrapper, code_list)
     pool.close()
     pool.join()

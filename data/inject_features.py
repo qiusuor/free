@@ -8,6 +8,7 @@ from utils import *
 from tqdm import tqdm
 from joblib import dump
 import warnings
+from data.inject_industry import inject_industry
 
 warnings.filterwarnings("ignore")
 
@@ -216,6 +217,8 @@ def inject_one(path):
     
 
 def inject_features():
+    get_industry_info()
+    inject_industry()
     pool = Pool(THREAD_NUM)
     paths = []
     for file in tqdm(os.listdir(DAILY_DIR)):
