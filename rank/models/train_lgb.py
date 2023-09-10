@@ -21,6 +21,7 @@ from data.inject_joint_label import injecto_joint_label
 from matplotlib import pyplot as plt
 import shutil
 
+
 def topk_shot(label, k=10):
     gt_labels = label.values[:k]
     shot_cnt = 0
@@ -33,8 +34,8 @@ def topk_shot(label, k=10):
     return miss_cnt, shot_cnt
 
 
-def train_lightgbm(features, label, train_start_day, train_end_day,
-                   val_start_day, val_end_day, pred_start_day, pred_end_day):
+def train_lightgbm(argv):
+    features, label, train_start_day, train_end_day, val_start_day, val_end_day, pred_start_day, pred_end_day = argv
     save_dir = "{}/{}/{}".format(EXP_DIR, label, to_int_date(val_start_day))
     if os.path.exists(save_dir):
         shutil.rmtree(os.path.dirname(save_dir))
@@ -59,7 +60,7 @@ def train_lightgbm(features, label, train_start_day, train_end_day,
         "gpu_platform_id": 0,
         "gpu_device_id": 0,
         "min_gain_to_split": 0,
-        "num_threads": THREAD_NUM,
+        "num_threads": 16,
     }
 
     train_dataset = []
@@ -90,14 +91,11 @@ def train_lightgbm(features, label, train_start_day, train_end_day,
     lgb_train = lgb.Dataset(train_x, train_y)
     lgb_eval = lgb.Dataset(val_x, val_y, reference=lgb_train)
 
-    gbm = lgb.train(
-        params,
-        lgb_train,
-        num_boost_round=5000,
-        valid_sets=(lgb_train, lgb_eval),
-        categorical_feature=["industry"]
-    )
-
+    gbm = lgb.train(params,
+                    lgb_train,
+                    num_boost_round=5000,
+                    valid_sets=(lgb_train, lgb_eval),
+                    categorical_feature=["industry"])
 
     gbm.save_model(os.path.join(save_dir, "model.txt"))
     joblib.dump(gbm, os.path.join(save_dir, "model.pkl"))
@@ -152,29 +150,33 @@ def train_lightgbm(features, label, train_start_day, train_end_day,
         save_file = f"{to_int_date(i)}_T3_{top3_miss}_T5_{top5_miss}_T10_{top10_miss}_AP_{ap}_AUC_{auc_score}.csv"
         res_i.to_csv(os.path.join(save_dir, save_file))
 
+
 def prepare_data():
     # fetch_daily()
     # inject_features()
-    
+
     inject_labels()
     injecto_joint_label()
+
 
 if __name__ == "__main__":
     # prepare_data()
 
-    for train_val_split_day in get_trade_days()[-30:-2]:
+    for train_val_split_day in get_trade_days()[-120:-2]:
         features = get_feature_cols()
         # label = "y_2_d_high_rank_20%"
         label = "y_02_101"
 
         # train_val_split_day = 20230821
-        train_start_day = to_date(get_offset_trade_day(train_val_split_day, -5))
+        train_start_day = to_date(get_offset_trade_day(train_val_split_day,
+                                                       -5))
         train_end_day = to_date(get_offset_trade_day(train_val_split_day, -1))
         val_start_day = to_date(train_val_split_day)
         val_end_day = to_date(get_offset_trade_day(train_val_split_day, 0))
         pred_start_day = to_date(get_offset_trade_day(train_val_split_day, 1))
         pred_end_day = to_date(get_offset_trade_day(train_val_split_day, 2))
 
-        train_lightgbm(features, label, train_start_day, train_end_day,
-                    val_start_day, val_end_day, pred_start_day, pred_end_day)
-
+        train_lightgbm([
+            features, label, train_start_day, train_end_day, val_start_day,
+            val_end_day, pred_start_day, pred_end_day
+        ])
