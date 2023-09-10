@@ -40,7 +40,7 @@ def train_lightgbm(features, label, train_start_day, train_end_day,
         'boosting_type': 'gbdt',
         'objective': 'binary',
         'metric': {"auc", "average_precision"},
-        'num_leaves': 1023,
+        'num_leaves': 15,
         "min_data_in_leaf": 7,
         'learning_rate': 0.05,
         'feature_fraction': 0.9,
@@ -48,7 +48,7 @@ def train_lightgbm(features, label, train_start_day, train_end_day,
         'bagging_freq': 2,
         'verbose': 1,
         "train_metric": True,
-        "max_depth": 21,
+        "max_depth": 5,
         "num_iterations": 5000,
         "early_stopping_rounds": 100,
         "device": 'gpu',
@@ -147,7 +147,7 @@ if __name__ == "__main__":
     label = "y_2_d_high_rank_30%"
 
     train_val_split_day = 20230818
-    train_start_day = to_date(get_offset_trade_day(train_val_split_day, -30))
+    train_start_day = to_date(get_offset_trade_day(train_val_split_day, -5))
     train_end_day = to_date(get_offset_trade_day(train_val_split_day, -1))
     val_start_day = to_date(train_val_split_day)
     val_end_day = to_date(get_offset_trade_day(train_val_split_day, 0))
