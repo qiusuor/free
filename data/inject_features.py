@@ -226,7 +226,6 @@ def inject_one(path):
     inject_price_turn_features(df)
     inject_alpha_features(df)
     inject_industry_and_name(df)
-    inject_shibor(df)
     
 
     df.to_csv(path.replace(".pkl", ".csv"))
@@ -247,7 +246,6 @@ def inject_features():
         path = os.path.join(DAILY_DIR, file)
         paths.append(path)
     # inject_one(paths[0])
-    # print(paths[0])
     pool.imap_unordered(inject_one, paths)
     pool.close()
     pool.join()

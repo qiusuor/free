@@ -1,6 +1,6 @@
 from utils import *
 
-get_industry_info()
+# get_industry_info()
 
 # get_shibor()
 # get_profit("sh.600533", False)

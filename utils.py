@@ -217,7 +217,7 @@ def get_feature_cols():
             continue
         path = os.path.join(DAILY_DIR, file)
         df = joblib.load(path)
-        no_feature_cols = set(["code", "adjustflag", "tradestatus", "code_name"] + [col for col in df.columns if col.startswith("y") or col.startswith("dy")])
+        no_feature_cols = set(["code", "adjustflag", "tradestatus", "code_name", "shiborON", "shibor1W", "shibor2W", "shibor3M", "shibor9M", "shibor1Y"] + [col for col in df.columns if col.startswith("y") or col.startswith("dy")])
         feature_cols = [col for col in df.columns if col not in no_feature_cols]
         return feature_cols
     
@@ -251,6 +251,7 @@ def get_shibor():
     result = pd.DataFrame(data_list, columns=rs.fields)
     result['date'] = pd.to_datetime(result['date'])
     result.set_index("date", inplace=True)
+    result.to_csv(SHIBOR_INFO.replace("pkl", "csv"))
     joblib.dump(result, SHIBOR_INFO)
     bs.logout()
     

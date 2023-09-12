@@ -2,7 +2,6 @@ import os
 from multiprocessing import cpu_count
 
 THREAD_NUM = cpu_count()
-CHECK_DAY = "20990101"
 
 ROOT_DIR = os.path.dirname(os.path.realpath(__file__))
 DATA_DIR = os.path.join(ROOT_DIR, "data/data")
