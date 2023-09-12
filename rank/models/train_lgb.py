@@ -54,13 +54,13 @@ def train_lightgbm(argv):
         'verbose': 1,
         "train_metric": True,
         "max_depth": 5,
-        "num_iterations": 3,
+        "num_iterations": 1000,
         # "early_stopping_rounds": 100,
-        "device": 'gpu',
-        "gpu_platform_id": 0,
-        "gpu_device_id": 0,
+        # "device": 'gpu',
+        # "gpu_platform_id": 0,
+        # "gpu_device_id": 0,
         "min_gain_to_split": 0,
-        "num_threads": 16,
+        "num_threads": 8,
     }
 
     train_dataset = []
@@ -75,6 +75,8 @@ def train_lightgbm(argv):
         path = os.path.join(DAILY_DIR, file)
         df = joblib.load(path)
         if df.isST[-1]:
+            continue
+        if "ST" in df.code_name[-1] or "st" in df.code_name[-1] or "sT" in df.code_name[-1]:
             continue
 
         train_dataset.append(df[train_start_day:train_end_day])
@@ -109,7 +111,8 @@ def train_lightgbm(argv):
     train_y_pred = gbm.predict(train_x, num_iteration=epoch)
     train_dataset["pred"] = train_y_pred
     train_dataset.sort_values(by="pred", inplace=True, ascending=False)
-    train_dataset[["code", "pred", label, "y_next_2_d_high_ratio", "y_next_2_d_low_ratio", "price"]].to_csv(os.path.join(save_dir, "train_set_epoch_{}.csv".format(epoch)))
+    train_ap = average_precision_score(train_dataset[label], train_dataset.pred)
+    train_dataset[["code", "pred", label, "y_next_2_d_high_ratio", "y_next_2_d_low_ratio", "price"]].to_csv(os.path.join(save_dir, "train_set_{}_{}.csv".format(epoch, train_ap)))
     fpr, tpr, thresh = roc_curve(val_y, val_y_pred)
     roc_auc = auc(fpr, tpr)
     plt.clf()
@@ -157,15 +160,16 @@ def train_lightgbm(argv):
 
 def prepare_data():
     # fetch_daily()
-    # inject_features()
+    inject_features()
 
     inject_labels()
     injecto_joint_label()
 
 
 if __name__ == "__main__":
-    # prepare_data()
-
+    prepare_data()
+    # print(get_trade_days())
+    # exit(0)
     for train_val_split_day in get_trade_days()[-10:-2]:
         features = get_feature_cols()
         # label = "y_2_d_high_rank_30%"
@@ -173,12 +177,10 @@ if __name__ == "__main__":
         # print(train_val_split_day)
         # train_val_split_day = 20230822
         train_start_day = to_date(get_offset_trade_day(train_val_split_day,
-                                                       -1))
+                                                       -5))
         train_end_day = to_date(get_offset_trade_day(train_val_split_day, 0))
         val_start_day = to_date(get_offset_trade_day(train_val_split_day, 1))
         val_end_day = to_date(get_offset_trade_day(train_val_split_day, 2))
-        # pred_start_day = to_date(get_offset_trade_day(train_val_split_day, 1))
-        # pred_end_day = to_date(get_offset_trade_day(train_val_split_day, 2))
         train_lightgbm([
             features, label, train_start_day, train_end_day, val_start_day,
             val_end_day

@@ -12,6 +12,8 @@ import pyecharts.options as opts
 from pyecharts.charts import Line
 import datetime
 import torch
+from sklearn import preprocessing
+from collections import defaultdict
 
 def addGaussianNoise(x, std=0.05):
     return x + torch.normal(x, std)
@@ -215,7 +217,7 @@ def get_feature_cols():
             continue
         path = os.path.join(DAILY_DIR, file)
         df = joblib.load(path)
-        no_feature_cols = set(["code", "adjustflag", "tradestatus"] + [col for col in df.columns if col.startswith("y") or col.startswith("dy")])
+        no_feature_cols = set(["code", "adjustflag", "tradestatus", "code_name"] + [col for col in df.columns if col.startswith("y") or col.startswith("dy")])
         feature_cols = [col for col in df.columns if col not in no_feature_cols]
         return feature_cols
     
@@ -228,12 +230,47 @@ def get_industry_info():
     while (rs.error_code == '0') & rs.next():
         industry_list.append(rs.get_row_data())
     result = pd.DataFrame(industry_list, columns=rs.fields)
-    ind = dict()
-    ind_mapping = dict()
+    result["industry"] = preprocessing.LabelEncoder().fit_transform(result["industry"])
+    ind = defaultdict(dict)
     for updateDate,code,code_name,industry,industryClassification in result.values:
-        if industry not in ind_mapping:
-            ind_mapping[industry] = len(ind_mapping)
-        ind[code] = ind_mapping[industry]
+        ind[code]["industry"] = industry
+        ind[code]["code_name"] = code_name
     joblib.dump(ind, INDUSTRY_INFO)
+    result.set_index("code", inplace=True)
+    result.to_csv(INDUSTRY_INFO.replace("pkl", "csv"))
+    bs.logout()
 
     
+def get_shibor():
+    lg = bs.login()
+    rs = bs.query_shibor_data(start_date="2020-01-01")
+
+    data_list = []
+    while (rs.error_code == '0') & rs.next():
+        data_list.append(rs.get_row_data())
+    result = pd.DataFrame(data_list, columns=rs.fields)
+    result['date'] = pd.to_datetime(result['date'])
+    result.set_index("date", inplace=True)
+    joblib.dump(result, SHIBOR_INFO)
+    bs.logout()
+    
+    
+def get_profit(code, login):
+    if not login:
+        lg = bs.login()
+
+    profit_list = []
+    quarter = (datetime.datetime.now().month - 1) // 3
+    year = datetime.datetime.now().year
+    if quarter == 0:
+        quarter = 4
+        year -= 1
+    rs_profit = bs.query_profit_data(code=code, year=year, quarter=quarter)
+    while (rs_profit.error_code == '0') & rs_profit.next():
+        profit_list.append(rs_profit.get_row_data())
+    result_profit = pd.DataFrame(profit_list, columns=rs_profit.fields)
+    # print(result_profit)
+
+    if not login:
+        bs.logout()
+    return result_profit

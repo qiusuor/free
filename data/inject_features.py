@@ -8,7 +8,6 @@ from utils import *
 from tqdm import tqdm
 from joblib import dump
 import warnings
-from data.inject_industry import inject_industry
 
 warnings.filterwarnings("ignore")
 
@@ -200,6 +199,23 @@ def inject_alpha_features(df):
         
     
     return df
+
+def inject_industry_and_name(df):
+    ind = joblib.load(INDUSTRY_INFO)
+    df["industry"] = ind[df.code[-1]]["industry"]
+    df["industry"] = df["industry"].astype('category')
+    df["code_name"] = ind[df.code[-1]]["code_name"]
+    
+    return df
+
+def inject_shibor(df):
+    shibor = joblib.load(SHIBOR_INFO)
+    df["shiborON"] = shibor["shiborON"]
+    df["shibor1W"] = shibor["shibor1W"]
+    df["shibor2W"] = shibor["shibor2W"]
+    df["shibor3M"] = shibor["shibor3M"]
+    df["shibor9M"] = shibor["shibor9M"]
+    df["shibor1Y"] = shibor["shibor1Y"]
     
 def inject_one(path):
     df = joblib.load(path)
@@ -209,16 +225,17 @@ def inject_one(path):
     inject_chip_features(df)
     inject_price_turn_features(df)
     inject_alpha_features(df)
+    inject_industry_and_name(df)
+    inject_shibor(df)
     
+
     df.to_csv(path.replace(".pkl", ".csv"))
-    # print(df)
-    # print(list(df.columns))
     dump(df, path)
     
 
 def inject_features():
     get_industry_info()
-    inject_industry()
+    get_shibor()
     pool = Pool(THREAD_NUM)
     paths = []
     for file in tqdm(os.listdir(DAILY_DIR)):
