@@ -5,19 +5,13 @@ from sklearn.metrics import mean_squared_error, roc_curve, auc, average_precisio
 import numpy as np
 from tqdm import tqdm
 from multiprocessing import Pool
-import multiprocessing
 from joblib import load, dump
 import _pickle as cPickle
 from multiprocessing import Process
-import hashlib
-import copy
-import bisect
-import random
 from utils import *
 from data.fetch import fetch_daily
 from data.inject_features import inject_features
 from data.inject_labels import inject_labels
-from data.inject_joint_label import injecto_joint_label
 from matplotlib import pyplot as plt
 import shutil
 
@@ -35,8 +29,9 @@ def topk_shot(label, k=10):
 
 
 def train_lightgbm(argv):
-    features, label, train_start_day, train_end_day, val_start_day, val_end_day, n_day = argv
-    save_dir = "{}/{}/{}".format(EXP_DIR, label, to_int_date(val_start_day))
+    features, label, train_start_day, train_end_day, val_start_day, val_end_day, n_day, train_len, num_leaves, max_depth, min_data_in_leaf = argv
+    param_des = "_".join([str(train_len), str(num_leaves), str(max_depth), str(min_data_in_leaf)])
+    save_dir = "{}/{}/{}/{}".format(EXP_DIR, label, to_int_date(val_start_day), param_des)
     if os.path.exists(save_dir):
         shutil.rmtree(os.path.dirname(save_dir))
     make_dir(save_dir)
@@ -49,24 +44,23 @@ def train_lightgbm(argv):
         "min_data_in_leaf": 7,
         'learning_rate': 0.05,
         'feature_fraction': 0.99,
-        'bagging_fraction': 0.7,
+        'bagging_fraction': 0.6,
         'bagging_freq': 1,
         'verbose': 1,
         "train_metric": True,
         "max_depth": 15,
-        "num_iterations": 10000,
+        "num_iterations": 8000,
         "early_stopping_rounds": 100,
-        "device": 'gpu',
-        "gpu_platform_id": 0,
-        "gpu_device_id": 0,
+        # "device": 'gpu',
+        # "gpu_platform_id": 0,
+        # "gpu_device_id": 0,
         "min_gain_to_split": 0,
-        "num_threads": 16,
+        "num_threads": 32,
     }
 
     train_dataset = []
     val_dataset = []
-    # pred_dataset = []
-    for file in tqdm(os.listdir(DAILY_DIR)):
+    for file in os.listdir(DAILY_DIR):
         code = file.split("_")[0]
         if not_concern(code) or is_index(code):
             continue
@@ -76,7 +70,7 @@ def train_lightgbm(argv):
         df = joblib.load(path)
         if df.isST[-1]:
             continue
-        if not isinstance(df.code_name[-1], str) or "ST" in df.code_name[-1] or "st" in df.code_name[-1] or "sT" in df.code_name[-1]:
+        if "code_name" not in df.columns or not isinstance(df.code_name[-1], str) or "ST" in df.code_name[-1] or "st" in df.code_name[-1] or "sT" in df.code_name[-1]:
             continue
 
         train_dataset.append(df[train_start_day:train_end_day])
@@ -94,7 +88,7 @@ def train_lightgbm(argv):
                     lgb_train,
                     num_boost_round=5000,
                     valid_sets=(lgb_train, lgb_eval),
-                    categorical_feature=["industry"]
+                    # categorical_feature=["industry"]
                     )
 
     gbm.save_model(os.path.join(save_dir, "model.txt"))
@@ -137,25 +131,71 @@ def train_lightgbm(argv):
 
 
 def prepare_data():
-    # fetch_daily()
+    fetch_daily()
     inject_features()
 
     inject_labels()
-    injecto_joint_label()
 
 
 if __name__ == "__main__":
-    # prepare_data()
-    for train_val_split_day in get_trade_days()[-30:-5]:
-        features = get_feature_cols()
-        label = "y_5_d_high_rank_30%"
-        # train_val_split_day = 20230822
+    
+    prepare_data()
+    
+    search_labels = [
+        "y_5_d_high_rank_10%",
+        "y_5_d_high_rank_20%",
+        "y_5_d_high_rank_30%",
+        "y_5_d_high_rank_50%",
+        
+        "y_5_d_ret_rank_10%",
+        "y_5_d_ret_rank_20%",
+        "y_5_d_ret_rank_30%",
+        "y_5_d_ret_rank_50%",
+        
+        
+        "y_10_d_high_rank_10%",
+        "y_10_d_high_rank_20%",
+        "y_10_d_high_rank_30%",
+        "y_10_d_high_rank_50%",
+        
+        "y_10_d_ret_rank_10%",
+        "y_10_d_ret_rank_20%",
+        "y_10_d_ret_rank_30%",
+        "y_10_d_ret_rank_50%",
+    ]
+    
+    features = get_feature_cols()
+    label = "y_10_d_ret_rank_10%"
+    # train_val_split_day = 20230822
+    argvs = []
+    trade_days = get_trade_days()
+    
+    num_leaves = 63
+    max_depth = 15
+    min_data_in_leaf = 7
+    train_len = 30
+    # for train_len in [2, 5, 10, 30]:
+    #     for label in search_labels:
+            
+    if "y_5_d" in label:
+        n_day = 5
+    elif "y_10_d" in label:
+        n_day = 10
+    else:
+        assert False
+    for train_val_split_day in trade_days[-60:-n_day]:
         train_start_day = to_date(get_offset_trade_day(train_val_split_day,
-                                                       -30))
+                                                    -train_len))
         train_end_day = to_date(get_offset_trade_day(train_val_split_day, 0))
         val_start_day = to_date(get_offset_trade_day(train_val_split_day, 1))
-        val_end_day = to_date(get_offset_trade_day(train_val_split_day, 5))
-        train_lightgbm([
+        val_end_day = to_date(get_offset_trade_day(train_val_split_day, n_day))
+        argvs.append([
             features, label, train_start_day, train_end_day, val_start_day,
-            val_end_day, 5
+            val_end_day, n_day, train_len, num_leaves, max_depth, min_data_in_leaf
         ])
+
+    np.random.shuffle(argvs)
+    pool = Pool(16)
+    pool.imap_unordered(train_lightgbm, argvs)
+    pool.close()
+    pool.join()

@@ -39,7 +39,7 @@ def injecto_joint_label():
             df_i["y_{}_d_high_rank_20%".format(d)] = (df_i["y_{}_d_high_rank".format(d)] <= 0.2).astype("float")
             df_i["y_{}_d_high_rank_30%".format(d)] = (df_i["y_{}_d_high_rank".format(d)] <= 0.3).astype("float")
             df_i["y_{}_d_high_rank_50%".format(d)] = (df_i["y_{}_d_high_rank".format(d)] <= 0.5).astype("float")
-            df_i["y_{}_d_ret_rank".format(d)] = df_i["y_next_{}_d_ret_ratio".format(d)].rank(pct=True, ascending=False)
+            df_i["y_{}_d_ret_rank".format(d)] = df_i["y_next_{}_d_ret".format(d)].rank(pct=True, ascending=False)
             df_i["y_{}_d_ret_rank_10%".format(d)] = (df_i["y_{}_d_ret_rank".format(d)] <= 0.1).astype("float")
             df_i["y_{}_d_ret_rank_20%".format(d)] = (df_i["y_{}_d_ret_rank".format(d)] <= 0.2).astype("float")
             df_i["y_{}_d_ret_rank_30%".format(d)] = (df_i["y_{}_d_ret_rank".format(d)] <= 0.3).astype("float")

@@ -8,6 +8,7 @@ from utils import *
 from tqdm import tqdm
 from joblib import dump
 import warnings
+from data.inject_joint_label import injecto_joint_label
 
 warnings.filterwarnings("ignore")
 
@@ -32,7 +33,7 @@ def inject_one(path):
     future_n_day_high_low = [2, 3, 5, 10, 22]
     
     for n_day in future_n_day_high_low:
-        df["y_next_{}_d_ret"] = df["close"].rolling(n_day).apply(lambda x:max(x[1:])).shift(-n_day) / df["open"].shift(-1)
+        df["y_next_{}_d_ret".format(n_day)] = df["close"].shift(-n_day) / df["open"].shift(-1)
         df["y_next_{}_d_high".format(n_day)] = df["high"].rolling(n_day).apply(lambda x:max(x[1:])).shift(-n_day)
         df["y_next_{}_d_high_ratio".format(n_day)] = df["y_next_{}_d_high".format(n_day)] / df["open"].shift(-1)
         df["y_next_{}_d_low".format(n_day)] = df["low"].rolling(n_day).apply(lambda x:min(x[1:])).shift(-n_day)
@@ -57,6 +58,7 @@ def inject_labels():
     pool.imap_unordered(inject_one, paths)
     pool.close()
     pool.join()
+    # injecto_joint_label()
      
 if __name__ == "__main__":
     inject_labels()
