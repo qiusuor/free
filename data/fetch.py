@@ -11,6 +11,7 @@ import threading
 import time
 import numpy as np
 import shutil
+from utils import *
 
 """
 adjustflag:
@@ -125,12 +126,19 @@ def fetch_one(code, login, frequency, adjustflag):
             result[col] = pd.to_numeric(result[col])
         result["price"]=result["amount"]/(result['volume']+1e-9)
         make_dir(data_path)
+        result = result[result["volume"] != 0]
+        trade_days = get_trade_days(update=False)
+        trade_day_inverse_mapping = dict(zip(trade_days, range(len(trade_days))))
+        index = list(map(lambda x: trade_day_inverse_mapping[to_int_date(x)], list(result.index)))
+        start_index = len(index) - 1
+        while start_index >=1 and index[start_index] - index[start_index-1] < 30:
+            start_index -= 1
+        result = result.iloc[start_index:]
+        
         result.to_csv(data_path)
-
+        dump(result, os.path.join(DAILY_DIR, "{}_{}_{}.pkl".format(code, frequency, adjustflag)))
         if not login:
             bs.logout()
-
-        dump(result, os.path.join(DAILY_DIR, "{}_{}_{}.pkl".format(code, frequency, adjustflag)))
         return 0
     except:
         time.sleep(np.random.randint(10))
@@ -147,7 +155,7 @@ def fetch(adjustflag='2', freqs=['m', 'w', 'd', '60', '30', '15', '5'], code_lis
         for code in tqdm.tqdm(code_list or stockes.code):
             if not_concern(code): continue
             code_list.append([code, False, freq, adjustflag])
-    # fetch_one(*code_list[0])
+    # fetch_one("sz.000670", False, 'd', '2')
     pool = Pool(16)
     pool.imap_unordered(fetch_one_wrapper, code_list)
     pool.close()

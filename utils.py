@@ -50,24 +50,26 @@ def is_index(code):
     return False
 
 
-def get_trade_days(login=False):
-    if not login:
-        lg = bs.login()
-        assert lg.error_code != 0, "Login failed!"
-    rs = bs.query_trade_dates(start_date="2012-01-01")
-    data_list = []
-    while (rs.error_code == '0') & rs.next():
-        data_list.append(rs.get_row_data())
-    result = pd.DataFrame(data_list, columns=rs.fields)
-    result = result[result.is_trading_day == '1']
-    trade_days = result.calendar_date.values
-    trade_days = [int(x.replace('-', '')) for x in trade_days]
-    make_dir(TRADE_DAYS)
-    result.to_csv(TRADE_DAYS, encoding="gbk", index=False)
-    joblib.dump(trade_days, TRADE_DAYS_PKL)
-    if not login:
-        bs.logout()
-    return trade_days
+def get_trade_days(login=False, update=True):
+    if update:
+        if not login:
+            lg = bs.login()
+            assert lg.error_code != 0, "Login failed!"
+        rs = bs.query_trade_dates(start_date="2012-01-01")
+        data_list = []
+        while (rs.error_code == '0') & rs.next():
+            data_list.append(rs.get_row_data())
+        result = pd.DataFrame(data_list, columns=rs.fields)
+        result = result[result.is_trading_day == '1']
+        trade_days = result.calendar_date.values
+        trade_days = [int(x.replace('-', '')) for x in trade_days]
+        make_dir(TRADE_DAYS)
+        result.to_csv(TRADE_DAYS, encoding="gbk", index=False)
+        joblib.dump(trade_days, TRADE_DAYS_PKL)
+        if not login:
+            bs.logout()
+        return trade_days
+    return joblib.load(TRADE_DAYS_PKL)
 
 def get_offset_trade_day(day, n):
     trade_days = joblib.load(TRADE_DAYS_PKL)
