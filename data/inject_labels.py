@@ -8,7 +8,6 @@ from utils import *
 from tqdm import tqdm
 from joblib import dump
 import warnings
-from data.inject_joint_label import injecto_joint_label
 
 warnings.filterwarnings("ignore")
 

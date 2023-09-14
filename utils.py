@@ -14,6 +14,9 @@ import datetime
 import torch
 from sklearn import preprocessing
 from collections import defaultdict
+from multiprocessing import Pool
+from joblib import dump
+from tqdm import tqdm
 
 def addGaussianNoise(x, std=0.05):
     return x + torch.normal(x, std)
@@ -277,3 +280,46 @@ def get_profit(code, login):
     if not login:
         bs.logout()
     return result_profit
+
+
+def injecto_joint_label():
+    def dump_i(argv):
+        i, df_i = argv
+        df_i = df_i.sort_index()
+        path = os.path.join(DAILY_DIR, "{}_d_2.pkl".format(i))
+        df_i.to_csv(path.replace(".pkl", ".csv"))
+        dump(df_i, path)
+    
+    data = []
+    for file in tqdm(os.listdir(DAILY_DIR)):
+        code = file.split("_")[0]
+        if not_concern(code) or is_index(code):
+            continue
+        if not file.endswith(".pkl"):
+            continue
+        path = os.path.join(DAILY_DIR, file)
+        df = joblib.load(path)
+        data.append(df)
+    df = pd.concat(data)
+    
+    data = []
+    for i, df_i in df.groupby("date"):
+        for d in [2, 3, 5, 10, 22]:
+            df_i["y_{}_d_high_rank".format(d)] = df_i["y_next_{}_d_high_ratio".format(d)].rank(pct=True, ascending=False)
+            df_i["y_{}_d_high_rank_10%".format(d)] = (df_i["y_{}_d_high_rank".format(d)] <= 0.1).astype("float")
+            df_i["y_{}_d_high_rank_20%".format(d)] = (df_i["y_{}_d_high_rank".format(d)] <= 0.2).astype("float")
+            df_i["y_{}_d_high_rank_30%".format(d)] = (df_i["y_{}_d_high_rank".format(d)] <= 0.3).astype("float")
+            df_i["y_{}_d_high_rank_50%".format(d)] = (df_i["y_{}_d_high_rank".format(d)] <= 0.5).astype("float")
+            df_i["y_{}_d_ret_rank".format(d)] = df_i["y_next_{}_d_ret".format(d)].rank(pct=True, ascending=False)
+            df_i["y_{}_d_ret_rank_10%".format(d)] = (df_i["y_{}_d_ret_rank".format(d)] <= 0.1).astype("float")
+            df_i["y_{}_d_ret_rank_20%".format(d)] = (df_i["y_{}_d_ret_rank".format(d)] <= 0.2).astype("float")
+            df_i["y_{}_d_ret_rank_30%".format(d)] = (df_i["y_{}_d_ret_rank".format(d)] <= 0.3).astype("float")
+            df_i["y_{}_d_ret_rank_50%".format(d)] = (df_i["y_{}_d_ret_rank".format(d)] <= 0.5).astype("float")
+        data.append(df_i)
+        
+    df = pd.concat(data)
+    
+    pool = Pool(THREAD_NUM)
+    pool.imap_unordered(dump_i, df.groupby("code"))
+    pool.close()
+    pool.join()
