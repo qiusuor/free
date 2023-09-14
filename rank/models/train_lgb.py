@@ -51,11 +51,11 @@ def train_lightgbm(argv):
         "max_depth": 15,
         "num_iterations": 8000,
         "early_stopping_rounds": 100,
-        # "device": 'gpu',
-        # "gpu_platform_id": 0,
-        # "gpu_device_id": 0,
+        "device": 'gpu',
+        "gpu_platform_id": 0,
+        "gpu_device_id": 0,
         "min_gain_to_split": 0,
-        "num_threads": 32,
+        "num_threads": 16,
     }
 
     train_dataset = []
@@ -139,7 +139,7 @@ def prepare_data():
 
 if __name__ == "__main__":
     
-    prepare_data()
+    # prepare_data()
     
     search_labels = [
         "y_5_d_high_rank_10%",
@@ -195,7 +195,7 @@ if __name__ == "__main__":
         ])
 
     np.random.shuffle(argvs)
-    pool = Pool(16)
+    pool = Pool(THREAD_NUM // 16)
     pool.imap_unordered(train_lightgbm, argvs)
     pool.close()
     pool.join()
