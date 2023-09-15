@@ -39,7 +39,7 @@ def train_lightgbm(argv):
     param_des = "_".join([str(train_len), str(num_leaves), str(max_depth), str(min_data_in_leaf)])
     save_dir = "{}/{}/{}/{}".format(EXP_DIR, label, param_des, to_int_date(val_start_day))
     if os.path.exists(save_dir):
-        shutil.rmtree(os.path.dirname(save_dir))
+        shutil.rmtree(save_dir)
     make_dir(save_dir)
     params = {
         'task': 'train',
@@ -209,11 +209,10 @@ if __name__ == "__main__":
     
     features = get_feature_cols()
     label = "y_2_d_high_rank_10%"
-    # train_val_split_day = 20230822
     argvs = []
     trade_days = get_trade_days()
     
-    num_leaves = 31
+    num_leaves = 7
     max_depth = 9
     min_data_in_leaf = 3
     train_len = 120
