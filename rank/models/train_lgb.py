@@ -40,17 +40,17 @@ def train_lightgbm(argv):
         'boosting_type': 'gbdt',
         'objective': 'binary',
         'metric': {"average_precision"},
-        'num_leaves': 63,
-        "min_data_in_leaf": 7,
+        'num_leaves': num_leaves,
+        "min_data_in_leaf": min_data_in_leaf,
         'learning_rate': 0.05,
         'feature_fraction': 0.99,
-        'bagging_fraction': 0.6,
+        'bagging_fraction': 0.7,
         'bagging_freq': 1,
         'verbose': 1,
         "train_metric": True,
-        "max_depth": 15,
-        "num_iterations": 8000,
-        "early_stopping_rounds": 100,
+        "max_depth": max_depth,
+        "num_iterations": 500,
+        # "early_stopping_rounds": 100,
         "device": 'gpu',
         "gpu_platform_id": 0,
         "gpu_device_id": 0,
@@ -100,7 +100,7 @@ def train_lightgbm(argv):
     train_dataset["pred"] = train_y_pred
     train_dataset.sort_values(by="pred", inplace=True, ascending=False)
     train_ap = average_precision_score(train_dataset[label], train_dataset.pred)
-    train_dataset[["code", "pred", label, f"y_next_{n_day}_d_high_ratio", f"y_next_{n_day}_d_low_ratio", "price"]].to_csv(os.path.join(save_dir, "train_set_{}_{}.csv".format(epoch, train_ap)))
+    train_dataset[["code", "code_name", "pred", label, f"y_next_{n_day}_d_high_ratio", f"y_next_{n_day}_d_low_ratio", "price"]].to_csv(os.path.join(save_dir, "train_set_{}_{}.csv".format(epoch, train_ap)))
     fpr, tpr, thresh = roc_curve(val_y, val_y_pred)
     roc_auc = auc(fpr, tpr)
     plt.clf()
@@ -117,7 +117,7 @@ def train_lightgbm(argv):
     plt.legend(loc="lower right")
     plt.savefig(os.path.join(save_dir, "roc_curve.png"))
     val_dataset["pred"] = val_y_pred
-    res_val = val_dataset[["code", "pred", label, f"y_next_{n_day}_d_high_ratio", f"y_next_{n_day}_d_low_ratio", "price"]]
+    res_val = val_dataset[["code", "code_name", "pred", label, f"y_next_{n_day}_d_high_ratio", f"y_next_{n_day}_d_low_ratio", "price"]]
     for i, res_i in res_val.groupby("date"):
         res_i.sort_values(by="pred", inplace=True, ascending=False)
         top3_miss, top3_shot = topk_shot(res_i[label], k=3)
@@ -165,15 +165,16 @@ if __name__ == "__main__":
     ]
     
     features = get_feature_cols()
-    label = "y_10_d_ret_rank_10%"
+    label = "y_2_d_high_rank_10%"
     # train_val_split_day = 20230822
     argvs = []
     trade_days = get_trade_days()
     
-    num_leaves = 63
-    max_depth = 15
+    num_leaves = 31
+    max_depth = 5
     min_data_in_leaf = 7
-    train_len = 30
+    train_len = 120
+    test_last_n_day = 10
     # for train_len in [2, 5, 10, 30]:
     #     for label in search_labels:
             
@@ -181,9 +182,11 @@ if __name__ == "__main__":
         n_day = 5
     elif "y_10_d" in label:
         n_day = 10
+    elif "y_2_d" in label:
+        n_day = 2
     else:
         assert False
-    for train_val_split_day in trade_days[-60:-n_day]:
+    for train_val_split_day in trade_days[-test_last_n_day-n_day:-n_day]:
         train_start_day = to_date(get_offset_trade_day(train_val_split_day,
                                                     -train_len))
         train_end_day = to_date(get_offset_trade_day(train_val_split_day, 0))

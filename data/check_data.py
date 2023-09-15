@@ -21,7 +21,8 @@ def check():
         path = os.path.join(DAILY_DIR, file)
         df = joblib.load(path)
         assert len(set(df.index)) == len(df.index), code
-        assert len(df) < 240 or df["y_next_10_d_high_ratio"].max() < 3, (code, df[df["y_next_10_d_high_ratio"] >=3])
+        if "y_next_10_d_high_ratio" in df.columns:
+            assert len(df) < 240 or df["y_next_10_d_high_ratio"].max() < 3, (code, df[df["y_next_10_d_high_ratio"] >=3])
     
 
 if __name__ == "__main__":

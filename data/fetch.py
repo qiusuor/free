@@ -3,7 +3,6 @@ from joblib import dump
 import baostock as bs
 import pandas as pd
 import bisect
-import tqdm
 from config import DAILY_DIR, ALL_STOCKS
 from utils import is_index, not_concern, fetch_stock_codes, make_dir
 from multiprocessing import Pool
@@ -152,7 +151,7 @@ def fetch(adjustflag='2', freqs=['m', 'w', 'd', '60', '30', '15', '5'], code_lis
         shutil.rmtree(DAILY_DIR)
     code_list = []
     for freq in freqs:
-        for code in tqdm.tqdm(code_list or stockes.code):
+        for code in tqdm(code_list or stockes.code):
             if not_concern(code): continue
             code_list.append([code, False, freq, adjustflag])
     # fetch_one("sz.000670", False, 'd', '2')
