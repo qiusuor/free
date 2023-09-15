@@ -1,5 +1,7 @@
 from utils import *
 
+inject_joint_label()
+
 # get_industry_info()
 
 # get_shibor()

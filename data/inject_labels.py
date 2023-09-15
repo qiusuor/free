@@ -57,7 +57,7 @@ def inject_labels():
     pool.imap_unordered(inject_one, paths)
     pool.close()
     pool.join()
-    injecto_joint_label()
+    inject_joint_label()
      
 if __name__ == "__main__":
     inject_labels()

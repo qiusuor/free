@@ -1,7 +1,7 @@
 import joblib
 import lightgbm as lgb
 import pandas as pd
-from sklearn.metrics import mean_squared_error, roc_curve, auc, average_precision_score
+from sklearn.metrics import mean_squared_error, roc_curve, auc, average_precision_score, roc_auc_score
 import numpy as np
 from tqdm import tqdm
 from multiprocessing import Pool
@@ -14,10 +14,11 @@ from data.inject_features import inject_features
 from data.inject_labels import inject_labels
 from matplotlib import pyplot as plt
 import shutil
+import json
 
 
-def topk_shot(label, k=10):
-    gt_labels = label.values[:k]
+def topk_shot(data, label, k=10, watch_list=[]):
+    gt_labels = data[label].values[:k]
     shot_cnt = 0
     miss_cnt = 0
     for label in gt_labels:
@@ -25,13 +26,18 @@ def topk_shot(label, k=10):
             shot_cnt += 1
         else:
             miss_cnt += 1
-    return miss_cnt, shot_cnt
+    watches = dict()
+    for watch in watch_list:
+        watches[watch+f"_topk_{k}_max"] = data[watch][:k].max()
+        watches[watch+f"_topk_{k}_min"] = data[watch][:k].min()
+        watches[watch+f"_topk_{k}_mean"] = data[watch][:k].mean()
+    return miss_cnt, shot_cnt, watches
 
 
 def train_lightgbm(argv):
     features, label, train_start_day, train_end_day, val_start_day, val_end_day, n_day, train_len, num_leaves, max_depth, min_data_in_leaf = argv
     param_des = "_".join([str(train_len), str(num_leaves), str(max_depth), str(min_data_in_leaf)])
-    save_dir = "{}/{}/{}/{}".format(EXP_DIR, label, to_int_date(val_start_day), param_des)
+    save_dir = "{}/{}/{}/{}".format(EXP_DIR, label, param_des, to_int_date(val_start_day))
     if os.path.exists(save_dir):
         shutil.rmtree(os.path.dirname(save_dir))
     make_dir(save_dir)
@@ -49,14 +55,15 @@ def train_lightgbm(argv):
         'verbose': 1,
         "train_metric": True,
         "max_depth": max_depth,
-        "num_iterations": 500,
-        # "early_stopping_rounds": 100,
-        "device": 'gpu',
-        "gpu_platform_id": 0,
-        "gpu_device_id": 0,
+        "num_iterations": 5000,
+        "early_stopping_rounds": 100,
+        # "device": 'gpu',
+        # "gpu_platform_id": 0,
+        # "gpu_device_id": 0,
         "min_gain_to_split": 0,
         "num_threads": 16,
     }
+    print(params)
 
     train_dataset = []
     val_dataset = []
@@ -99,15 +106,17 @@ def train_lightgbm(argv):
     train_y_pred = gbm.predict(train_x, num_iteration=epoch)
     train_dataset["pred"] = train_y_pred
     train_dataset.sort_values(by="pred", inplace=True, ascending=False)
-    train_ap = average_precision_score(train_dataset[label], train_dataset.pred)
-    train_dataset[["code", "code_name", "pred", label, f"y_next_{n_day}_d_high_ratio", f"y_next_{n_day}_d_low_ratio", "price"]].to_csv(os.path.join(save_dir, "train_set_{}_{}.csv".format(epoch, train_ap)))
+    train_ap = round(average_precision_score(train_dataset[label], train_dataset.pred), 2)
+    train_auc = round(roc_auc_score(train_dataset[label], train_dataset.pred), 2)
+    train_dataset[["code", "code_name", "pred", label, f"y_next_{n_day}_d_high_ratio", f"y_next_{n_day}_d_low_ratio", "price"]].to_csv(os.path.join(save_dir, "train_set_EPOCH_{}_AP_{}_AUC_{}.csv".format(epoch, train_ap, train_auc)))
     fpr, tpr, thresh = roc_curve(val_y, val_y_pred)
-    roc_auc = auc(fpr, tpr)
+    val_auc = auc(fpr, tpr)
+    val_ap = average_precision_score(val_y, val_y_pred)
     plt.clf()
     plt.plot(fpr,
              tpr,
              'k--',
-             label='ROC (area = {0:.2f})'.format(roc_auc),
+             label='ROC (area = {0:.2f})'.format(val_auc),
              lw=2)
     plt.xlim([-0.05, 1.05])
     plt.ylim([-0.05, 1.05])
@@ -118,17 +127,51 @@ def train_lightgbm(argv):
     plt.savefig(os.path.join(save_dir, "roc_curve.png"))
     val_dataset["pred"] = val_y_pred
     res_val = val_dataset[["code", "code_name", "pred", label, f"y_next_{n_day}_d_high_ratio", f"y_next_{n_day}_d_low_ratio", "price"]]
+    meta = dict()
+    meta["config"] = {
+        "label": label,
+        "train_len": train_len,
+        "val_start_day": to_int_date(val_start_day),
+        "val_end_day": to_int_date(val_end_day),
+        "num_leaves": num_leaves,
+        "max_depth": max_depth,
+        "min_data_in_leaf": min_data_in_leaf,
+    }
+    meta["info"] = {
+        "epoch": epoch,
+        "train_auc": train_auc,
+        "train_ap": train_ap,
+        "val_auc:": val_auc,
+        "val_ap": val_ap,
+    }
+    meta["daily"] = dict()
+    watch_list = [f"y_next_{n_day}_d_high_ratio", f"y_next_{n_day}_d_low_ratio"]
+    
     for i, res_i in res_val.groupby("date"):
         res_i.sort_values(by="pred", inplace=True, ascending=False)
-        top3_miss, top3_shot = topk_shot(res_i[label], k=3)
-        top5_miss, top5_shot = topk_shot(res_i[label], k=5)
-        top10_miss, top10_shot = topk_shot(res_i[label], k=10)
+        top3_miss, top3_shot, top3_watch = topk_shot(res_i, label, k=3, watch_list=watch_list)
+        top5_miss, top5_shot, top5_watch = topk_shot(res_i, label, k=5, watch_list=watch_list)
+        top10_miss, top10_shot, top10_watch = topk_shot(res_i, label, k=10, watch_list=watch_list)
         fpr, tpr, thresh = roc_curve(res_i[label], res_i.pred)
         auc_score = auc(fpr, tpr)
         ap = average_precision_score(res_i[label], res_i.pred)
+        meta["daily"][to_int_date(i)] = {
+            "auc": auc_score,
+            "ap": ap,
+            "top3_watch": top3_watch,
+            "top5_watch": top5_watch,
+            "top10_watch": top10_watch
+        }
+        meta["last_val"] = {
+            "auc": auc_score,
+            "ap": ap,
+            "top3_watch": top3_watch,
+            "top5_watch": top5_watch,
+            "top10_watch": top10_watch
+        }
         save_file = f"{to_int_date(i)}_T3_{top3_miss}_T5_{top5_miss}_T10_{top10_miss}_AP_{ap}_AUC_{auc_score}.csv"
         res_i.to_csv(os.path.join(save_dir, save_file))
-
+    json.dump(meta, open(os.path.join(save_dir, "mete.json"), 'w'), indent=4)
 
 def prepare_data():
     fetch_daily()
@@ -171,8 +214,8 @@ if __name__ == "__main__":
     trade_days = get_trade_days()
     
     num_leaves = 31
-    max_depth = 5
-    min_data_in_leaf = 7
+    max_depth = 9
+    min_data_in_leaf = 3
     train_len = 120
     test_last_n_day = 10
     # for train_len in [2, 5, 10, 30]:
@@ -186,7 +229,8 @@ if __name__ == "__main__":
         n_day = 2
     else:
         assert False
-    for train_val_split_day in trade_days[-test_last_n_day-n_day:-n_day]:
+    for train_val_split_day in trade_days[-test_last_n_day-n_day:-2*n_day]:
+        print(train_val_split_day)
         train_start_day = to_date(get_offset_trade_day(train_val_split_day,
                                                     -train_len))
         train_end_day = to_date(get_offset_trade_day(train_val_split_day, 0))
@@ -197,7 +241,8 @@ if __name__ == "__main__":
             val_end_day, n_day, train_len, num_leaves, max_depth, min_data_in_leaf
         ])
 
-    np.random.shuffle(argvs)
+    # np.random.shuffle(argvs)
+    # train_lightgbm(argvs[0])
     pool = Pool(THREAD_NUM // 16)
     pool.imap_unordered(train_lightgbm, argvs)
     pool.close()

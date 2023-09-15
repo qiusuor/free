@@ -58,7 +58,7 @@ def get_trade_days(login=False, update=True):
         if not login:
             lg = bs.login()
             assert lg.error_code != 0, "Login failed!"
-        rs = bs.query_trade_dates(start_date="2012-01-01")
+        rs = bs.query_trade_dates(start_date="2020-01-01")
         data_list = []
         while (rs.error_code == '0') & rs.next():
             data_list.append(rs.get_row_data())
@@ -281,15 +281,15 @@ def get_profit(code, login):
         bs.logout()
     return result_profit
 
+def inject_joint_label_i(argv):
+    i, df_i = argv
+    df_i = df_i.sort_index()
+    path = os.path.join(DAILY_DIR, "{}_d_2.pkl".format(i))
+    df_i.to_csv(path.replace(".pkl", ".csv"))
+    dump(df_i, path)
 
-def injecto_joint_label():
-    def dump_i(argv):
-        i, df_i = argv
-        df_i = df_i.sort_index()
-        path = os.path.join(DAILY_DIR, "{}_d_2.pkl".format(i))
-        df_i.to_csv(path.replace(".pkl", ".csv"))
-        dump(df_i, path)
-    
+def inject_joint_label():
+
     data = []
     for file in tqdm(os.listdir(DAILY_DIR)):
         code = file.split("_")[0]
@@ -318,8 +318,8 @@ def injecto_joint_label():
         data.append(df_i)
         
     df = pd.concat(data)
-    
+
     pool = Pool(THREAD_NUM)
-    pool.imap_unordered(dump_i, df.groupby("code"))
+    pool.imap_unordered(inject_joint_label_i, df.groupby("code"))
     pool.close()
     pool.join()
