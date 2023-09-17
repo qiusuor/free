@@ -5,7 +5,13 @@ import json
 import numpy as np
 
 
-
+def to_dict(sorted_items):
+    keys, vals = [], []
+    for key, val in sorted_items:
+        keys.append(key)
+        vals.append(val)
+    return dict(zip(keys, vals))
+        
 def agg():
     agg_result = dict()
     agg_result["sharp_exp"] = dict()
@@ -99,8 +105,8 @@ def agg():
             max_next_1d_close_2d_open_gain, max_next_1d_close_2d_open_gain_config = compare_large(avg_nightly_gain, max_next_1d_close_2d_open_gain, max_next_1d_close_2d_open_gain_config)
 
                 
-    agg_result["sharp_exp"] = sorted(agg_result["sharp_exp"].items(), key=lambda x:x[1]["avg_sharp"])
-    agg_result["nightly_exp"] = sorted(agg_result["nightly_exp"].items(), key=lambda x:x[1]["avg_nightly_gain"])
+    agg_result["sharp_exp"] = to_dict(sorted(agg_result["sharp_exp"].items(), key=lambda x:x[1]["avg_sharp"]))
+    agg_result["nightly_exp"] = to_dict(sorted(agg_result["nightly_exp"].items(), key=lambda x:x[1]["avg_nightly_gain"]))
     
     agg_result["best_sharp_exp"] = dict()
     agg_result["best_sharp_exp"]["ap"] = max_avg_ap_config
