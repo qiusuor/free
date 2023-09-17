@@ -174,9 +174,9 @@ def train_lightgbm(argv):
         res_i.to_csv(os.path.join(save_dir, save_file))
     json.dump(meta, open(os.path.join(save_dir, "meta.json"), 'w'), indent=4)
 
-def prepare_data():
-    fetch_daily()
+def prepare_data(update=True):
+    if update:
+        fetch_daily()
     inject_features()
-
     inject_labels()
 
