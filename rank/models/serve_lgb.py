@@ -26,24 +26,26 @@ if __name__ == "__main__":
     argvs = []
     trade_days = get_trade_days()
     test_n_day = 10
-    opt_points = [("y_2_d_high_rank_20%", 120, 15, 7, 5), ("y_2_d_ret_rank_20%", 60, 3, 9, 3), ("y_next_1d_close_2d_open_rate_rank_10%", 120, 15, 9, 5), ("y_next_1d_close_2d_open_rate_rank_10%", 120, 7, 3, 21)]
+    opt_points = [("y_2_d_high_rank_20%", 120, 15, 7, 5, 156), ("y_2_d_high_rank_20%", 120, 15, 9, 5, 193), ("y_next_1d_close_2d_open_rate_rank_10%", 120, 15, 9, 5, 254), ("y_next_1d_close_2d_open_rate_rank_10%", 120, 3, 3, 41, 570)]
     
-    for label, train_len, num_leaves, max_depth, min_data_in_leaf in opt_points:
+    for label, train_len, num_leaves, max_depth, min_data_in_leaf, epoch in opt_points:
         n_day = get_n_val_day(label)
-        print(len(argvs))
+        # print(len(argvs))
+        train_val_split_day = trade_days[-n_day-1]
         
-        for train_val_split_day in trade_days[-test_n_day-2*n_day:-2*n_day]:
-            train_start_day = to_date(get_offset_trade_day(train_val_split_day,
-                                                        -train_len))
-            train_end_day = to_date(get_offset_trade_day(train_val_split_day, 0))
-            val_start_day = to_date(get_offset_trade_day(train_val_split_day, 1))
-            val_end_day = to_date(get_offset_trade_day(train_val_split_day, n_day))
-            argvs.append([
-                features, label, train_start_day, train_end_day, val_start_day,
-                val_end_day, n_day, train_len, num_leaves, max_depth, min_data_in_leaf, True
-            ])
+        train_start_day = to_date(get_offset_trade_day(train_val_split_day,
+                                                    -train_len))
+        train_end_day = to_date(get_offset_trade_day(train_val_split_day, 0))
+        val_start_day = to_date(get_offset_trade_day(train_val_split_day, 1))
+        val_end_day = to_date(get_offset_trade_day(train_val_split_day, n_day))
+        argvs.append([
+            features, label, train_start_day, train_end_day, val_start_day,
+            val_end_day, n_day, train_len, num_leaves, max_depth, min_data_in_leaf, epoch
+        ])
+        # print(train_start_day, train_end_day, val_start_day, val_end_day)
 
     np.random.shuffle(argvs)
+    # print(argvs[0])
     # train_lightgbm(argvs[0])
     pool = Pool(1)
     pool.imap_unordered(train_lightgbm, argvs)

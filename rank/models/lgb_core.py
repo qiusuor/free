@@ -35,12 +35,7 @@ def topk_shot(data, label, k=10, watch_list=[]):
 
 
 def train_lightgbm(argv):
-    features, label, train_start_day, train_end_day, val_start_day, val_end_day, n_day, train_len, num_leaves, max_depth, min_data_in_leaf, pred = argv
-    param_des = "_".join([str(train_len), str(num_leaves), str(max_depth), str(min_data_in_leaf)])
-    save_dir = "{}/{}/{}/{}".format(EXP_DIR_PRED, label, param_des, to_int_date(val_start_day))
-    if os.path.exists(save_dir):
-        shutil.rmtree(save_dir)
-    make_dir(save_dir)
+    features, label, train_start_day, train_end_day, val_start_day, val_end_day, n_day, train_len, num_leaves, max_depth, min_data_in_leaf, epoch = argv
     params = {
         'task': 'train',
         'boosting_type': 'gbdt',
@@ -64,10 +59,23 @@ def train_lightgbm(argv):
         "num_threads": 16,
     }
     # print(params)
+    pred_mode = False
+    if epoch > 0:
+        params["num_iterations"] = epoch
+        params.pop("early_stopping_rounds")
+        print(params)
+        
+        pred_mode = True
+        
+    param_des = "_".join([str(train_len), str(num_leaves), str(max_depth), str(min_data_in_leaf)])
+    root_dir = EXP_PRED_DIR if pred_mode else EXP_DIR
+    save_dir = "{}/{}/{}/{}".format(root_dir, label, param_des, to_int_date(val_start_day))
+    if os.path.exists(save_dir):
+        shutil.rmtree(save_dir)
+    make_dir(save_dir)
 
     train_dataset = []
     val_dataset = []
-    pred_dataset = []
     for file in os.listdir(DAILY_DIR):
         code = file.split("_")[0]
         if not_concern(code) or is_index(code):
@@ -83,21 +91,17 @@ def train_lightgbm(argv):
 
         train_dataset.append(df[train_start_day:train_end_day])
         val_dataset.append(df[val_start_day:val_end_day])
-        pred_dataset.append(df[val_end_day:])
 
     train_dataset = pd.concat(train_dataset, axis=0)
     val_dataset = pd.concat(val_dataset, axis=0)
-    pred_dataset = pd.concat(pred_dataset, axis=0)
 
     train_x, train_y = train_dataset[features], train_dataset[label]
     val_x, val_y = val_dataset[features], val_dataset[label]
-    pred_x, pred_y = pred_dataset[features], pred_dataset[label]
     lgb_train = lgb.Dataset(train_x, train_y)
     lgb_eval = lgb.Dataset(val_x, val_y, reference=lgb_train)
 
     gbm = lgb.train(params,
                     lgb_train,
-                    num_boost_round=5000,
                     valid_sets=(lgb_train, lgb_eval),
                     # categorical_feature=["industry"]
                     )
@@ -107,13 +111,13 @@ def train_lightgbm(argv):
     epoch = gbm.best_iteration
 
     val_y_pred = gbm.predict(val_x, num_iteration=epoch)
-    pred_y_pred = gbm.predict(pred_x, num_iteration=epoch)
     train_y_pred = gbm.predict(train_x, num_iteration=epoch)
     train_dataset["pred"] = train_y_pred
     train_dataset.sort_values(by="pred", inplace=True, ascending=False)
     train_ap = round(average_precision_score(train_dataset[label], train_dataset.pred), 2)
     train_auc = round(roc_auc_score(train_dataset[label], train_dataset.pred), 2)
-    # train_dataset[["code", "code_name", "pred", label, "y_next_1d_close_2d_open_rate", f"y_next_{n_day}_d_high_ratio", f"y_next_{n_day}_d_low_ratio", "price"]].to_csv(os.path.join(save_dir, "train_set_EPOCH_{}_AP_{}_AUC_{}.csv".format(epoch, train_ap, train_auc)))
+    if pred_mode:
+        train_dataset[["code", "code_name", "pred", label, "y_next_1d_close_2d_open_rate", f"y_next_{n_day}_d_high_ratio", f"y_next_{n_day}_d_low_ratio", "price"]].to_csv(os.path.join(save_dir, "train_set_EPOCH_{}_AP_{}_AUC_{}.csv".format(epoch, train_ap, train_auc)))
     fpr, tpr, thresh = roc_curve(val_y, val_y_pred)
     val_auc = auc(fpr, tpr)
     val_ap = average_precision_score(val_y, val_y_pred)
@@ -131,9 +135,7 @@ def train_lightgbm(argv):
     plt.legend(loc="lower right")
     plt.savefig(os.path.join(save_dir, "roc_curve.png"))
     val_dataset["pred"] = val_y_pred
-    pred_dataset["pred"] = pred_y_pred
     res_val = val_dataset[["code", "code_name", "pred", label, "y_next_1d_close_2d_open_rate", f"y_next_{n_day}_d_high_ratio", f"y_next_{n_day}_d_low_ratio", "price"]]
-    res_pred = pred_dataset[["code", "code_name", "pred", label, "y_next_1d_close_2d_open_rate", f"y_next_{n_day}_d_high_ratio", f"y_next_{n_day}_d_low_ratio", "price"]]
     meta = dict()
     meta["config"] = {
         "label": label,
@@ -179,21 +181,10 @@ def train_lightgbm(argv):
             }
         save_file = f"{to_int_date(i)}_T3_{top3_miss}_T5_{top5_miss}_T10_{top10_miss}_AP_{ap}_AUC_{auc_score}.csv"
         res_i.to_csv(os.path.join(save_dir, save_file))
-    json.dump(meta, open(os.path.join(save_dir, "meta.json"), 'w'), indent=4)
     
-    if pred:
-        pred_dir = os.path.join(save_dir, "pred")
-        make_dir(pred_dir)
-        for i, res_i in res_pred.groupby("date"):
-            res_i.sort_values(by="pred", inplace=True, ascending=False)
-            top3_miss, top3_shot, top3_watch = topk_shot(res_i, label, k=3, watch_list=watch_list)
-            top5_miss, top5_shot, top5_watch = topk_shot(res_i, label, k=5, watch_list=watch_list)
-            top10_miss, top10_shot, top10_watch = topk_shot(res_i, label, k=10, watch_list=watch_list)
-            fpr, tpr, thresh = roc_curve(res_i[label], res_i.pred)
-            auc_score = auc(fpr, tpr)
-            ap = average_precision_score(res_i[label], res_i.pred)
-            save_file = f"{to_int_date(i)}_T3_{top3_miss}_T5_{top5_miss}_T10_{top10_miss}_AP_{ap}_AUC_{auc_score}.csv"
-            res_i.to_csv(os.path.join(pred_dir, save_file))
+    if not pred_mode:
+        json.dump(meta, open(os.path.join(save_dir, "meta.json"), 'w'), indent=4)
+    
 
 def prepare_data(update=True):
     if update:
