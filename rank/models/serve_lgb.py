@@ -29,14 +29,7 @@ if __name__ == "__main__":
     opt_points = [("y_2_d_high_rank_20%", 120, 15, 7, 5), ("y_2_d_ret_rank_20%", 60, 3, 9, 3), ("y_next_1d_close_2d_open_rate_rank_10%", 120, 15, 9, 5), ("y_next_1d_close_2d_open_rate_rank_10%", 120, 7, 3, 21)]
     
     for label, train_len, num_leaves, max_depth, min_data_in_leaf in opt_points:
-        if "y_5_d" in label:
-            n_day = 5
-        elif "y_10_d" in label:
-            n_day = 10
-        elif "y_2_d" in label:
-            n_day = 2
-        else:
-            assert False
+        n_day = get_n_val_day(label)
         print(len(argvs))
         
         for train_val_split_day in trade_days[-test_n_day-2*n_day:-2*n_day]:

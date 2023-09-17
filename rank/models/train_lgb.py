@@ -78,14 +78,8 @@ if __name__ == "__main__":
                 for max_depth in [3, 7, 9, 12, 15]:
                     if 2**max_depth <= num_leaves: continue
                     for train_len in [2, 5, 10, 20, 50, 120]:
-                        if "y_5_d" in label:
-                            n_day = 5
-                        elif "y_10_d" in label:
-                            n_day = 10
-                        elif "y_2_d" in label or "1d_close_2d_open" in label:
-                            n_day = 2
-                        else:
-                            assert False
+                        n_day = get_n_val_day(label)
+                        
                         print(len(argvs))
                         
                         for train_val_split_day in trade_days[-test_n_day-2*n_day:-2*n_day]:
