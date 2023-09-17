@@ -44,7 +44,7 @@ if __name__ == "__main__":
             ])
 
     np.random.shuffle(argvs)
-
+    # train_lightgbm(argvs[0])
     pool = Pool(1)
     pool.imap_unordered(train_lightgbm, argvs)
     pool.close()

@@ -87,6 +87,7 @@ def train_lightgbm(argv):
 
     train_dataset = pd.concat(train_dataset, axis=0)
     val_dataset = pd.concat(val_dataset, axis=0)
+    pred_dataset = pd.concat(pred_dataset, axis=0)
 
     train_x, train_y = train_dataset[features], train_dataset[label]
     val_x, val_y = val_dataset[features], val_dataset[label]
