@@ -40,7 +40,7 @@ if __name__ == "__main__":
             val_end_day = to_date(get_offset_trade_day(train_val_split_day, n_day))
             argvs.append([
                 features, label, train_start_day, train_end_day, val_start_day,
-                val_end_day, n_day, train_len, num_leaves, max_depth, min_data_in_leaf
+                val_end_day, n_day, train_len, num_leaves, max_depth, min_data_in_leaf, True
             ])
 
     np.random.shuffle(argvs)
