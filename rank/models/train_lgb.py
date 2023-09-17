@@ -23,8 +23,14 @@ if __name__ == "__main__":
     # prepare_data()
     
     search_labels = [
+        "y_next_1d_close_2d_open_rate_rank_10%",
+        "y_next_1d_close_2d_open_rate_rank_20%",
+        "y_next_1d_close_2d_open_rate_rank_30%",
+        # "y_next_1d_close_2d_open_rate_rank_50%",
+        
+        
         # "y_2_d_high_rank_10%",
-        "y_2_d_high_rank_20%",
+        # "y_2_d_high_rank_20%",
         # "y_2_d_high_rank_30%",
         # "y_2_d_high_rank_50%",
         
@@ -76,7 +82,7 @@ if __name__ == "__main__":
                             n_day = 5
                         elif "y_10_d" in label:
                             n_day = 10
-                        elif "y_2_d" in label:
+                        elif "y_2_d" in label or "1d_close_2d_open" in label:
                             n_day = 2
                         else:
                             assert False
