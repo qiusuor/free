@@ -15,7 +15,7 @@ from data.inject_labels import inject_labels
 from matplotlib import pyplot as plt
 import shutil
 import json
-from train_lgb_core import *
+from rank.models.lgb_core import *
 
 
 if __name__ == "__main__":
