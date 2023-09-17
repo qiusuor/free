@@ -304,6 +304,11 @@ def inject_joint_label():
     
     data = []
     for i, df_i in df.groupby("date"):
+        df_i["y_next_1d_close_2d_open_rate_rank"] = df_i["y_next_1d_close_2d_open_rate"].rank(pct=True, ascending=False)
+        df_i["y_next_1d_close_2d_open_rate_rank_10%"] = (df_i["y_next_1d_close_2d_open_rate_rank_10%"] <= 0.1).astype("float")
+        df_i["y_next_1d_close_2d_open_rate_rank_20%"] = (df_i["y_next_1d_close_2d_open_rate_rank_20%"] <= 0.2).astype("float")
+        df_i["y_next_1d_close_2d_open_rate_rank_30%"] = (df_i["y_next_1d_close_2d_open_rate_rank_30%"] <= 0.3).astype("float")
+        df_i["y_next_1d_close_2d_open_rate_rank_50%"] = (df_i["y_next_1d_close_2d_open_rate_rank_50%"] <= 0.5).astype("float")
         for d in [2, 3, 5, 10, 22]:
             df_i["y_{}_d_high_rank".format(d)] = df_i["y_next_{}_d_high_ratio".format(d)].rank(pct=True, ascending=False)
             df_i["y_{}_d_high_rank_10%".format(d)] = (df_i["y_{}_d_high_rank".format(d)] <= 0.1).astype("float")
