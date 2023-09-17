@@ -26,7 +26,7 @@ if __name__ == "__main__":
     argvs = []
     trade_days = get_trade_days()
     test_n_day = 10
-    opt_points = [("y_2_d_high_rank_20%", 120, 15, 7, 5), ("y_2_d_ret_rank_20%", 60, 3, 9, 3), ("y_next_1d_close_2d_open_rate_rank_10%", 120, 15, 9, 5)]
+    opt_points = [("y_2_d_high_rank_20%", 120, 15, 7, 5), ("y_2_d_ret_rank_20%", 60, 3, 9, 3), ("y_next_1d_close_2d_open_rate_rank_10%", 120, 15, 9, 5), ("y_next_1d_close_2d_open_rate_rank_10%", 120, 7, 3, 21)]
     
     for label, train_len, num_leaves, max_depth, min_data_in_leaf in opt_points:
         if "y_5_d" in label:
