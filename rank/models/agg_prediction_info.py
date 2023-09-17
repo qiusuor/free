@@ -25,6 +25,7 @@ def agg():
     max_next_1d_close_2d_open_gain = -np.inf
     max_next_1d_close_2d_open_gain_config = None
     for label in tqdm(os.listdir(EXP_DIR)):
+        if "5_d" in label: continue
         calc_nightly_gain = "y_next_1d_close_2d_open_rate_rank" in label
         if not label.startswith("y") and not label.startswith("dy"): continue
         label_dir = os.path.join(EXP_DIR, label)
@@ -78,9 +79,10 @@ def agg():
                 "avg_nightly_gain": avg_nightly_gain
             }
             json.dump(exp_result, open(os.path.join(configured_exp_dir, "result.json"), 'w'), indent=4)
-            agg_result["sharp_exp"][exp_config] = exp_result
+            
+            agg_result["sharp_exp"]["_".join([label, exp_config])] = exp_result
             if calc_nightly_gain:
-                agg_result["nightly_exp"][exp_config] = exp_result
+                agg_result["nightly_exp"]["_".join([label, exp_config])] = exp_result
 
             
             def compare_large(cur, best, container):
@@ -105,8 +107,9 @@ def agg():
             max_next_1d_close_2d_open_gain, max_next_1d_close_2d_open_gain_config = compare_large(avg_nightly_gain, max_next_1d_close_2d_open_gain, max_next_1d_close_2d_open_gain_config)
 
                 
-    agg_result["sharp_exp"] = to_dict(sorted(agg_result["sharp_exp"].items(), key=lambda x:x[1]["avg_sharp"]))
-    agg_result["nightly_exp"] = to_dict(sorted(agg_result["nightly_exp"].items(), key=lambda x:x[1]["avg_nightly_gain"]))
+    agg_result["sharp_exp"] = to_dict(sorted(agg_result["sharp_exp"].items(), key=lambda x:-x[1]["avg_sharp"]))
+    agg_result["high_exp"] = to_dict(sorted(agg_result["sharp_exp"].items(), key=lambda x:-x[1]["avg_high"]))
+    agg_result["nightly_exp"] = to_dict(sorted(agg_result["nightly_exp"].items(), key=lambda x:-x[1]["avg_nightly_gain"]))
     
     agg_result["best_sharp_exp"] = dict()
     agg_result["best_sharp_exp"]["ap"] = max_avg_ap_config
