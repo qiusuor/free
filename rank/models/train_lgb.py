@@ -228,13 +228,21 @@ if __name__ == "__main__":
     min_data_in_leaf = 3
     train_len = 120
     test_n_day = 10
-    for label in search_labels:
-        for num_leaves in [3, 7, 15, 31, 63]:
-            for min_data_in_leaf in [3, 5, 11, 21, 41]:
-        # for num_leaves in [3, 7, 15, 31, 63, 127]:
-                for max_depth in [3, 7, 9, 12, 15]:
-                    if 2**max_depth <= num_leaves: continue
-                    for train_len in [2, 5, 10, 20, 50, 120]:
+    opt_points = [("y_2_d_high_rank_20%", 120, 15, 7, 5)]
+    # for serve
+    for label, train_len, num_leaves, max_depth, min_data_in_leaf in opt_points:
+        
+    
+    # for seach 
+    # for label in search_labels:
+    #     for num_leaves in [3, 7, 15, 31, 63]:
+    #         for min_data_in_leaf in [3, 5, 11, 21, 41]:
+    #             for max_depth in [3, 7, 9, 12, 15]:
+    #                 if 2**max_depth <= num_leaves: continue
+    #                 for train_len in [2, 5, 10, 20, 50, 120]:
+                        
+                        
+                    
                         if "y_5_d" in label:
                             n_day = 5
                         elif "y_10_d" in label:
@@ -244,6 +252,7 @@ if __name__ == "__main__":
                         else:
                             assert False
                         print(len(argvs))
+                        
                         for train_val_split_day in trade_days[-test_n_day-2*n_day:-2*n_day]:
                             # print(train_val_split_day)
                             train_start_day = to_date(get_offset_trade_day(train_val_split_day,
