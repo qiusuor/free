@@ -146,6 +146,7 @@ def fetch_one(code, login, frequency, adjustflag):
 
 def fetch(adjustflag='2', freqs=['m', 'w', 'd', '60', '30', '15', '5'], code_list=[]):
     fetch_stock_codes()
+    get_industry_info()
     stockes = pd.read_csv(ALL_STOCKS)
     if os.path.exists(DAILY_DIR):
         shutil.rmtree(DAILY_DIR)
@@ -155,7 +156,7 @@ def fetch(adjustflag='2', freqs=['m', 'w', 'd', '60', '30', '15', '5'], code_lis
             if not_concern(code): continue
             code_list.append([code, False, freq, adjustflag])
     # fetch_one("sz.000670", False, 'd', '2')
-    pool = Pool(16)
+    pool = Pool(8)
     pool.imap_unordered(fetch_one_wrapper, code_list)
     pool.close()
     pool.join()

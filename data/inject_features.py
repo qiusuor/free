@@ -233,7 +233,6 @@ def inject_one(path):
     
 
 def inject_features():
-    get_industry_info()
     # get_shibor()
     pool = Pool(THREAD_NUM)
     paths = []
