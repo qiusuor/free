@@ -234,7 +234,7 @@ def inject_one(path):
 
 def inject_features():
     get_industry_info()
-    get_shibor()
+    # get_shibor()
     pool = Pool(THREAD_NUM)
     paths = []
     for file in tqdm(os.listdir(DAILY_DIR)):

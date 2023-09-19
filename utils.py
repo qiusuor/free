@@ -90,7 +90,7 @@ def to_int_date(date):
 
 def get_last_trade_day(login=False, update=True):
     if update:
-        get_trade_days(login=login)
+        get_trade_days(login=login, update=update)
     trade_days = joblib.load(TRADE_DAYS_PKL)
     localtime = datetime.datetime.now()
     if localtime.hour < 18 and to_int_date(localtime) in trade_days:

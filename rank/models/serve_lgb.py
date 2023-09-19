@@ -24,7 +24,7 @@ if __name__ == "__main__":
     features = get_feature_cols()
     label = "y_2_d_high_rank_10%"
     argvs = []
-    trade_days = get_trade_days()
+    trade_days = get_trade_days(update=False)
     test_n_day = 10
     opt_points = [("y_2_d_high_rank_20%", 120, 15, 7, 5, 156), ("y_2_d_high_rank_20%", 120, 15, 9, 5, 193), ("y_next_1d_close_2d_open_rate_rank_10%", 120, 15, 9, 5, 254), ("y_next_1d_close_2d_open_rate_rank_10%", 120, 3, 3, 41, 570)]
     
@@ -42,8 +42,8 @@ if __name__ == "__main__":
             features, label, train_start_day, train_end_day, val_start_day,
             val_end_day, n_day, train_len, num_leaves, max_depth, min_data_in_leaf, epoch
         ])
-        # print(train_start_day, train_end_day, val_start_day, val_end_day)
-
+    #     print(train_start_day, train_end_day, val_start_day, val_end_day)
+    # exit(0)
     np.random.shuffle(argvs)
     # print(argvs[0])
     # train_lightgbm(argvs[0])
