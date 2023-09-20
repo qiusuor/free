@@ -34,6 +34,7 @@ def inject_one(path):
     for n_day in future_n_day_high_low:
         df["y_next_{}_d_ret".format(n_day)] = df["close"].shift(-n_day) / df["open"].shift(-1)
         df["y_next_{}_d_close_high_ratio".format(n_day)] = df["high"].shift(-n_day) / df["close"].shift(-1)
+        df["y_next_{}_d_close_low_ratio".format(n_day)] = df["low"].shift(-n_day) / df["close"].shift(-1)
         df["y_next_{}_d_high".format(n_day)] = df["high"].rolling(n_day).apply(lambda x:max(x[1:])).shift(-n_day)
         df["y_next_{}_d_high_ratio".format(n_day)] = df["y_next_{}_d_high".format(n_day)] / df["open"].shift(-1)
         df["y_next_{}_d_low".format(n_day)] = df["low"].rolling(n_day).apply(lambda x:min(x[1:])).shift(-n_day)
