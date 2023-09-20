@@ -188,7 +188,7 @@ def train_lightgbm(argv):
         json.dump(meta, open(os.path.join(save_dir, "meta.json"), 'w'), indent=4)
     
 
-def prepare_data(update=True):
+def prepare_data(update=False):
     if update:
         fetch_daily()
     inject_features()
