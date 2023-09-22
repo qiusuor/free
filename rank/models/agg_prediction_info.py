@@ -38,7 +38,7 @@ def agg():
         for exp_config in  os.listdir(label_dir):
             configured_exp_dir = os.path.join(label_dir, exp_config)
             if not os.path.isdir(configured_exp_dir): continue
-            epochs, last_aps, last_aucs, top3_high_means, top3_low_means, top3_sharp_means, top3_gain_means, top3_close_high_means, top3_close_low_means, top3_close_sharps = [], [], [], [], [], [], [], [], [], []
+            epochs, last_aps, last_aucs, top3_high_means, top3_low_means, top3_sharp_means, top3_gain_means, top3_close_high_means, top3_close_low_means, top3_close_sharps, top3_1d_close_means = [], [], [], [], [], [], [], [], [], [], []
             if len(os.listdir(configured_exp_dir)) < 10: continue
             finished = True
             for val_start_day in os.listdir(configured_exp_dir):
@@ -58,6 +58,7 @@ def agg():
                 top3_gain_mean = meta["last_val"]["top3_watch"]["y_next_1d_close_2d_open_rate_topk_3_mean"] if "y_next_1d_close_2d_open_rate_topk_3_mean" in meta["last_val"]["top3_watch"] else 0
                 top3_close_high_mean = meta["last_val"]["top3_watch"]["y_next_2_d_close_high_ratio_topk_3_mean"] if "y_next_2_d_close_high_ratio_topk_3_mean" in meta["last_val"]["top3_watch"] else 0
                 top3_close_low_mean = meta["last_val"]["top3_watch"]["y_next_2_d_close_low_ratio_topk_3_mean"] if "y_next_2_d_close_low_ratio_topk_3_mean" in meta["last_val"]["top3_watch"] else 0
+                top3_1d_close_mean = meta["last_val"]["top3_watch"]["y_next_1d_close_rate_topk_3_mean"] if "y_next_1d_close_rate_topk_3_mean" in meta["last_val"]["top3_watch"] else 0
                 
                 top3_sharp_mean = top3_high_mean * top3_low_mean
                 top3_close_sharp = top3_close_high_mean * top3_close_low_mean
@@ -72,6 +73,7 @@ def agg():
                 top3_close_high_means.append(top3_close_high_mean)
                 top3_close_low_means.append(top3_close_low_mean)
                 top3_close_sharps.append(top3_close_sharp)
+                top3_1d_close_means.append(top3_1d_close_mean)
                 
             if not finished: continue
             avg_epoch = np.mean(epochs)
@@ -84,6 +86,7 @@ def agg():
             avg_close_high = np.mean(top3_close_high_means)
             avg_close_low = np.mean(top3_close_low_means)
             avg_close_sharp = np.mean(top3_close_sharps)
+            avg_1d_close = np.mean(top3_1d_close_means)
             
             exp_result = {
                 "label": label,
@@ -96,7 +99,8 @@ def agg():
                 "avg_nightly_gain": avg_nightly_gain,
                 "avg_close_high": avg_close_high,
                 "avg_close_low": avg_close_low,
-                "avg_close_sharp": avg_close_sharp
+                "avg_close_sharp": avg_close_sharp,
+                "avg_1d_close": avg_1d_close
             }
             json.dump(exp_result, open(os.path.join(configured_exp_dir, "result.json"), 'w'), indent=4)
             
@@ -121,6 +125,7 @@ def agg():
 
                 
     agg_result["sharp_exp"] = to_dict(sorted(agg_result["sharp_exp"].items(), key=lambda x:-x[1]["avg_sharp"]))
+    agg_result["sharp_1d_safe_exp"] = to_dict(sorted(agg_result["sharp_exp"].items(), key=lambda x:-x[1]["avg_sharp"]*x[1]["avg_1d_close"]))
     agg_result["high_exp"] = to_dict(sorted(agg_result["sharp_exp"].items(), key=lambda x:-x[1]["avg_high"]))
     agg_result["close_open_strategy"] = to_dict(sorted(agg_result["close_open_strategy"].items(), key=lambda x:-x[1]["avg_nightly_gain"]))
     agg_result["close_high_strategy"] = to_dict(sorted(agg_result["close_high_strategy"].items(), key=lambda x:-x[1]["avg_close_high"]))

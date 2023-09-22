@@ -28,10 +28,12 @@ if __name__ == "__main__":
         # "y_next_1d_close_2d_open_rate_rank_30%",
         # "y_next_1d_close_2d_open_rate_rank_50%",
         
-        "y_2_d_close_high_rank_10%",
-        "y_2_d_close_high_rank_20%",
-        "y_2_d_close_high_rank_30%",
+        # "y_2_d_close_high_rank_10%",
+        # "y_2_d_close_high_rank_20%",
+        # "y_2_d_close_high_rank_30%",
         # "y_2_d_close_high_rank_50%",
+        
+        "y_2_d_high_rank_20%_safe_1d",
         
         # "y_2_d_high_rank_10%",
         # "y_2_d_high_rank_20%",
@@ -102,7 +104,7 @@ if __name__ == "__main__":
                         
 
     np.random.shuffle(argvs)
-
+    # print(argvs[0])
     # train_lightgbm(argvs[0])
     pool = Pool(16)
     pool.imap_unordered(train_lightgbm, argvs)
