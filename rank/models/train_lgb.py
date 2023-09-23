@@ -23,48 +23,28 @@ if __name__ == "__main__":
     # prepare_data()
     
     search_labels = [
-        # "y_next_1d_close_2d_open_rate_rank_10%",
-        # "y_next_1d_close_2d_open_rate_rank_20%",
-        # "y_next_1d_close_2d_open_rate_rank_30%",
+        "y_next_1d_close_2d_open_rate_rank_10%",
+        "y_next_1d_close_2d_open_rate_rank_20%",
+        "y_next_1d_close_2d_open_rate_rank_30%",
         # "y_next_1d_close_2d_open_rate_rank_50%",
         
-        # "y_2_d_close_high_rank_10%",
-        # "y_2_d_close_high_rank_20%",
-        # "y_2_d_close_high_rank_30%",
+        "y_2_d_close_high_rank_10%",
+        "y_2_d_close_high_rank_20%",
+        "y_2_d_close_high_rank_30%",
         # "y_2_d_close_high_rank_50%",
         
         "y_2_d_high_rank_20%_safe_1d",
         
-        # "y_2_d_high_rank_10%",
-        # "y_2_d_high_rank_20%",
-        # "y_2_d_high_rank_30%",
+        "y_2_d_high_rank_10%",
+        "y_2_d_high_rank_20%",
+        "y_2_d_high_rank_30%",
         # "y_2_d_high_rank_50%",
         
-        # "y_2_d_ret_rank_10%",
-        # "y_2_d_ret_rank_20%",
-        # "y_2_d_ret_rank_30%",
+        "y_2_d_ret_rank_10%",
+        "y_2_d_ret_rank_20%",
+        "y_2_d_ret_rank_30%",
         # "y_2_d_ret_rank_50%",
-        
-        # "y_5_d_high_rank_10%",
-        # "y_5_d_high_rank_20%",
-        # "y_5_d_high_rank_30%",
-        # "y_5_d_high_rank_50%",
-        
-        # "y_5_d_ret_rank_10%",
-        # "y_5_d_ret_rank_20%",
-        # "y_5_d_ret_rank_30%",
-        # "y_5_d_ret_rank_50%",
-        
-        
-        # "y_10_d_high_rank_10%",
-        # "y_10_d_high_rank_20%",
-        # "y_10_d_high_rank_30%",
-        # "y_10_d_high_rank_50%",
-        
-        # "y_10_d_ret_rank_10%",
-        # "y_10_d_ret_rank_20%",
-        # "y_10_d_ret_rank_30%",
-        # "y_10_d_ret_rank_50%",
+    
     ]
     
     features = get_feature_cols()
@@ -103,6 +83,7 @@ if __name__ == "__main__":
                         # exit(0)
                         
 
+    exit(0)
     np.random.shuffle(argvs)
     # print(argvs[0])
     # train_lightgbm(argvs[0])
