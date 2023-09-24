@@ -66,8 +66,6 @@ def train_lightgbm(argv):
         print(params)
         
         pred_mode = True
-    if not pred_mode:
-        params["num_threads"] = 32
         
     param_des = "_".join([str(train_len), str(num_leaves), str(max_depth), str(min_data_in_leaf)])
     root_dir = EXP_PRED_DIR if pred_mode else EXP_DIR
