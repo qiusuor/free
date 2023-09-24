@@ -26,24 +26,24 @@ if __name__ == "__main__":
         "y_next_1d_close_2d_open_rate_rank_10%",
         "y_next_1d_close_2d_open_rate_rank_20%",
         "y_next_1d_close_2d_open_rate_rank_30%",
-        # "y_next_1d_close_2d_open_rate_rank_50%",
+        "y_next_1d_close_2d_open_rate_rank_50%",
         
         "y_2_d_close_high_rank_10%",
         "y_2_d_close_high_rank_20%",
         "y_2_d_close_high_rank_30%",
-        # "y_2_d_close_high_rank_50%",
+        "y_2_d_close_high_rank_50%",
         
         "y_2_d_high_rank_20%_safe_1d",
         
         "y_2_d_high_rank_10%",
         "y_2_d_high_rank_20%",
         "y_2_d_high_rank_30%",
-        # "y_2_d_high_rank_50%",
+        "y_2_d_high_rank_50%",
         
         "y_2_d_ret_rank_10%",
         "y_2_d_ret_rank_20%",
         "y_2_d_ret_rank_30%",
-        # "y_2_d_ret_rank_50%",
+        "y_2_d_ret_rank_50%",
     
     ]
     
@@ -56,7 +56,7 @@ if __name__ == "__main__":
     max_depth = 9
     min_data_in_leaf = 3
     train_len = 120
-    test_n_day = 10
+    test_n_day = TEST_N_LAST_DAY
 
     for label in search_labels:
         for num_leaves in [3, 7, 15, 31, 63]:
@@ -83,7 +83,7 @@ if __name__ == "__main__":
                         # exit(0)
                         
 
-    exit(0)
+    # exit(0)
     np.random.shuffle(argvs)
     # print(argvs[0])
     # train_lightgbm(argvs[0])

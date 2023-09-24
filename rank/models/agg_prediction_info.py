@@ -4,6 +4,7 @@ import os
 import json
 import numpy as np
 
+test_last_n_day = TEST_N_LAST_DAY
 
 def to_dict(sorted_items):
     keys, vals = [], []
@@ -39,7 +40,7 @@ def agg():
             configured_exp_dir = os.path.join(label_dir, exp_config)
             if not os.path.isdir(configured_exp_dir): continue
             epochs, last_aps, last_aucs, top3_high_means, top3_low_means, top3_sharp_means, top3_gain_means, top3_close_high_means, top3_close_low_means, top3_close_sharps, top3_1d_close_means = [], [], [], [], [], [], [], [], [], [], []
-            if len(os.listdir(configured_exp_dir)) < 10: continue
+            if len(os.listdir(configured_exp_dir)) < test_last_n_day: continue
             finished = True
             for val_start_day in os.listdir(configured_exp_dir):
                 val_start_day_dir = os.path.join(configured_exp_dir, val_start_day)
