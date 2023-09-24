@@ -48,16 +48,10 @@ if __name__ == "__main__":
     ]
     
     features = get_feature_cols()
-    label = "y_2_d_high_rank_10%"
-    argvs = []
     trade_days = get_trade_days(update=False)
-    
-    num_leaves = 7
-    max_depth = 9
-    min_data_in_leaf = 3
-    train_len = 120
     test_n_day = TEST_N_LAST_DAY
-
+    argvs = []
+    
     for label in search_labels:
         for num_leaves in [3, 7, 15, 31, 63]:
             for min_data_in_leaf in [3, 5, 11, 21, 41]:
