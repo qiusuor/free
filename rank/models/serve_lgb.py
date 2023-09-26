@@ -20,7 +20,7 @@ from rank.models.lgb_core import *
 
 if __name__ == "__main__":
     
-    # prepare_data()
+    prepare_data(update=False)
     features = get_feature_cols()
     label = "y_2_d_high_rank_10%"
     argvs = []
