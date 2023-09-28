@@ -33,6 +33,8 @@ def topk_shot(data, label, k=10, watch_list=[]):
         watches[watch+f"_topk_{k}_mean"] = data[watch][:k].mean()
     return miss_cnt, shot_cnt, watches
 
+def train_val_data_filter(df):
+    return df[df.low.shift(-1) != df.high.shift(-1)]
 
 def train_lightgbm(argv):
     features, label, train_start_day, train_end_day, val_start_day, val_end_day, n_day, train_len, num_leaves, max_depth, min_data_in_leaf, epoch = argv
@@ -52,19 +54,16 @@ def train_lightgbm(argv):
         "max_depth": max_depth,
         "num_iterations": 5000,
         "early_stopping_rounds": 100,
-        # "device": 'gpu',
-        # "gpu_platform_id": 0,
-        # "gpu_device_id": 0,
         "min_gain_to_split": 0,
-        "num_threads": 16,
+        "num_threads": 32,
     }
-    # print(params)
+    
     pred_mode = False
     if epoch > 0:
         params["num_iterations"] = epoch
         params.pop("early_stopping_rounds")
+        params["num_threads"] = 16
         print(params)
-        
         pred_mode = True
         
     param_des = "_".join([str(train_len), str(num_leaves), str(max_depth), str(min_data_in_leaf)])
@@ -86,6 +85,7 @@ def train_lightgbm(argv):
             continue
         path = os.path.join(DAILY_DIR, file)
         df = joblib.load(path)
+        df = train_val_data_filter(df)
         if df.isST[-1]:
             continue
         if "code_name" not in df.columns or not isinstance(df.code_name[-1], str) or "ST" in df.code_name[-1] or "st" in df.code_name[-1] or "sT" in df.code_name[-1]:
