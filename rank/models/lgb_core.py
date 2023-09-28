@@ -56,14 +56,13 @@ def train_lightgbm(argv):
         "num_iterations": 5000,
         "early_stopping_rounds": 100,
         "min_gain_to_split": 0,
-        "num_threads": 32,
+        "num_threads": 8,
     }
     
     pred_mode = False
     if epoch > 0:
         params["num_iterations"] = epoch
         params.pop("early_stopping_rounds")
-        params["num_threads"] = 16
         print(params)
         pred_mode = True
         

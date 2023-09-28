@@ -86,7 +86,7 @@ if __name__ == "__main__":
                         
 
     np.random.shuffle(argvs)
-    pool = Pool(16)
+    pool = Pool(32)
     pool.imap_unordered(train_lightgbm, argvs)
     pool.close()
     pool.join()
