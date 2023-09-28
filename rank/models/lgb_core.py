@@ -15,6 +15,7 @@ from data.inject_labels import inject_labels
 from matplotlib import pyplot as plt
 import shutil
 import json
+import gc
 
 
 def topk_shot(data, label, k=10, watch_list=[]):
@@ -75,28 +76,35 @@ def train_lightgbm(argv):
         shutil.rmtree(save_dir)
     make_dir(save_dir)
 
-    train_dataset = []
-    val_dataset = []
-    for file in os.listdir(DAILY_DIR):
-        code = file.split("_")[0]
-        if not_concern(code) or is_index(code):
-            continue
-        if not file.endswith(".pkl"):
-            continue
-        path = os.path.join(DAILY_DIR, file)
-        df = joblib.load(path)
-        df = train_val_data_filter(df)
-        if df.isST[-1]:
-            continue
-        if "code_name" not in df.columns or not isinstance(df.code_name[-1], str) or "ST" in df.code_name[-1] or "st" in df.code_name[-1] or "sT" in df.code_name[-1]:
-            continue
+    if os.path.exists(EXP_DATA_CACHE):
+        with open(EXP_DATA_CACHE, 'rb') as f:
+            dataset = cPickle.load(f)
+    else:
+        dataset = []
+        for file in os.listdir(DAILY_DIR):
+            code = file.split("_")[0]
+            if not_concern(code) or is_index(code):
+                continue
+            if not file.endswith(".pkl"):
+                continue
+            path = os.path.join(DAILY_DIR, file)
+            df = joblib.load(path)
+            df = train_val_data_filter(df)
+            if df.isST[-1]:
+                continue
+            if "code_name" not in df.columns or not isinstance(df.code_name[-1], str) or "ST" in df.code_name[-1] or "st" in df.code_name[-1] or "sT" in df.code_name[-1]:
+                continue
+            df["date"] = df.index
+            df = df[to_date(20220901):]
+            dataset.append(df)
+        dataset = pd.concat(dataset, axis=0)
 
-        train_dataset.append(df[train_start_day:train_end_day])
-        val_dataset.append(df[val_start_day:val_end_day])
-
-    train_dataset = pd.concat(train_dataset, axis=0)
-    val_dataset = pd.concat(val_dataset, axis=0)
-
+        with open(EXP_DATA_CACHE, 'wb') as f:
+            cPickle.dump(dataset, f)
+    train_dataset = dataset[(dataset.date >= train_start_day) & (dataset.date <= train_end_day)]
+    val_dataset = dataset[(dataset.date >= val_start_day) & (dataset.date <= val_end_day)]
+    del dataset
+    gc.collect()
     train_x, train_y = train_dataset[features], train_dataset[label]
     val_x, val_y = val_dataset[features], val_dataset[label]
     lgb_train = lgb.Dataset(train_x, train_y)

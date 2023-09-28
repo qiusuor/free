@@ -23,30 +23,30 @@ if __name__ == "__main__":
     # prepare_data()
     
     search_labels = [
-        # "y_next_1d_close_2d_open_rate_rank_10%",
-        # "y_next_1d_close_2d_open_rate_rank_20%",
-        # "y_next_1d_close_2d_open_rate_rank_30%",
-        # "y_next_1d_close_2d_open_rate_rank_50%",
+        "y_next_1d_close_2d_open_rate_rank_10%",
+        "y_next_1d_close_2d_open_rate_rank_20%",
+        "y_next_1d_close_2d_open_rate_rank_30%",
+        "y_next_1d_close_2d_open_rate_rank_50%",
         
-        # "y_2_d_close_high_rank_10%",
-        # "y_2_d_close_high_rank_20%",
-        # "y_2_d_close_high_rank_30%",
-        # "y_2_d_close_high_rank_50%",
+        "y_2_d_close_high_rank_10%",
+        "y_2_d_close_high_rank_20%",
+        "y_2_d_close_high_rank_30%",
+        "y_2_d_close_high_rank_50%",
         
         "y_2_d_high_rank_10%_safe_1d",
         "y_2_d_high_rank_20%_safe_1d",
         "y_2_d_high_rank_30%_safe_1d",
-        # "y_2_d_high_rank_50%_safe_1d",
+        "y_2_d_high_rank_50%_safe_1d",
         
         "y_2_d_high_rank_10%",
         "y_2_d_high_rank_20%",
         "y_2_d_high_rank_30%",
-        # "y_2_d_high_rank_50%",
+        "y_2_d_high_rank_50%",
         
-        # "y_2_d_ret_rank_10%",
-        # "y_2_d_ret_rank_20%",
-        # "y_2_d_ret_rank_30%",
-        # "y_2_d_ret_rank_50%",
+        "y_2_d_ret_rank_10%",
+        "y_2_d_ret_rank_20%",
+        "y_2_d_ret_rank_30%",
+        "y_2_d_ret_rank_50%",
     
     ]
     
@@ -73,17 +73,19 @@ if __name__ == "__main__":
                             val_start_day = to_date(get_offset_trade_day(train_val_split_day, 1))
                             # print(val_start_day)
                             val_end_day = to_date(get_offset_trade_day(train_val_split_day, n_day))
-                            argvs.append([
+                            argv = [
                                 features, label, train_start_day, train_end_day, val_start_day,
                                 val_end_day, n_day, train_len, num_leaves, max_depth, min_data_in_leaf, -1
-                            ])
+                            ]
+                            if not os.path.exists(EXP_DATA_CACHE):
+                                # print(argv)
+                                train_lightgbm(argv)
+                                exit(0)
+                            argvs.append(argv)
                         # exit(0)
                         
 
-    # exit(0)
     np.random.shuffle(argvs)
-    # print(argvs[0])
-    # train_lightgbm(argvs[0])
     pool = Pool(16)
     pool.imap_unordered(train_lightgbm, argvs)
     pool.close()

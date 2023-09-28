@@ -3,12 +3,13 @@ from multiprocessing import cpu_count
 
 THREAD_NUM = cpu_count()
 
-TEST_N_LAST_DAY = 5
+TEST_N_LAST_DAY = 10
 ROOT_DIR = os.path.dirname(os.path.realpath(__file__))
 DATA_DIR = os.path.join(ROOT_DIR, "data/data")
 TICK_DIR = os.path.join(DATA_DIR, "tick")
 DAILY_DIR = os.path.join(DATA_DIR, "daily")
 EXP_DIR = os.path.join(ROOT_DIR, "rank/exp")
+EXP_DATA_CACHE = os.path.join(EXP_DIR, "cache.pkl")
 EXP_PRED_DIR = os.path.join(ROOT_DIR, "rank/exp_pred")
 INDUSTRY_INFO = os.path.join(DATA_DIR, "market/industry.pkl")
 SHIBOR_INFO = os.path.join(DATA_DIR, "market/shibor.pkl")
