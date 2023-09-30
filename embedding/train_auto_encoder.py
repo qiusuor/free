@@ -14,17 +14,19 @@ from config import *
 import pandas as pd
 from utils import *
 from sklearn.metrics import average_precision_score, roc_auc_score
-from auto_encoder import LSTMAutoEncoder, MLPAutoEncoder, weight_init
+from auto_encoder import LSTMAutoEncoder, MLPAutoEncoder, weight_init, SeqMLPAutoEncoder
 from collections import Counter
 import platform
 
 batch_size = 1024
-epochs = 300
+epochs = 1500
 
-
+K = 120
 
 def load_data(train_val_split=0.7):
     data = []
+    features = ["turn", "price"]
+    
     for file in tqdm(os.listdir(DAILY_DIR)):
         code = file.split("_")[0]
         if not_concern(code) or is_index(code):
@@ -32,21 +34,38 @@ def load_data(train_val_split=0.7):
         if not file.endswith(".pkl"):
             continue
         path = os.path.join(DAILY_DIR, file)
-        df = joblib.load(path)
-        data.append(df)
+        df = joblib.load(path)[features]
+        data_i = [df]
+        for i in range(1, K):
+            data_i.append(df.shift(i))
+        data_i = data_i[::-1]
+        data_i = pd.concat(data_i, axis=1)
+        data_i = data_i.iloc[K:]
+        # print(data_i)
+        # exit(0)
+        data.append(data_i)
     df = pd.concat(data)
-    features = ["open", "close", "low", "high", "amount", "turn", "price", "pctChg", "peTTM", "pbMRQ", "psTTM", "pcfNcfTTM"]
-    df = df[features]
-    df = df.fillna(0).astype("float32")
-    mean = df.mean(axis=0).values
-    std = df.std(axis=0).values
-    df = (df - mean) / (std + 1e-9)
-    joblib.dump((mean, std), os.path.join(DATA_DIR, "market", "mean_std.pkl"))
-    print(mean)
-    print(std)
-    data = df.values
-    np.random.shuffle(data)
+    df = df.fillna(0).astype("float32").values
+    # mean = df.mean(axis=0).values
+    # std = df.std(axis=0).values
+    # df = (df - mean) / (std + 1e-9)
+    # joblib.dump((mean, std), os.path.join(DATA_DIR, "market", "mean_std.pkl"))
+    # np.random.shuffle(df)
+    
+    data = torch.from_numpy(df)
+    
     N = len(data)
+    
+    data = data.reshape(N, K, 2)
+    # print(data)
+    # data = data.permute(0, 2, 1)
+    # print(data)
+    mean = data.mean((0, 1))
+    std = data.std((0, 1))
+    data = (data - mean) / (std + 1e-9)
+    # print(mean)
+    # print(std)
+    joblib.dump((mean, std), os.path.join(DATA_DIR, "market", "mean_std.pkl"))
     x_train = data[:int(N*train_val_split)]
     x_test = data[int(N*train_val_split):]
     # print(len(x_train))
@@ -71,7 +90,7 @@ if __name__ == "__main__":
     criterion = nn.MSELoss(reduction="mean")
     train_loader = DataLoader(x_train, batch_size=batch_size, drop_last=True, shuffle=True)
     test_loader = DataLoader(x_test, batch_size=batch_size, drop_last=True)
-    model = MLPAutoEncoder(input_size=feature_size, lat_size=64, hidden_size=128)
+    model = SeqMLPAutoEncoder(t_in=K, c_in=2, lat_size=8)
     model.apply(weight_init)
     model.to(device)
     print(model)
@@ -84,7 +103,7 @@ if __name__ == "__main__":
                                 weight_decay = 0.0,
                                 amsgrad=False)
 
-    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[50, 100, 200], gamma=0.1)
+    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[200, 500, 800, 1200], gamma=0.3)
     mean, std = joblib.load(os.path.join(DATA_DIR, "market", "mean_std.pkl"))
     for epoch in range(epochs):
         print('EPOCH {} / {}:'.format(epoch + 1, epochs))
@@ -102,7 +121,7 @@ if __name__ == "__main__":
             
         scheduler.step()
         avg_loss = np.mean(loss_)
-
+        print()
         with torch.no_grad():
             model.eval()
             vloss_ = []
@@ -119,7 +138,7 @@ if __name__ == "__main__":
                 vloss_.append(vloss.data.item())
                 
                 if j%200==0:
-                    print(list(zip((inputs_v.cpu()[0]*(std+1e-9)+mean).numpy().tolist(), (o.cpu()[0]*(std+1e-9)+mean).numpy().tolist())))
+                    print(list(zip((inputs_v.cpu()[-1,-1,:]*(std+1e-9)+mean).numpy().tolist(), (o.cpu()[-1,-1,:]*(std+1e-9)+mean).numpy().tolist())))
             avg_vloss = np.mean(vloss_)
             print("\nTrain avg loss: {} Val avg loss: {}".format(avg_loss, avg_vloss))
             if avg_vloss < best_score:

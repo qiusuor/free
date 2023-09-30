@@ -5,6 +5,7 @@ import numpy as np
 import tensorboard as tb
 import torch.nn as nn
 from torch.nn import LSTMCell
+import torch.nn.functional as F
 
 
 
@@ -123,6 +124,60 @@ class MLPAutoEncoder(nn.Module):
         lat = self.encoder(x)
         x = self.decoder(lat)
         return x, lat
+  
+class SeqMLPBlock(nn.Module):
+    """
+        B, T_IN, C_IN -> B, T_OUT, C_OUT
+    """
+    def __init__(self, t_in, t_out, c_in, c_out):
+        super().__init__()
+        self.time_embedding = nn.Linear(t_in, t_out)
+        self.channel_embedding = nn.Linear(c_in, c_out)
+        
+    def forward(self, x):
+        # print(x.permute(0, 2, 1).shape)
+        x = self.time_embedding(x.permute(0, 2, 1))
+        x = F.leaky_relu(x)
+        x = self.channel_embedding(x.permute(0, 2, 1))
+        x = F.leaky_relu(x)
+        
+        return x
+    
+class SeqMLPAutoEncoder(nn.Module):
+    def __init__(self, t_in, c_in, lat_size=16):
+        super().__init__()
+        self.t_in = t_in
+        self.c_in = c_in
+        self.lat_size = lat_size
+        self.pre = SeqMLPBlock(t_in, 128, c_in, 128)
+        self.post = SeqMLPBlock(128, t_in, 128, c_in)
+        
+        self.encoder = nn.Sequential(
+            SeqMLPBlock(128, 64, 128, 64),
+            SeqMLPBlock(64, 32, 64, 32),
+            SeqMLPBlock(32, 16, 32, 16),
+            SeqMLPBlock(16, 8, 16, 8),
+        )
+        self.h2l = nn.Linear(64, lat_size)
+        self.l2h = nn.Linear(lat_size, 64)
+        self.decoder = nn.Sequential(
+            SeqMLPBlock(8, 16, 8, 16),
+            SeqMLPBlock(16, 32, 16, 32),
+            SeqMLPBlock(32, 64, 32, 64),
+            SeqMLPBlock(64, 128, 64, 128)
+        )
+        
+
+    def forward(self, x):
+        N = x.shape[0]
+        x = self.pre(x)
+        h = self.encoder(x)
+        lat = self.h2l(h.reshape(N, -1))
+        h = self.l2h(lat).reshape(N, 8, 8)
+        x = self.decoder(h)
+        x = self.post(x)
+        return x, lat
+    
 
 class TransformerAutoEncoder(nn.Module):
     def __init__(self, input_size, output_size, lat_size, hidden_size=128, num_layers=3, dropout=0, batch_first=True, bidirectional=True, n_class=3):
