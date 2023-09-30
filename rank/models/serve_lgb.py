@@ -28,7 +28,8 @@ if __name__ == "__main__":
     test_n_day = 10
     opt_points = [
         # ("y_2_d_high_rank_20%_safe_1d", 180, 31, 7, 3, 144), 
-        ("y_2_d_high_rank_20%", 120, 63, 9, 11, 52), 
+        ("y_2_d_high_rank_20%", 120, 63, 9, 3, 45), 
+        # ("y_2_d_high_rank_20%", 120, 63, 9, 11, 52), 
         # ("y_2_d_high_rank_20%", 180, 63, 7, 11, 48), 
         # ("y_next_1d_close_2d_open_rate_rank_10%", 120, 15, 9, 5, 254), 
         # ("y_next_1d_close_2d_open_rate_rank_10%", 120, 3, 3, 41, 570), 

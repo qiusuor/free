@@ -95,7 +95,7 @@ class LSTMAutoEncoder(nn.Module):
         return outputs, outputs
     
 class MLPAutoEncoder(nn.Module):
-    def __init__(self, input_size, lat_size, hidden_size=16):
+    def __init__(self, input_size, lat_size, hidden_size=128):
         super().__init__()
         self.input_size = input_size
         self.lat_size = lat_size
