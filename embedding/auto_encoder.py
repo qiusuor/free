@@ -153,18 +153,35 @@ class SeqMLPAutoEncoder(nn.Module):
         self.post = SeqMLPBlock(128, t_in, 128, c_in)
         
         self.encoder = nn.Sequential(
+            SeqMLPBlock(128, 128, 128, 128),
+            SeqMLPBlock(128, 128, 128, 128),
+            SeqMLPBlock(128, 128, 128, 128),
+            SeqMLPBlock(128, 128, 128, 128),
             SeqMLPBlock(128, 64, 128, 64),
             SeqMLPBlock(64, 32, 64, 32),
             SeqMLPBlock(32, 16, 32, 16),
-            SeqMLPBlock(16, 8, 16, 8),
         )
-        self.h2l = nn.Linear(64, lat_size)
-        self.l2h = nn.Linear(lat_size, 64)
+        self.h2l = nn.Sequential(
+            nn.Linear(256, 128),
+            nn.Linear(128, 64),
+            nn.Linear(64, 64),
+            nn.Linear(64, lat_size))
+        
+        self.l2h = nn.Sequential(
+            nn.Linear(lat_size, 64),
+            nn.Linear(64, 64),
+            nn.Linear(64, 128),
+            nn.Linear(128, 256)
+        )
+        
         self.decoder = nn.Sequential(
-            SeqMLPBlock(8, 16, 8, 16),
             SeqMLPBlock(16, 32, 16, 32),
             SeqMLPBlock(32, 64, 32, 64),
-            SeqMLPBlock(64, 128, 64, 128)
+            SeqMLPBlock(64, 128, 64, 128),
+            SeqMLPBlock(128, 128, 128, 128),
+            SeqMLPBlock(128, 128, 128, 128),
+            SeqMLPBlock(128, 128, 128, 128),
+            SeqMLPBlock(128, 128, 128, 128)
         )
         
 
@@ -173,7 +190,7 @@ class SeqMLPAutoEncoder(nn.Module):
         x = self.pre(x)
         h = self.encoder(x)
         lat = self.h2l(h.reshape(N, -1))
-        h = self.l2h(lat).reshape(N, 8, 8)
+        h = self.l2h(lat).reshape(N, 16, 16)
         x = self.decoder(h)
         x = self.post(x)
         return x, lat

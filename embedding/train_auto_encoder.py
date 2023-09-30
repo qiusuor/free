@@ -19,9 +19,9 @@ from collections import Counter
 import platform
 
 batch_size = 1024
-epochs = 1500
+epochs = 500
 
-K = 120
+K = 240
 
 def load_data(train_val_split=0.7):
     data = []
@@ -50,7 +50,7 @@ def load_data(train_val_split=0.7):
     # std = df.std(axis=0).values
     # df = (df - mean) / (std + 1e-9)
     # joblib.dump((mean, std), os.path.join(DATA_DIR, "market", "mean_std.pkl"))
-    # np.random.shuffle(df)
+    np.random.shuffle(df)
     
     data = torch.from_numpy(df)
     
@@ -98,12 +98,12 @@ if __name__ == "__main__":
     print(f'Trainable params: {trainable_params}')
 
     optimizer = torch.optim.Adam(model.parameters(),
-                                lr=0.001,
+                                lr=0.0001,
                                 betas=[0.9, 0.999],
                                 weight_decay = 0.0,
                                 amsgrad=False)
 
-    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[200, 500, 800, 1200], gamma=0.3)
+    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[100, 200, 300, 400], gamma=0.3)
     mean, std = joblib.load(os.path.join(DATA_DIR, "market", "mean_std.pkl"))
     for epoch in range(epochs):
         print('EPOCH {} / {}:'.format(epoch + 1, epochs))
