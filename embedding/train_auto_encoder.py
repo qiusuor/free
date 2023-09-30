@@ -62,7 +62,7 @@ def load_data(train_val_split=0.7):
 
 if __name__ == "__main__":
  
-    best_score = 0
+    best_score = float("inf")
     best_model_path = "embedding/checkpoint/mlp_autoencoder_last_{}.pth".format(K)
     make_dir(best_model_path)
     torch.set_default_dtype(torch.float32)
