@@ -13,7 +13,7 @@ def to_dict(sorted_items):
         vals.append(val)
     return dict(zip(keys, vals))
         
-def agg():
+def agg_prediction_info():
     agg_result = dict()
     agg_result["sharp_exp"] = dict()
     agg_result["close_open_strategy"] = dict()
@@ -144,5 +144,5 @@ def agg():
             
             
 if __name__ == "__main__":
-    agg()
+    agg_prediction_info()
     
