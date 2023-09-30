@@ -49,7 +49,7 @@ def load_data(train_val_split=0.7):
     data = torch.from_numpy(df)
     
     N = len(data)
-    data = data.reshape(N, K, 2)
+    data = data.reshape(N, K, len(features))
     mean = data.mean((0, 1))
     std = data.std((0, 1))
     data = (data - mean) / (std + 1e-9)
@@ -70,12 +70,12 @@ if __name__ == "__main__":
     print("training on device: ", device)
 
     x_train, x_test = load_data()
-    feature_size = len(x_train[0])
+    feature_dim = x_train.shape[2]
     
     criterion = nn.MSELoss(reduction="mean")
     train_loader = DataLoader(x_train, batch_size=batch_size, drop_last=True, shuffle=True)
     test_loader = DataLoader(x_test, batch_size=batch_size, drop_last=True)
-    model = SeqMLPAutoEncoder(t_in=K, c_in=2, lat_size=LAT_SIZE)
+    model = SeqMLPAutoEncoder(t_in=K, c_in=feature_dim, lat_size=LAT_SIZE)
     model.apply(weight_init)
     model.to(device)
     print(model)
