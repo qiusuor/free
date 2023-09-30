@@ -20,12 +20,12 @@ import platform
 
 batch_size = 1024
 epochs = 500
-LAT_SIZE = 8
-K = 5
+LAT_SIZE = 16
+K = 3
 
 def load_data(train_val_split=0.7):
     data = []
-    features = ["turn", "price", "open", "low", "high", "close", "pctChg", "peTTM", "pbMRQ", "psTTM", "pcfNcfTTM"]
+    features = ["turn", "price", "open", "low", "high", "close"]
     
     for file in tqdm(os.listdir(DAILY_DIR)):
         code = file.split("_")[0]
