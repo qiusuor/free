@@ -21,7 +21,7 @@ import platform
 batch_size = 1024
 epochs = 500
 LAT_SIZE = 16
-K = 3
+K = 120
 
 def load_data(train_val_split=0.7):
     data = []
