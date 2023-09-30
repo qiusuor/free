@@ -80,6 +80,7 @@ if __name__ == "__main__":
                             if not os.path.exists(EXP_DATA_CACHE):
                                 # print(argv)
                                 train_lightgbm(argv)
+                                print("Generate cache file this time, try again.")
                                 exit(0)
                             argvs.append(argv)
                         # exit(0)

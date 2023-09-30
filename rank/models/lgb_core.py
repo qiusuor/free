@@ -74,7 +74,7 @@ def train_lightgbm(argv):
     if os.path.exists(save_dir):
         shutil.rmtree(save_dir)
     make_dir(save_dir)
-
+    make_dir(EXP_DATA_CACHE)
     if os.path.exists(EXP_DATA_CACHE):
         with open(EXP_DATA_CACHE, 'rb') as f:
             dataset = cPickle.load(f)
