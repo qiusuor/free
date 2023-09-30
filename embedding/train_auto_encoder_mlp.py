@@ -20,12 +20,12 @@ import platform
 
 batch_size = 1024
 epochs = 500
-LAT_SIZE = 64
-K = 120
+LAT_SIZE = 16
+K = 3
 
 def load_data(train_val_split=0.7):
     data = []
-    features = ["turn", "price", "open", "low", "high", "close"]
+    features = ["turn", "price", "open", "low", "high", "close", "pctChg", "peTTM", "pbMRQ", "psTTM", "pcfNcfTTM"]
     
     for file in tqdm(os.listdir(DAILY_DIR)):
         code = file.split("_")[0]
@@ -53,7 +53,7 @@ def load_data(train_val_split=0.7):
     mean = data.mean(0)
     std = data.std(0)
     data = (data - mean) / (std + 1e-9)
-    joblib.dump((mean, std), "embedding/checkpoint/mean_std_last_{}.pkl")
+    joblib.dump((mean, std), "embedding/checkpoint/mean_std_last_{}.pkl".format(K))
     x_train = data[:int(N*train_val_split)]
     x_test = data[int(N*train_val_split):]    
     
@@ -89,7 +89,7 @@ if __name__ == "__main__":
                                 amsgrad=False)
 
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[100, 200, 300, 400], gamma=0.3)
-    mean, std = joblib.load("embedding/checkpoint/mean_std_last_{}.pkl")
+    mean, std = joblib.load("embedding/checkpoint/mean_std_last_{}.pkl".format(K))
     for epoch in range(epochs):
         print('EPOCH {} / {}:'.format(epoch + 1, epochs))
         model.train()
