@@ -41,36 +41,21 @@ def load_data(train_val_split=0.7):
         data_i = data_i[::-1]
         data_i = pd.concat(data_i, axis=1)
         data_i = data_i.iloc[K:]
-        # print(data_i)
-        # exit(0)
         data.append(data_i)
+        
     df = pd.concat(data)
     df = df.fillna(0).astype("float32").values
-    # mean = df.mean(axis=0).values
-    # std = df.std(axis=0).values
-    # df = (df - mean) / (std + 1e-9)
-    # joblib.dump((mean, std), os.path.join(DATA_DIR, "market", "mean_std.pkl"))
     np.random.shuffle(df)
-    
     data = torch.from_numpy(df)
     
     N = len(data)
-    
     data = data.reshape(N, K, 2)
-    # print(data)
-    # data = data.permute(0, 2, 1)
-    # print(data)
     mean = data.mean((0, 1))
     std = data.std((0, 1))
     data = (data - mean) / (std + 1e-9)
-    # print(mean)
-    # print(std)
     joblib.dump((mean, std), os.path.join(DATA_DIR, "market", "mean_std.pkl"))
     x_train = data[:int(N*train_val_split)]
-    x_test = data[int(N*train_val_split):]
-    # print(len(x_train))
-    # print(x_train)
-    
+    x_test = data[int(N*train_val_split):]    
     
     return x_train, x_test
         
