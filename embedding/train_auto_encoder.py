@@ -20,7 +20,7 @@ import platform
 
 batch_size = 1024
 epochs = 500
-
+LAT_SIZE = 64
 K = 240
 
 def load_data(train_val_split=0.7):
@@ -90,7 +90,7 @@ if __name__ == "__main__":
     criterion = nn.MSELoss(reduction="mean")
     train_loader = DataLoader(x_train, batch_size=batch_size, drop_last=True, shuffle=True)
     test_loader = DataLoader(x_test, batch_size=batch_size, drop_last=True)
-    model = SeqMLPAutoEncoder(t_in=K, c_in=2, lat_size=8)
+    model = SeqMLPAutoEncoder(t_in=K, c_in=2, lat_size=LAT_SIZE)
     model.apply(weight_init)
     model.to(device)
     print(model)
