@@ -5,3 +5,4 @@ retrieve/rules/main_wave/report_main_wave_retr
 retrieve/rules/main_wave/today_report_main_wave_retr
 rank/exp
 rank/exp_pred
+embedding/checkpoint
