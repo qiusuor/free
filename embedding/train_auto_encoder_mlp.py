@@ -20,8 +20,8 @@ import platform
 
 batch_size = 1024
 epochs = 500
-LAT_SIZE = 16
-K = 3
+LAT_SIZE = 64
+K = 120
 
 def load_data(train_val_split=0.7):
     data = []
@@ -53,7 +53,7 @@ def load_data(train_val_split=0.7):
     mean = data.mean(0)
     std = data.std(0)
     data = (data - mean) / (std + 1e-9)
-    joblib.dump((mean, std), os.path.join(DATA_DIR, "market", "mean_std.pkl"))
+    joblib.dump((mean, std), "embedding/checkpoint/mean_std_last_{}.pkl")
     x_train = data[:int(N*train_val_split)]
     x_test = data[int(N*train_val_split):]    
     
@@ -89,7 +89,7 @@ if __name__ == "__main__":
                                 amsgrad=False)
 
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[100, 200, 300, 400], gamma=0.3)
-    mean, std = joblib.load(os.path.join(DATA_DIR, "market", "mean_std.pkl"))
+    mean, std = joblib.load("embedding/checkpoint/mean_std_last_{}.pkl")
     for epoch in range(epochs):
         print('EPOCH {} / {}:'.format(epoch + 1, epochs))
         model.train()
