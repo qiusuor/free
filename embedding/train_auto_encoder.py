@@ -78,8 +78,8 @@ def load_data(train_val_split=0.7):
 if __name__ == "__main__":
  
     best_score = 0
-    best_model_path = "rank/models/checkpoint/mlp_autoencoder.pth"
-
+    best_model_path = "embedding/checkpoint/mlp_autoencoder_last_{}.pth".format(K)
+    make_dir(best_model_path)
     torch.set_default_dtype(torch.float32)
     device = torch.device("mps") if platform.machine() == 'arm64' else torch.device("cuda")
     print("training on device: ", device)
