@@ -21,7 +21,7 @@ import platform
 batch_size = 1024
 epochs = 500
 LAT_SIZE = 16
-K = 120
+K = 240
 
 def load_data(train_val_split=0.7):
     data = []
@@ -53,7 +53,7 @@ def load_data(train_val_split=0.7):
     mean = data.mean(0)
     std = data.std(0)
     data = (data - mean) / (std + 1e-9)
-    joblib.dump((mean, std), "embedding/checkpoint/mean_std_last_{}.pkl".format(K))
+    joblib.dump((mean, std), "embedding/checkpoint/mean_std_{}_{}.pkl".format(K, LAT_SIZE))
     x_train = data[:int(N*train_val_split)]
     x_test = data[int(N*train_val_split):]    
     
@@ -63,7 +63,7 @@ def load_data(train_val_split=0.7):
 if __name__ == "__main__":
  
     best_score = float("inf")
-    best_model_path = "embedding/checkpoint/mlp_autoencoder_last_{}.pth".format(K)
+    best_model_path = "embedding/checkpoint/mlp_autoencoder_{}_{}.pth".format(K, LAT_SIZE)
     make_dir(best_model_path)
     torch.set_default_dtype(torch.float32)
     device = torch.device("mps") if platform.machine() == 'arm64' else torch.device("cuda")
@@ -89,7 +89,7 @@ if __name__ == "__main__":
                                 amsgrad=False)
 
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[100, 200, 300, 400], gamma=0.3)
-    mean, std = joblib.load("embedding/checkpoint/mean_std_last_{}.pkl".format(K))
+    mean, std = joblib.load("embedding/checkpoint/mean_std_{}_{}.pkl".format(K, LAT_SIZE))
     for epoch in range(epochs):
         print('EPOCH {} / {}:'.format(epoch + 1, epochs))
         model.train()
