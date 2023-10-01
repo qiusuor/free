@@ -18,11 +18,6 @@ from auto_encoder import LSTMAutoEncoder, MLPAutoEncoder, weight_init, SeqMLPAut
 from collections import Counter
 import platform
 
-batch_size = 1024
-epochs = 500
-LAT_SIZE = 16
-K = 240
-
 def load_data(train_val_split=0.7):
     data = []
     features = ["turn", "price", "open", "low", "high", "close", "pctChg"]
@@ -58,10 +53,23 @@ def load_data(train_val_split=0.7):
     x_test = data[int(N*train_val_split):]    
     
     return x_train, x_test
-        
-
-if __name__ == "__main__":
  
+ def parse_args():
+    parser = argparse.ArgumentParser(description='MLP embedding')
+    parser.add_argument('--last_n_day', type=int, default=3)
+    parser.add_argument('--lat_size', type=int, default=16)
+    parser.add_argument('--batch_size', type=int, default=1024)
+    parser.add_argument('--epoch', type=int, default=500)
+    
+    args = parser.parse_args()
+    return args   
+
+def train(args):
+    batch_size = args.batch_size
+    epochs = args.epoch
+    LAT_SIZE = args.lat_size
+    K = args.last_n_day
+
     best_score = float("inf")
     best_model_path = "embedding/checkpoint/mlp_autoencoder_{}_{}.pth".format(K, LAT_SIZE)
     make_dir(best_model_path)
@@ -134,3 +142,8 @@ if __name__ == "__main__":
 
                 
                 
+    
+if __name__ == "__main__":
+    args = parse_args()
+    train(args)
+    
