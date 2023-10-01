@@ -107,10 +107,14 @@ class MLPAutoEncoder(nn.Module):
             nn.LeakyReLU(),
             nn.Linear(hidden_size, hidden_size),
             nn.LeakyReLU(),
+            nn.Linear(hidden_size, hidden_size),
+            nn.LeakyReLU(),
             nn.Linear(hidden_size, lat_size),
         )
         self.decoder = nn.Sequential(
             nn.Linear(lat_size, hidden_size),
+            nn.LeakyReLU(),
+            nn.Linear(hidden_size, hidden_size),
             nn.LeakyReLU(),
             nn.Linear(hidden_size, hidden_size),
             nn.LeakyReLU(),
