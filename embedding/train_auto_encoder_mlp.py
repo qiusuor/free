@@ -18,41 +18,7 @@ from auto_encoder import LSTMAutoEncoder, MLPAutoEncoder, weight_init, SeqMLPAut
 from collections import Counter
 import platform
 
-def load_data(train_val_split=0.7):
-    data = []
-    features = ["turn", "price", "open", "low", "high", "close", "pctChg"]
-    
-    for file in tqdm(os.listdir(DAILY_DIR)):
-        code = file.split("_")[0]
-        if not_concern(code) or is_index(code):
-            continue
-        if not file.endswith(".pkl"):
-            continue
-        path = os.path.join(DAILY_DIR, file)
-        df = joblib.load(path)[features]
-        data_i = [df]
-        for i in range(1, K):
-            data_i.append(df.shift(i))
-        data_i = data_i[::-1]
-        data_i = pd.concat(data_i, axis=1)
-        data_i = data_i.iloc[K:]
-        data.append(data_i)
-        
-    df = pd.concat(data)
-    df = df.fillna(0).astype("float32").values
-    np.random.shuffle(df)
-    data = torch.from_numpy(df)
-    
-    N = len(data)
-    # data = data.reshape(N, K, len(features))
-    mean = data.mean(0)
-    std = data.std(0)
-    data = (data - mean) / (std + 1e-9)
-    joblib.dump((mean, std), "embedding/checkpoint/mean_std_{}_{}.pkl".format(K, LAT_SIZE))
-    x_train = data[:int(N*train_val_split)]
-    x_test = data[int(N*train_val_split):]    
-    
-    return x_train, x_test
+
  
 def parse_args():
     parser = argparse.ArgumentParser(description='MLP embedding')
@@ -64,7 +30,43 @@ def parse_args():
     args = parser.parse_args()
     return args   
 
-def train(args):
+def train(argv):
+    batch_size, epochs, K, LAT_SIZE = argv
+    def load_data(train_val_split=0.7):
+        data = []
+        features = ["turn", "price", "open", "low", "high", "close", "pctChg"]
+        
+        for file in tqdm(os.listdir(DAILY_DIR)):
+            code = file.split("_")[0]
+            if not_concern(code) or is_index(code):
+                continue
+            if not file.endswith(".pkl"):
+                continue
+            path = os.path.join(DAILY_DIR, file)
+            df = joblib.load(path)[features]
+            data_i = [df]
+            for i in range(1, K):
+                data_i.append(df.shift(i))
+            data_i = data_i[::-1]
+            data_i = pd.concat(data_i, axis=1)
+            data_i = data_i.iloc[K:]
+            data.append(data_i)
+            
+        df = pd.concat(data)
+        df = df.fillna(0).astype("float32").values
+        np.random.shuffle(df)
+        data = torch.from_numpy(df)
+        
+        N = len(data)
+        # data = data.reshape(N, K, len(features))
+        mean = data.mean(0)
+        std = data.std(0)
+        data = (data - mean) / (std + 1e-9)
+        joblib.dump((mean, std), "embedding/checkpoint/mean_std_{}_{}.pkl".format(K, LAT_SIZE))
+        x_train = data[:int(N*train_val_split)]
+        x_test = data[int(N*train_val_split):]    
+    return x_train, x_test
+
     best_score = float("inf")
     best_model_path = "embedding/checkpoint/mlp_autoencoder_{}_{}.pth".format(K, LAT_SIZE)
     make_dir(best_model_path)
@@ -105,11 +107,11 @@ def train(args):
             loss.backward()
             optimizer.step()
             loss_.append(loss.data.item())
-            print('\r    BATCH {} / {} loss: {}'.format(i + 1, len(train_loader), loss.data.item()), end="")
+            # print('\r    BATCH {} / {} loss: {}'.format(i + 1, len(train_loader), loss.data.item()), end="")
             
         scheduler.step()
         avg_loss = np.mean(loss_)
-        print()
+        # print()
         with torch.no_grad():
             model.eval()
             vloss_ = []
@@ -125,25 +127,29 @@ def train(args):
                 vloss = criterion(inputs_v, o)
                 vloss_.append(vloss.data.item())
                 
-                if j%200==0:
-                    print(list(zip((inputs_v.cpu()[-1,:]*(std+1e-9)+mean).numpy().tolist(), (o.cpu()[-1,:]*(std+1e-9)+mean).numpy().tolist()))[-feature_dim//K:])
+                # if j%200==0:
+                #     print(list(zip((inputs_v.cpu()[-1,:]*(std+1e-9)+mean).numpy().tolist(), (o.cpu()[-1,:]*(std+1e-9)+mean).numpy().tolist()))[-feature_dim//K:])
             avg_vloss = np.mean(vloss_)
-            print("\nTrain avg loss: {} Val avg loss: {}".format(avg_loss, avg_vloss))
+            print("K: {} Lat size: {} Train avg loss: {} Val avg loss: {}".format(K, LAT_SIZE, avg_loss, avg_vloss))
             if avg_vloss < best_score:
                 best_score = avg_vloss
                 model_path = best_model_path
-                print('    ---> New Best Score: {}. Saving model to {}'.format(best_score, model_path))
+                print('    ---> K: {} Lat size: {} New Best Score: {}. Saving model to {}'.format(K, LAT_SIZE, best_score, model_path))
                 torch.save(model.state_dict(), model_path)
 
                 
                 
     
 if __name__ == "__main__":
-    args = parse_args()
-    global batch_size, epochs, LAT_SIZE, K
-    batch_size = args.batch_size
-    epochs = args.epoch
-    LAT_SIZE = args.lat_size
-    K = args.last_n_day
-    train(args)
+    # args = parse_args()
+    # global batch_size, epochs, LAT_SIZE, K
+    # batch_size = args.batch_size
+    # epochs = args.epoch
+    # LAT_SIZE = args.lat_size
+    # K = args.last_n_day
+    pool = Pool(16)
+    pool.imap_unordered(train, auto_encoder_config)
+    pool.close()
+    pool.join()
+    # train(argv)
     
