@@ -18,9 +18,6 @@ from multiprocessing import Pool
 from joblib import dump
 from tqdm import tqdm
 
-def addGaussianNoise(x, std=0.05):
-    return x + torch.normal(x, std)
-
 def make_dir(file_name):
     if "." in os.path.basename(file_name):
         dir_name = os.path.dirname(file_name)
