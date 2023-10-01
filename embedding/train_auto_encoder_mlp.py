@@ -63,7 +63,7 @@ def train(argv):
         joblib.dump((mean, std), "embedding/checkpoint/mean_std_{}_{}.pkl".format(K, LAT_SIZE))
         x_train = data[:int(N*train_val_split)]
         x_test = data[int(N*train_val_split):]    
-    return x_train, x_test
+        return x_train, x_test
 
     best_score = float("inf")
     best_model_path = "embedding/checkpoint/mlp_autoencoder_{}_{}.pth".format(K, LAT_SIZE)
@@ -73,7 +73,7 @@ def train(argv):
     print("training on device: ", device)
 
     x_train, x_test = load_data()
-    feature_dim = len(auto_encoder_features)
+    feature_dim = len(auto_encoder_features) * K
     
     criterion = nn.MSELoss(reduction="mean")
     train_loader = DataLoader(x_train, batch_size=batch_size, drop_last=True, shuffle=True)
@@ -145,9 +145,10 @@ if __name__ == "__main__":
     # epochs = args.epoch
     # LAT_SIZE = args.lat_size
     # K = args.last_n_day
+    # train(auto_encoder_config[0])
     pool = Pool(16)
     pool.imap_unordered(train, auto_encoder_config)
     pool.close()
     pool.join()
-    # train(argv)
+    train(argv)
     

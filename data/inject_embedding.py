@@ -26,6 +26,9 @@ def inject_one(path):
         model.load_state_dict(torch.load(model_path))
         model.to(device)
         model.eval()
+        mean, std = joblib.load("embedding/checkpoint/mean_std_{}_{}.pkl".format(K, LAT_SIZE))
+        mean = mean.to(device)
+        std = std.to(device)
         with torch.no_grad():
             data_i = [df]
             for i in range(1, K):
@@ -34,6 +37,7 @@ def inject_one(path):
             data_i = pd.concat(data_i, axis=1)
             data_i = data_i.fillna(0).astype("float32").values
             data_i = torch.from_numpy(data_i).to(device)
+            data_i = (data_i - mean) / (std + 1e-9)
             lat_i = model(data_i)[1]
             names = ["emb_{}_of_{}_{}".format(i, K, LAT_SIZE) for i in range(LAT_SIZE)]
             data[names] = lat_i.cpu().detach().numpy()
@@ -55,7 +59,7 @@ def inject_embedding():
             paths.append(path)
     # print(paths[0])
     # inject_one(paths[0])
-    pool = Pool(16)
+    pool = Pool(32)
     pool.imap_unordered(inject_one, paths)
     pool.close()
     pool.join()
