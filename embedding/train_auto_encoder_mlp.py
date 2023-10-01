@@ -150,5 +150,4 @@ if __name__ == "__main__":
     pool.imap_unordered(train, auto_encoder_config)
     pool.close()
     pool.join()
-    train(argv)
     
