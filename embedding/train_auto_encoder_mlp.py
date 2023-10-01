@@ -54,7 +54,7 @@ def load_data(train_val_split=0.7):
     
     return x_train, x_test
  
- def parse_args():
+def parse_args():
     parser = argparse.ArgumentParser(description='MLP embedding')
     parser.add_argument('--last_n_day', type=int, default=3)
     parser.add_argument('--lat_size', type=int, default=16)
