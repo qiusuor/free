@@ -17,18 +17,8 @@ from sklearn.metrics import average_precision_score, roc_auc_score
 from auto_encoder import LSTMAutoEncoder, MLPAutoEncoder, weight_init, SeqMLPAutoEncoder
 from collections import Counter
 import platform
-
-
+import gc
  
-def parse_args():
-    parser = argparse.ArgumentParser(description='MLP embedding')
-    parser.add_argument('--last_n_day', type=int, default=3)
-    parser.add_argument('--lat_size', type=int, default=16)
-    parser.add_argument('--batch_size', type=int, default=1024)
-    parser.add_argument('--epoch', type=int, default=500)
-    
-    args = parser.parse_args()
-    return args   
 
 def train(argv):
     batch_size, epochs, K, LAT_SIZE = argv
@@ -73,6 +63,7 @@ def train(argv):
     print("training on device: ", device)
 
     x_train, x_test = load_data()
+    gc.collect()
     feature_dim = len(auto_encoder_features) * K
     
     criterion = nn.MSELoss(reduction="mean")
@@ -139,12 +130,6 @@ def train(argv):
                 
     
 if __name__ == "__main__":
-    # args = parse_args()
-    # global batch_size, epochs, LAT_SIZE, K
-    # batch_size = args.batch_size
-    # epochs = args.epoch
-    # LAT_SIZE = args.lat_size
-    # K = args.last_n_day
     # train(auto_encoder_config[0])
     pool = Pool(16)
     pool.imap_unordered(train, auto_encoder_config)
