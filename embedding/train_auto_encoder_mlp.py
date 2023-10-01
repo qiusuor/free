@@ -65,11 +65,6 @@ def parse_args():
     return args   
 
 def train(args):
-    batch_size = args.batch_size
-    epochs = args.epoch
-    LAT_SIZE = args.lat_size
-    K = args.last_n_day
-
     best_score = float("inf")
     best_model_path = "embedding/checkpoint/mlp_autoencoder_{}_{}.pth".format(K, LAT_SIZE)
     make_dir(best_model_path)
@@ -145,5 +140,10 @@ def train(args):
     
 if __name__ == "__main__":
     args = parse_args()
+    global batch_size, epochs, LAT_SIZE, K
+    batch_size = args.batch_size
+    epochs = args.epoch
+    LAT_SIZE = args.lat_size
+    K = args.last_n_day
     train(args)
     
