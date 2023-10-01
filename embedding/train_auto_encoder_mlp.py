@@ -34,8 +34,6 @@ def train(argv):
     batch_size, epochs, K, LAT_SIZE = argv
     def load_data(train_val_split=0.7):
         data = []
-        features = ["turn", "price", "open", "low", "high", "close", "pctChg"]
-        
         for file in tqdm(os.listdir(DAILY_DIR)):
             code = file.split("_")[0]
             if not_concern(code) or is_index(code):
@@ -43,7 +41,7 @@ def train(argv):
             if not file.endswith(".pkl"):
                 continue
             path = os.path.join(DAILY_DIR, file)
-            df = joblib.load(path)[features]
+            df = joblib.load(path)[auto_encoder_features]
             data_i = [df]
             for i in range(1, K):
                 data_i.append(df.shift(i))
@@ -75,7 +73,7 @@ def train(argv):
     print("training on device: ", device)
 
     x_train, x_test = load_data()
-    feature_dim = x_train.shape[1]
+    feature_dim = len(auto_encoder_features)
     
     criterion = nn.MSELoss(reduction="mean")
     train_loader = DataLoader(x_train, batch_size=batch_size, drop_last=True, shuffle=True)
@@ -83,9 +81,9 @@ def train(argv):
     model = MLPAutoEncoder(input_size=feature_dim, lat_size=LAT_SIZE)
     model.apply(weight_init)
     model.to(device)
-    print(model)
-    trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    print(f'Trainable params: {trainable_params}')
+    # print(model)
+    # trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    # print(f'Trainable params: {trainable_params}')
 
     optimizer = torch.optim.Adam(model.parameters(),
                                 lr=0.0001,

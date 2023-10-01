@@ -100,6 +100,9 @@ labels = [
     "dy_30_90",
 ]
 
+auto_encoder_features = ["turn", "price", "open", "low", "high", "close", "pctChg"]
+
+
 auto_encoder_config = [
     (1024, 500, 3, 16),
     (1024, 500, 5, 16),
