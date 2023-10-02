@@ -1,5 +1,4 @@
-import os
-from data.fetch_daily import fetch
+from data.fetch_core import fetch
 
 
 def fetch_minutes():
