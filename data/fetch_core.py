@@ -143,7 +143,10 @@ def fetch_one(code, login, frequency, adjustflag):
             bs.logout()
         return 0
     except:
-        time.sleep(np.random.randint(10))
+        if frequency == "d":
+            time.sleep(np.random.randint(10))
+        else:
+            time.sleep(np.random.randint(30))
         return fetch_one(code, login, frequency, adjustflag)
 
 
