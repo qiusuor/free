@@ -3,7 +3,7 @@ from joblib import dump
 import baostock as bs
 import pandas as pd
 import bisect
-from config import DAILY_DIR, ALL_STOCKS
+from config import DAILY_DIR, ALL_STOCKS, MINUTE_DIR
 from utils import is_index, not_concern, fetch_stock_codes, make_dir
 from multiprocessing import Pool
 import threading
@@ -28,6 +28,7 @@ def dealTime(result):
     if "dividOperateDate" in result.columns:
         result.rename(columns={'dividOperateDate': 'date'}, inplace=True)
     if "time" in result.columns:
+        result["day"] = result["date"]
         result.drop("date", inplace=True, axis=1)
         result['date'] = pd.to_datetime(result['time'], format="%Y%m%d%H%M%S000")
         result.drop("time", inplace=True, axis=1)
@@ -85,8 +86,9 @@ def fetch_one(code, login, frequency, adjustflag):
         if not login:
             lg=bs.login()
             assert lg.error_code != 0, "Login filed!"
+        save_dir = DAILY_DIR if frequency == "d" else MINUTE_DIR
 
-        data_path = os.path.join(DAILY_DIR, "{}_{}_{}.csv".format(code, frequency, adjustflag))
+        data_path = os.path.join(save_dir, "{}_{}_{}.csv".format(code, frequency, adjustflag))
 
         data_list = []
         fields_dict = {
@@ -120,8 +122,9 @@ def fetch_one(code, login, frequency, adjustflag):
             calRehab(result, result_factor, adjustflag=adjustflag)
         else:
             result["factor"] = 1.0
-            
-        for col in list("open,high,low,close,preclose,volume,amount,adjustflag,turn,tradestatus,pctChg,peTTM,pbMRQ,psTTM,pcfNcfTTM,isST,factor".split(",")):
+        
+        for col in list(fields.split(",")) + ["factor"]:
+            if col in ["date", "code", "time"]: continue
             result[col] = pd.to_numeric(result[col])
         result["price"]=result["amount"]/(result['volume']+1e-9)
         make_dir(data_path)
@@ -135,7 +138,7 @@ def fetch_one(code, login, frequency, adjustflag):
         result = result.iloc[start_index:]
         
         result.to_csv(data_path)
-        dump(result, os.path.join(DAILY_DIR, "{}_{}_{}.pkl".format(code, frequency, adjustflag)))
+        dump(result, os.path.join(save_dir, "{}_{}_{}.pkl".format(code, frequency, adjustflag)))
         if not login:
             bs.logout()
         return 0
@@ -148,14 +151,18 @@ def fetch(adjustflag='2', freqs=['m', 'w', 'd', '60', '30', '15', '5'], code_lis
     fetch_stock_codes()
     get_industry_info()
     stockes = pd.read_csv(ALL_STOCKS)
-    if os.path.exists(DAILY_DIR):
-        shutil.rmtree(DAILY_DIR)
+    if "d" in freqs:
+        if os.path.exists(DAILY_DIR):
+            shutil.rmtree(DAILY_DIR)
+    elif "5" in freqs:
+        if os.path.exists(MINUTE_DIR):
+            shutil.rmtree(MINUTE_DIR)
     code_list = []
     for freq in freqs:
         for code in tqdm(code_list or stockes.code):
             if not_concern(code): continue
             code_list.append([code, False, freq, adjustflag])
-    # fetch_one("sz.000670", False, 'd', '2')
+    # fetch_one("sz.000670", False, '5', '2')
     pool = Pool(8)
     pool.imap_unordered(fetch_one_wrapper, code_list)
     pool.close()
