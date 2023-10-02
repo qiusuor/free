@@ -146,8 +146,7 @@ def fetch_one(code, login, frequency, adjustflag):
             bs.logout()
         return 0
     except:
-        time.sleep(np.random.randint(10))
-        return fetch_one(code, login, frequency, adjustflag)
+        return -1
 
 
 def fetch(adjustflag='2', freqs=['m', 'w', 'd', '60', '30', '15', '5'], code_list=[]):
@@ -166,7 +165,7 @@ def fetch(adjustflag='2', freqs=['m', 'w', 'd', '60', '30', '15', '5'], code_lis
             if not_concern(code): continue
             code_list.append([code, False, freq, adjustflag])
     # fetch_one("sz.000670", False, '5', '2')
-    pool = Pool(8)
+    pool = Pool(16)
     pool.imap_unordered(fetch_one_wrapper, code_list)
     pool.close()
     pool.join()
