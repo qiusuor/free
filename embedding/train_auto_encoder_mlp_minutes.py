@@ -33,9 +33,8 @@ def train(argv):
             path = os.path.join(MINUTE_DIR, file)
             df = joblib.load(path)[["day", "price", "amount"]]
            
-            data.extend([x[1][["price", "amount"]] for x in df.groupby("day")])
-            
-        df = pd.concat(data)
+            data.extend([x[1][["price", "amount"]].values.reshape(-1) for x in df.groupby("day")])
+        df = pd.DataFrame(data)
         df = df.fillna(0).astype("float32").values
         np.random.shuffle(df)
         data = torch.from_numpy(df)
@@ -46,6 +45,8 @@ def train(argv):
         print(mean)
         print(std)
         data = (data - mean) / (std + 1e-9)
+        print(data.shape)
+        # exit(0)
         joblib.dump((mean, std), "embedding/checkpoint/minutes_mean_std_{}.pkl".format(LAT_SIZE))
         x_train = data[:int(N*train_val_split)]
         x_test = data[int(N*train_val_split):]    
@@ -60,7 +61,7 @@ def train(argv):
 
     x_train, x_test = load_data()
     gc.collect()
-    feature_dim = 2
+    feature_dim = 2 *48
     
     criterion = nn.MSELoss(reduction="mean")
     train_loader = DataLoader(x_train, batch_size=batch_size, drop_last=True, shuffle=True)
@@ -92,11 +93,11 @@ def train(argv):
             loss.backward()
             optimizer.step()
             loss_.append(loss.data.item())
-            # print('\r    BATCH {} / {} loss: {}'.format(i + 1, len(train_loader), loss.data.item()), end="")
+            print('\r    BATCH {} / {} loss: {}'.format(i + 1, len(train_loader), loss.data.item()), end="")
             
         scheduler.step()
         avg_loss = np.mean(loss_)
-        # print()
+        print()
         with torch.no_grad():
             model.eval()
             vloss_ = []
@@ -127,5 +128,5 @@ def train(argv):
     
 if __name__ == "__main__":
     # train(auto_encoder_config[0])
-    train([1024, 500, 16])
+    train([1024, 500, 8])
     
