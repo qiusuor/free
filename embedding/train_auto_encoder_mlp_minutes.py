@@ -33,7 +33,7 @@ def train(argv):
             path = os.path.join(MINUTE_DIR, file)
             df = joblib.load(path)[["day", "price", "amount"]]
            
-            data.extend([x[1] for x in df.groupby("day")])
+            data.extend([x[1][["price", "amount"]] for x in df.groupby("day")])
             
         df = pd.concat(data)
         df = df.fillna(0).astype("float32").values
@@ -79,7 +79,7 @@ def train(argv):
                                 amsgrad=False)
 
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[100, 200, 300, 400], gamma=0.3)
-    mean, std = joblib.load("embedding/checkpoint/minutes_mean_std_{}_{}.pkl".format(LAT_SIZE))
+    mean, std = joblib.load("embedding/checkpoint/minutes_mean_std_{}.pkl".format(LAT_SIZE))
     for epoch in range(epochs):
         print('EPOCH {} / {}:'.format(epoch + 1, epochs))
         model.train()
