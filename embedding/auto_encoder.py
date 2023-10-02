@@ -6,9 +6,96 @@ import tensorboard as tb
 import torch.nn as nn
 from torch.nn import LSTMCell
 import torch.nn.functional as F
+import math
 
 
 
+class TransformerEncoder(torch.nn.Module):
+    def __init__(self, embed_dim, num_heads, dropout, feedforward_dim):
+        super().__init__()
+        self.attn = torch.nn.MultiheadAttention(embed_dim, num_heads, dropout=dropout)
+        self.linear_1 = torch.nn.Linear(embed_dim, feedforward_dim)
+        self.linear_2 = torch.nn.Linear(feedforward_dim, embed_dim)
+        self.layernorm_1 = torch.nn.LayerNorm(embed_dim)
+        self.layernorm_2 = torch.nn.LayerNorm(embed_dim)
+    
+    def forward(self, x_in):
+        attn_out, _ = self.attn(x_in, x_in, x_in)
+        x = self.layernorm_1(x_in + attn_out)
+        ff_out = self.linear_2(torch.nn.functional.relu(self.linear_1(x)))
+        x = self.layernorm_2(x + ff_out)
+        return x
+    
+class TransformerAutoEncoder(torch.nn.Module):
+    def __init__(self, t_len, input_size, lat_size, num_heads=4, dropout=0.05, embed_dim=128, feedforward_dim=128):
+        super().__init__()
+        self.embed_dim = embed_dim
+        self.t_len = t_len
+        
+        self.pre = nn.Linear(input_size, embed_dim)
+
+        self.encoder = nn.Sequential(
+            TransformerEncoder(embed_dim, num_heads, dropout, feedforward_dim),
+            # TransformerEncoder(embed_dim, num_heads, dropout, feedforward_dim),
+            # TransformerEncoder(embed_dim, num_heads, dropout, feedforward_dim)
+        )
+        self.h2l = nn.Sequential(
+            nn.Linear(embed_dim*t_len, embed_dim),
+            nn.LeakyReLU(),
+            nn.Linear(embed_dim, embed_dim),
+            nn.LeakyReLU(),
+            nn.Linear(embed_dim, embed_dim),
+            nn.LeakyReLU(),
+            nn.Linear(embed_dim, lat_size)
+        )
+        self.l2h = nn.Sequential(
+            nn.Linear(lat_size, embed_dim),
+            nn.LeakyReLU(),
+            nn.Linear(embed_dim, embed_dim),
+            nn.LeakyReLU(),
+            nn.Linear(embed_dim, embed_dim),
+            nn.LeakyReLU(),
+            nn.Linear(embed_dim, embed_dim*t_len)
+        )
+        self.decoder = nn.Sequential(
+            TransformerEncoder(embed_dim, num_heads, dropout, feedforward_dim),
+            # TransformerEncoder(embed_dim, num_heads, dropout, feedforward_dim),
+            # TransformerEncoder(embed_dim, num_heads, dropout, feedforward_dim)
+        )
+        self.post = nn.Linear(embed_dim, input_size)
+        self.position_emb = self.positionalencoding1d(embed_dim, t_len)
+
+    def forward(self, x):
+        N = x.shape[0]
+        x = self.pre(x)
+        x += self.position_emb
+        h = self.encoder(x)
+        l = self.h2l(h.reshape(N, -1))
+        h = self.l2h(l).reshape(N, self.t_len, -1)
+        x = self.decoder(h)
+        x -= self.position_emb
+        x = self.post(x)
+        return x, l
+    
+    def positionalencoding1d(self, d_model, length):
+        """
+        :param d_model: dimension of the model
+        :param length: length of positions
+        :return: length*d_model position matrix
+        """
+        if d_model % 2 != 0:
+            raise ValueError("Cannot use sin/cos positional encoding with "
+                            "odd dim (got dim={:d})".format(d_model))
+        pe = torch.zeros(length, d_model)
+        position = torch.arange(0, length).unsqueeze(1)
+        div_term = torch.exp((torch.arange(0, d_model, 2, dtype=torch.float) *
+                            -(math.log(10000.0) / d_model)))
+        pe[:, 0::2] = torch.sin(position.float() * div_term)
+        pe[:, 1::2] = torch.cos(position.float() * div_term)
+        pe.requires_grad = False
+        return pe.cuda()
+        
+  
 class LSTMAutoEncoder(nn.Module):
     def __init__(self, input_size, output_size, lat_size, hidden_size=16, n_class=3):
         super().__init__()
@@ -198,15 +285,6 @@ class SeqMLPAutoEncoder(nn.Module):
         x = self.decoder(h)
         x = self.post(x)
         return x, lat
-    
-
-class TransformerAutoEncoder(nn.Module):
-    def __init__(self, input_size, output_size, lat_size, hidden_size=128, num_layers=3, dropout=0, batch_first=True, bidirectional=True, n_class=3):
-        raise NotImplementedError
-
-    def forward(self, seq):
-        raise NotImplementedError
-    
 
 
 def weight_init(m):
