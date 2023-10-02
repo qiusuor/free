@@ -92,11 +92,11 @@ def train(argv):
             loss.backward()
             optimizer.step()
             loss_.append(loss.data.item())
-            # print('\r    BATCH {} / {} loss: {}'.format(i + 1, len(train_loader), loss.data.item()), end="")
+            print('\r    BATCH {} / {} loss: {}'.format(i + 1, len(train_loader), loss.data.item()), end="")
             
         scheduler.step()
         avg_loss = np.mean(loss_)
-        # print()
+        print()
         with torch.no_grad():
             model.eval()
             vloss_ = []
