@@ -75,7 +75,10 @@ def fetch_one_wrapper(argv):
         t = RetThread(func=fetch_one, args=argv)
         t.daemon =True
         t.start()
-        t.join(10) 
+        if argv[2] == 'd':
+            t.join(10)
+        else:
+            t.join(30)
         if t.is_alive() or t.result != 0:
             raise TimeoutError
     except:
@@ -143,10 +146,7 @@ def fetch_one(code, login, frequency, adjustflag):
             bs.logout()
         return 0
     except:
-        if frequency == "d":
-            time.sleep(np.random.randint(10))
-        else:
-            time.sleep(np.random.randint(30))
+        time.sleep(np.random.randint(10))
         return fetch_one(code, login, frequency, adjustflag)
 
 
