@@ -85,7 +85,7 @@ def agg_prediction_info():
                 agv_high = np.mean(topk_high_means)
                 avg_low = np.mean(topk_low_means)
                 avg_sharp = np.mean(topk_sharp_means)
-                avg_nightly_gain = np.mean(topk_gain_means)
+                avg_close_open = np.mean(topk_gain_means)
                 avg_close_high = np.mean(topk_close_high_means)
                 avg_close_low = np.mean(topk_close_low_means)
                 avg_close_sharp = np.mean(topk_close_sharps)
@@ -93,13 +93,14 @@ def agg_prediction_info():
                 
                 exp_result = {
                     "label": label,
+                    "exp_config": exp_config,
                     "avg_epoch": avg_epoch,
                     "avg_ap": avg_ap,
                     "avg_auc": avg_auc,
                     "avg_high": agv_high, 
                     "avg_low": avg_low,
                     "avg_sharp": avg_sharp,
-                    "avg_nightly_gain": avg_nightly_gain,
+                    "avg_close_open": avg_close_open,
                     "avg_close_high": avg_close_high,
                     "avg_close_low": avg_close_low,
                     "avg_close_sharp": avg_close_sharp,
@@ -122,7 +123,7 @@ def agg_prediction_info():
                 max_high_rate, max_high_rate_config = compare_large(agv_high, max_high_rate, max_high_rate_config)
                 max_avg_ap, max_avg_ap_config = compare_large(avg_ap, max_avg_ap, max_avg_ap_config)
                 max_sharp_rate, max_sharp_rate_config = compare_large(avg_sharp, max_sharp_rate, max_sharp_rate_config)
-                max_next_1d_close_2d_open_gain, max_next_1d_close_2d_open_gain_config = compare_large(avg_nightly_gain, max_next_1d_close_2d_open_gain, max_next_1d_close_2d_open_gain_config)
+                max_next_1d_close_2d_open_gain, max_next_1d_close_2d_open_gain_config = compare_large(avg_close_open, max_next_1d_close_2d_open_gain, max_next_1d_close_2d_open_gain_config)
                 max_avg_close_high, max_avg_close_high_config = compare_large(avg_close_high, max_avg_close_high, max_avg_close_high_config)
                 max_avg_close_sharp_rate, max_avg_close_sharp_rate_config = compare_large(avg_close_sharp, max_avg_close_sharp_rate, max_avg_close_sharp_rate_config)
 
@@ -130,7 +131,7 @@ def agg_prediction_info():
         agg_result["sharp_exp"] = to_dict(sorted(agg_result["sharp_exp"].items(), key=lambda x:-x[1]["avg_sharp"]))
         agg_result["sharp_1d_safe_exp"] = to_dict(sorted(agg_result["sharp_exp"].items(), key=lambda x:-x[1]["avg_sharp"]*x[1]["avg_1d_close"]))
         agg_result["high_exp"] = to_dict(sorted(agg_result["sharp_exp"].items(), key=lambda x:-x[1]["avg_high"]))
-        agg_result["close_open_strategy"] = to_dict(sorted(agg_result["close_open_strategy"].items(), key=lambda x:-x[1]["avg_nightly_gain"]))
+        agg_result["close_open_strategy"] = to_dict(sorted(agg_result["close_open_strategy"].items(), key=lambda x:-x[1]["avg_close_open"]))
         agg_result["close_high_strategy"] = to_dict(sorted(agg_result["close_high_strategy"].items(), key=lambda x:-x[1]["avg_close_high"]))
         agg_result["close_sharp_strategy"] = to_dict(sorted(agg_result["close_high_strategy"].items(), key=lambda x:-x[1]["avg_close_sharp"]))
         
