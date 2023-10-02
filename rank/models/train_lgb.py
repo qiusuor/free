@@ -9,7 +9,7 @@ from joblib import load, dump
 import _pickle as cPickle
 from multiprocessing import Process
 from utils import *
-from data.fetch import fetch_daily
+from data.fetch_daily import fetch_daily
 from data.inject_features import inject_features
 from data.inject_labels import inject_labels
 from matplotlib import pyplot as plt
