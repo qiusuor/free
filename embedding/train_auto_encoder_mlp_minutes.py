@@ -66,7 +66,7 @@ def train(argv):
     criterion = nn.MSELoss(reduction="mean")
     train_loader = DataLoader(x_train, batch_size=batch_size, drop_last=True, shuffle=True)
     test_loader = DataLoader(x_test, batch_size=batch_size, drop_last=True)
-    model = MLPAutoEncoder(input_size=feature_dim, lat_size=LAT_SIZE)
+    model = MLPAutoEncoder(input_size=feature_dim, lat_size=LAT_SIZE, hidden_size=32)
     model.apply(weight_init)
     model.to(device)
     # print(model)
