@@ -17,6 +17,7 @@ import shutil
 import json
 from rank.models.lgb_core import *
 from rank.models.agg_prediction_info import agg_prediction_info
+import platform
 
 
 if __name__ == "__main__":
@@ -29,7 +30,7 @@ if __name__ == "__main__":
     test_n_day = 10
     opt_points = [
         # ("y_2_d_high_rank_20%_safe_1d", 180, 31, 7, 3, 144), 
-        ("y_2_d_ret_rank_20%", 180, 7, 3, 41, 177), 
+        ("y_2_d_high_rank_20%_safe_1d", 180, 31, 12, 11, 34), 
         ("y_2_d_high_rank_20%_safe_1d", 180, 31, 9, 21, 40), 
         # ("y_2_d_high_rank_20%", 120, 63, 9, 11, 52), 
         # ("y_2_d_high_rank_20%", 180, 63, 7, 11, 48), 
@@ -66,7 +67,7 @@ if __name__ == "__main__":
     np.random.shuffle(argvs)
     # print(argvs[0])
     # train_lightgbm(argvs[0])
-    pool = Pool(2)
+    pool = Pool(32 if "Linux" in platform.platform() else 2)
     pool.imap_unordered(train_lightgbm, argvs)
     pool.close()
     pool.join()
