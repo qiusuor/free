@@ -1,5 +1,6 @@
 from data.fetch_core import fetch
-
+from config import *
+from utils import *
 
 def fetch_minutes_recent_week():
     trade_days = get_trade_days(update=False)
