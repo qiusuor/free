@@ -12,6 +12,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 def check():
+    last_trade_day = get_trade_days(update=False)[-1]
     for file in tqdm(os.listdir(DAILY_DIR)):
         code = file.split("_")[0]
         if not_concern(code) or is_index(code):
@@ -23,6 +24,8 @@ def check():
         assert len(set(df.index)) == len(df.index), code
         if "y_next_10_d_high_ratio" in df.columns:
             assert len(df) < 240 or df["y_next_10_d_high_ratio"].max() < 3, (code, df[df["y_next_10_d_high_ratio"] >=3])
+        if to_int_date(df.index[-1]) != last_trade_day:
+            print(code, "no data at last trade day!")
     
 
 if __name__ == "__main__":
