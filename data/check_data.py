@@ -32,15 +32,15 @@ def check_daily():
     return no_last_day_data_codes
     
 
-def check_minutes(no_last_day_data_codes):
+def check_minutes(no_last_day_data_codes, check_dir):
     last_trade_day = get_trade_days(update=False)[-1]
-    for file in tqdm(os.listdir(MINUTE_DIR)):
+    for file in tqdm(os.listdir(check_dir)):
         code = file.split("_")[0]
         if not_concern(code) or is_index(code):
             continue
         if not file.endswith(".pkl"):
             continue
-        path = os.path.join(MINUTE_DIR, file)
+        path = os.path.join(check_dir, file)
         df = joblib.load(path)
         assert len(set(df.index)) == len(df.index), code
         
@@ -51,6 +51,7 @@ def check_minutes(no_last_day_data_codes):
             
 if __name__ == "__main__":
     no_last_day_data_codes = check_daily()
-    check_minutes(no_last_day_data_codes)
+    check_minutes(no_last_day_data_codes, MINUTE_DIR)
+    check_minutes(no_last_day_data_codes, MINUTE_RECENT_DIR)
     
     
