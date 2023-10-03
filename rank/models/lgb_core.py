@@ -191,8 +191,7 @@ def train_lightgbm(argv):
         save_file = f"{to_int_date(i)}_T3_{top3_miss}_T5_{top5_miss}_T10_{top10_miss}_AP_{ap}_AUC_{auc_score}.csv"
         res_i.to_csv(os.path.join(save_dir, save_file))
     
-    if not pred_mode:
-        json.dump(meta, open(os.path.join(save_dir, "meta.json"), 'w'), indent=4)
+    json.dump(meta, open(os.path.join(save_dir, "meta.json"), 'w'), indent=4)
     
 
 def prepare_data(update=False):

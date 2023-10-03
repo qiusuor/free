@@ -16,6 +16,7 @@ from matplotlib import pyplot as plt
 import shutil
 import json
 from rank.models.lgb_core import *
+from rank.models.agg_prediction_info import agg_prediction_info
 
 
 if __name__ == "__main__":
@@ -28,7 +29,7 @@ if __name__ == "__main__":
     test_n_day = 10
     opt_points = [
         # ("y_2_d_high_rank_20%_safe_1d", 180, 31, 7, 3, 144), 
-        ("y_2_d_high_rank_20%", 120, 63, 9, 3, 45), 
+        ("y_2_d_high_rank_20%", 180, 31, 12, 41, 103), 
         # ("y_2_d_high_rank_20%", 120, 63, 9, 11, 52), 
         # ("y_2_d_high_rank_20%", 180, 63, 7, 11, 48), 
         # ("y_next_1d_close_2d_open_rate_rank_10%", 120, 15, 9, 5, 254), 
@@ -38,25 +39,27 @@ if __name__ == "__main__":
     ]
     
     for label, train_len, num_leaves, max_depth, min_data_in_leaf, epoch in opt_points:
-        n_day = get_n_val_day(label)
-        # print(len(argvs))
-        train_val_split_day = trade_days[-n_day-1]
-        
-        train_start_day = to_date(get_offset_trade_day(train_val_split_day,
-                                                    -train_len))
-        train_end_day = to_date(get_offset_trade_day(train_val_split_day, 0))
-        val_start_day = to_date(get_offset_trade_day(train_val_split_day, 1))
-        val_end_day = to_date(get_offset_trade_day(train_val_split_day, n_day))
-        argv = [
-            features, label, train_start_day, train_end_day, val_start_day,
-            val_end_day, n_day, train_len, num_leaves, max_depth, min_data_in_leaf, epoch
-        ]
-        if not os.path.exists(EXP_DATA_CACHE):
-            # print(argv)
-            train_lightgbm(argv)
-            print("Generate cache file this time, try again.")
-            exit(0)
-        argvs.append(argv)
+        # eval on multi run
+        for k in range(TEST_N_LAST_DAY + 2):
+            n_day = get_n_val_day(label)
+            # print(len(argvs))
+            train_val_split_day = trade_days[-n_day-1-k]
+            
+            train_start_day = to_date(get_offset_trade_day(train_val_split_day,
+                                                        -train_len))
+            train_end_day = to_date(get_offset_trade_day(train_val_split_day, 0))
+            val_start_day = to_date(get_offset_trade_day(train_val_split_day, 1))
+            val_end_day = to_date(get_offset_trade_day(train_val_split_day, n_day))
+            argv = [
+                features, label, train_start_day, train_end_day, val_start_day,
+                val_end_day, n_day, train_len, num_leaves, max_depth, min_data_in_leaf, epoch
+            ]
+            if not os.path.exists(EXP_DATA_CACHE):
+                # print(argv)
+                train_lightgbm(argv)
+                print("Generate cache file this time, try again.")
+                exit(0)
+            argvs.append(argv)
     #     print(train_start_day, train_end_day, val_start_day, val_end_day)
     # exit(0)
     np.random.shuffle(argvs)
@@ -66,3 +69,5 @@ if __name__ == "__main__":
     pool.imap_unordered(train_lightgbm, argvs)
     pool.close()
     pool.join()
+    agg_prediction_info(EXP_PRED_DIR)
+    

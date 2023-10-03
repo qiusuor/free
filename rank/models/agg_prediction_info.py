@@ -13,7 +13,7 @@ def to_dict(sorted_items):
         vals.append(val)
     return dict(zip(keys, vals))
         
-def agg_prediction_info():
+def agg_prediction_info(ana_dir=EXP_DIR):
     all_agg_result = dict()
     for topk in [3, 5, 10]:
         agg_result = all_agg_result["Top-{}".format(topk)] = dict()
@@ -32,19 +32,22 @@ def agg_prediction_info():
         max_avg_close_high_config = None
         max_avg_close_sharp_rate = -np.inf
         max_avg_close_sharp_rate_config = None
-        for label in tqdm(os.listdir(EXP_DIR)):
+        for label in tqdm(os.listdir(ana_dir)):
             if "5_d" in label: continue
             close_open_strategy = "y_next_1d_close_2d_open_rate_rank" in label
             close_high_strategy = "y_2_d_close_high" in label
             if not label.startswith("y") and not label.startswith("dy"): continue
-            label_dir = os.path.join(EXP_DIR, label)
-            for exp_config in  os.listdir(label_dir):
+            label_dir = os.path.join(ana_dir, label)
+            for exp_config in os.listdir(label_dir):
                 configured_exp_dir = os.path.join(label_dir, exp_config)
                 if not os.path.isdir(configured_exp_dir): continue
                 epochs, last_aps, last_aucs, topk_high_means, topk_low_means, topk_sharp_means, topk_gain_means, topk_close_high_means, topk_close_low_means, topk_close_sharps, topk_1d_close_means = [], [], [], [], [], [], [], [], [], [], []
                 if len(os.listdir(configured_exp_dir)) < test_last_n_day: continue
                 finished = True
-                for val_start_day in os.listdir(configured_exp_dir):
+                val_start_days = filter(lambda x: os.path.isdir(os.path.join(configured_exp_dir, x)), os.listdir(configured_exp_dir))
+                val_start_days = list(sorted(val_start_days, key=lambda x:int(x)))[:test_last_n_day]
+                # print(val_start_days)
+                for val_start_day in val_start_days:
                     val_start_day_dir = os.path.join(configured_exp_dir, val_start_day)
                     # print(val_start_day_dir)
                     
@@ -142,7 +145,7 @@ def agg_prediction_info():
         agg_result["best_close_open_strategy"] = max_next_1d_close_2d_open_gain_config
         agg_result["best_close_high_strategy"] = max_avg_close_high_config
         agg_result["best_close_sharp_strategy"] = max_avg_close_sharp_rate_config
-    json.dump(all_agg_result, open(os.path.join(EXP_DIR, "agg_info.json"), 'w'), indent=4)
+    json.dump(all_agg_result, open(os.path.join(ana_dir, "agg_info.json"), 'w'), indent=4)
             
             
             
