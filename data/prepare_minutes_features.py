@@ -44,14 +44,17 @@ def prepare_one(path):
     feat_path = os.path.join(MINUTE_FEAT, os.path.basename(path))
     feat['date'] = pd.to_datetime(feat['date'])
     feat.set_index("date", inplace=True)
+    if os.path.exists(feat_path):
+        old_feat = joblib.load(feat_path)
+        old_feat_index = set(old_feat.index)
+        feat = pd.concat([old_feat, feat[[i not in old_feat_index for i in feat.index]]], axis=0)
     feat.to_csv(feat_path.replace(".pkl", ".csv"))
     dump(feat, feat_path)
     
     
 def prepare():
-    # data_dir = MINUTE_DIR if not os.path.exists(MINUTE_FEAT) else MINUTE_RECENT_DIR
-    data_dir = MINUTE_DIR
-    make_dir(MINUTE_FEAT)
+    data_dir = MINUTE_DIR if not os.path.exists(os.path.join(MINUTE_FEAT, "sh.600000_5_2.csv")) else MINUTE_RECENT_DIR
+    make_dir(data_dir)
     paths = []
     for file in tqdm(os.listdir(data_dir)):
         code = file.split("_")[0]
@@ -61,6 +64,7 @@ def prepare():
             continue
         path = os.path.join(data_dir, file)
         paths.append(path)
+    # print(paths[0])
     # prepare_one(paths[0])
     # exit(0)
     pool = Pool(32)
