@@ -135,6 +135,7 @@ def fetch_one(code, login, frequency, adjustflag, start_date="2020-01-01", save_
         while start_index >=1 and index[start_index] - index[start_index-1] < 30:
             start_index -= 1
         result = result.iloc[start_index:]
+        # print(result)
         
         result.to_csv(data_path)
         dump(result, os.path.join(save_dir, "{}_{}_{}.pkl".format(code, frequency, adjustflag)))
@@ -156,7 +157,7 @@ def fetch(adjustflag='2', freqs=['m', 'w', 'd', '60', '30', '15', '5'], code_lis
         for code in tqdm(code_list or stockes.code):
             if not_concern(code): continue
             code_list.append([code, False, freq, adjustflag, start_date, save_dir])
-    # fetch_one("sz.000670", False, '5', '2')
+    # fetch_one("sz.002815", False, freq, adjustflag, start_date, save_dir)
     pool = Pool(16)
     pool.imap_unordered(fetch_one_wrapper, code_list)
     pool.close()
