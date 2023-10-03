@@ -84,15 +84,12 @@ def fetch_one_wrapper(argv):
     except:
         fetch_one_wrapper(argv)
 
-def fetch_one(code, login, frequency, adjustflag):
+def fetch_one(code, login, frequency, adjustflag, start_date="2020-01-01", save_dir=DAILY_DIR):
     try:
         if not login:
             lg=bs.login()
             assert lg.error_code != 0, "Login filed!"
-        save_dir = DAILY_DIR if frequency == "d" else MINUTE_DIR
-
         data_path = os.path.join(save_dir, "{}_{}_{}.csv".format(code, frequency, adjustflag))
-
         data_list = []
         fields_dict = {
             'd': "date,code,open,high,low,close,preclose,volume,amount,adjustflag,turn,tradestatus,pctChg,peTTM,pbMRQ,psTTM,pcfNcfTTM,isST",
@@ -100,7 +97,6 @@ def fetch_one(code, login, frequency, adjustflag):
             'm': "date,code,open,high,low,close,volume,amount,adjustflag,turn,pctChg",
         }
         fields = fields_dict.get(frequency, "date,time,code,open,high,low,close,volume,amount,adjustflag")
-        start_date = "2020-01-01"
         rs = bs.query_history_k_data_plus(code, fields,
                                     start_date=start_date, frequency=frequency, adjustflag=adjustflag)
         assert rs.error_code != 0, "fetch {} filed!".format(code)
@@ -149,21 +145,17 @@ def fetch_one(code, login, frequency, adjustflag):
         return -1
 
 
-def fetch(adjustflag='2', freqs=['m', 'w', 'd', '60', '30', '15', '5'], code_list=[]):
+def fetch(adjustflag='2', freqs=['m', 'w', 'd', '60', '30', '15', '5'], code_list=[], start_date="2020-01-01", save_dir=DAILY_DIR):
     fetch_stock_codes()
     get_industry_info()
     stockes = pd.read_csv(ALL_STOCKS)
-    if "d" in freqs:
-        if os.path.exists(DAILY_DIR):
-            shutil.rmtree(DAILY_DIR)
-    elif "5" in freqs:
-        if os.path.exists(MINUTE_DIR):
-            shutil.rmtree(MINUTE_DIR)
+    if os.path.exists(save_dir):
+        shutil.rmtree(save_dir)
     code_list = []
     for freq in freqs:
         for code in tqdm(code_list or stockes.code):
             if not_concern(code): continue
-            code_list.append([code, False, freq, adjustflag])
+            code_list.append([code, False, freq, adjustflag, start_date, save_dir])
     # fetch_one("sz.000670", False, '5', '2')
     pool = Pool(16)
     pool.imap_unordered(fetch_one_wrapper, code_list)
