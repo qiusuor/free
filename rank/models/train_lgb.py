@@ -24,30 +24,30 @@ if __name__ == "__main__":
     # prepare_data()
     
     search_labels = [
-        "y_next_1d_close_2d_open_rate_rank_10%",
-        "y_next_1d_close_2d_open_rate_rank_20%",
-        "y_next_1d_close_2d_open_rate_rank_30%",
-        "y_next_1d_close_2d_open_rate_rank_50%",
+        # "y_next_1d_close_2d_open_rate_rank_10%",
+        # "y_next_1d_close_2d_open_rate_rank_20%",
+        # "y_next_1d_close_2d_open_rate_rank_30%",
+        # "y_next_1d_close_2d_open_rate_rank_50%",
         
-        "y_2_d_close_high_rank_10%",
-        "y_2_d_close_high_rank_20%",
-        "y_2_d_close_high_rank_30%",
-        "y_2_d_close_high_rank_50%",
+        # "y_2_d_close_high_rank_10%",
+        # "y_2_d_close_high_rank_20%",
+        # "y_2_d_close_high_rank_30%",
+        # "y_2_d_close_high_rank_50%",
         
-        "y_2_d_high_rank_10%_safe_1d",
+        # "y_2_d_high_rank_10%_safe_1d",
         "y_2_d_high_rank_20%_safe_1d",
-        "y_2_d_high_rank_30%_safe_1d",
-        "y_2_d_high_rank_50%_safe_1d",
+        # "y_2_d_high_rank_30%_safe_1d",
+        # "y_2_d_high_rank_50%_safe_1d",
         
-        "y_2_d_high_rank_10%",
-        "y_2_d_high_rank_20%",
-        "y_2_d_high_rank_30%",
-        "y_2_d_high_rank_50%",
+        # "y_2_d_high_rank_10%",
+        # "y_2_d_high_rank_20%",
+        # "y_2_d_high_rank_30%",
+        # "y_2_d_high_rank_50%",
         
-        "y_2_d_ret_rank_10%",
+        # "y_2_d_ret_rank_10%",
         "y_2_d_ret_rank_20%",
-        "y_2_d_ret_rank_30%",
-        "y_2_d_ret_rank_50%",
+        # "y_2_d_ret_rank_30%",
+        # "y_2_d_ret_rank_50%",
     
     ]
     
