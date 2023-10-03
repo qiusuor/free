@@ -79,7 +79,7 @@ def train(argv):
                                 weight_decay = 0.0,
                                 amsgrad=False)
 
-    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[100, 200, 300, 400], gamma=0.3)
+    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[300, 600, 900, 1200], gamma=0.3)
     mean, std = joblib.load("embedding/checkpoint/minutes_mean_std_{}.pkl".format(LAT_SIZE))
     for epoch in range(epochs):
         print('EPOCH {} / {}:'.format(epoch + 1, epochs))
@@ -128,5 +128,5 @@ def train(argv):
     
 if __name__ == "__main__":
     # train(auto_encoder_config[0])
-    train([1024, 500, 8])
+    train([1024, 1500, 16])
     
