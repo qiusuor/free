@@ -16,15 +16,19 @@ from matplotlib import pyplot as plt
 import shutil
 import json
 
-for file in os.listdir(DAILY_DIR):
-    code = file.split("_")[0]
-    if not_concern(code) or is_index(code):
-        continue
-    if not file.endswith(".pkl"):
-        continue
-    path = os.path.join(DAILY_DIR, file)
-    df = joblib.load(path)
-    df["date"] = df.index
-    print(list(df.columns))
-    print(df.date)
-    exit(0)
+# for file in os.listdir(DAILY_DIR):
+#     code = file.split("_")[0]
+#     if not_concern(code) or is_index(code):
+#         continue
+#     if not file.endswith(".pkl"):
+#         continue
+#     path = os.path.join(DAILY_DIR, file)
+#     df = joblib.load(path)
+#     df["date"] = df.index
+#     print(list(df.columns))
+#     print(df.date)
+#     exit(0)
+
+model = joblib.load("/home/qiusuo/free/rank/exp_pred/y_2_d_high_rank_20%_safe_1d/180_31_9_21/20230919/model.pkl")
+print(model.feature_importance())
+print(model.feature_name())

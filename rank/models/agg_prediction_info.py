@@ -47,6 +47,8 @@ def agg_prediction_info(ana_dir=EXP_DIR):
                 val_start_days = filter(lambda x: os.path.isdir(os.path.join(configured_exp_dir, x)), os.listdir(configured_exp_dir))
                 val_start_days = list(sorted(val_start_days, key=lambda x:int(x)))[:test_last_n_day]
                 # print(val_start_days)
+                feature_importance = 0
+                
                 for val_start_day in val_start_days:
                     val_start_day_dir = os.path.join(configured_exp_dir, val_start_day)
                     # print(val_start_day_dir)
@@ -55,6 +57,9 @@ def agg_prediction_info(ana_dir=EXP_DIR):
                     if not os.path.exists(os.path.join(val_start_day_dir, "meta.json")):
                         finished = False
                         break
+                    model = joblib.load(os.path.join(val_start_day_dir, "model.pkl"))
+                    feature_importance += model.feature_importance()
+                    feature_name = model.feature_name()
                     meta = json.load(open(os.path.join(val_start_day_dir, "meta.json")))
                     epoch = meta["info"]["epoch"]
                     last_ap = meta["last_val"]["ap"]
@@ -93,7 +98,7 @@ def agg_prediction_info(ana_dir=EXP_DIR):
                 avg_close_low = np.mean(topk_close_low_means)
                 avg_close_sharp = np.mean(topk_close_sharps)
                 avg_1d_close = np.mean(topk_1d_close_means)
-                
+                feature_importance, feature_name = zip(*sorted(list(zip(feature_importance, feature_name)), key=lambda x:-x[0]))
                 exp_result = {
                     "label": label,
                     "exp_config": exp_config,
@@ -107,7 +112,9 @@ def agg_prediction_info(ana_dir=EXP_DIR):
                     "avg_close_high": avg_close_high,
                     "avg_close_low": avg_close_low,
                     "avg_close_sharp": avg_close_sharp,
-                    "avg_1d_close": avg_1d_close
+                    "avg_1d_close": avg_1d_close,
+                    "feature_importance": str(feature_importance[:50]),
+                    "feature_name": str(feature_name[:50])
                 }
                 json.dump(exp_result, open(os.path.join(configured_exp_dir, "result.json"), 'w'), indent=4)
                 
