@@ -31,12 +31,9 @@ def train(argv):
             if not file.endswith(".pkl"):
                 continue
             path = os.path.join(TDX_MINUTE_DIR, file)
-            df = joblib.load(path)[["day", "price", "amount"]]
+            df = joblib.load(path)
            
             data.extend([x[1][["price", "amount"]].values.reshape(-1) for x in df.groupby("day")])
-            # print(data[-1])
-            # print(code)
-            # exit(0)
         df = pd.DataFrame(data)
         df = df.fillna(0).astype("float32").values
         np.random.shuffle(df)
@@ -64,7 +61,7 @@ def train(argv):
 
     x_train, x_test = load_data()
     gc.collect()
-    feature_dim = 4 * 60 * 2
+    feature_dim = 96
     
     criterion = nn.MSELoss(reduction="mean")
     train_loader = DataLoader(x_train, batch_size=batch_size, drop_last=True, shuffle=True)

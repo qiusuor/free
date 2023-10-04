@@ -8,7 +8,7 @@ from utils import *
 
 def day2csv_data(argv):
     path, targetDir = argv
-    freq = '1'
+    freq = '5'
     fname = os.path.basename(path)
     ofile = open(path, 'rb')
     buf = ofile.read()
@@ -27,7 +27,8 @@ def day2csv_data(argv):
         month = (num % 2048) // 100
         day = (num % 2048) %100
         dt=datetime.datetime(year=year, month=month, day=day, hour=a[1]//60, minute=a[1]%60)
-        data.append([dt, dt.strftime("%Y-%m-%d"), fname[:2]+'.'+fname[2:-4], a[2], a[3], a[4], a[5], a[6], a[7], a[6]/(a[7]+1e-9)])
+        price =  a[6]/(a[7]) if a[7] > 0 else a[2]
+        data.append([dt, dt.strftime("%Y-%m-%d"), fname[:2]+'.'+fname[2:-4], a[2], a[3], a[4], a[5], a[6], a[7], price])
         b = b + 32
         e = e + 32
     df = pd.DataFrame(data, columns=cols)
@@ -39,8 +40,8 @@ def day2csv_data(argv):
 
 
 if __name__ == "__main__":
-    pathdir1 = r'C:\new_tdx\vipdoc\sh\minline'
-    pathdir2 = r'C:\new_tdx\vipdoc\sz\minline'
+    pathdir1 = r'C:\new_tdx\vipdoc\sh\fzline'
+    pathdir2 = r'C:\new_tdx\vipdoc\sz\fzline'
 
     targetDir = TDX_MINUTE_DIR
     make_dir(targetDir)
