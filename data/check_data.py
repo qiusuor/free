@@ -51,7 +51,7 @@ def check_minutes(no_last_day_data_codes, check_dir):
             
 if __name__ == "__main__":
     no_last_day_data_codes = check_daily()
-    check_minutes(no_last_day_data_codes, MINUTE_DIR)
-    check_minutes(no_last_day_data_codes, MINUTE_RECENT_DIR)
+    check_minutes(no_last_day_data_codes, TDX_MINUTE_DIR)
+    # check_minutes(no_last_day_data_codes, MINUTE_RECENT_DIR)
     
     

@@ -29,17 +29,20 @@ def make_dir(file_name):
 def not_concern(code):
     if code.startswith("sh.000001"):
         return False
-    if code.startswith("sh.00"):
-        return True
-    if code.startswith("sz.39"):
-        return True
-    if code.startswith("sz.30"):
-        return True
-    if code.startswith("sh.68"):
-        return True
-    if code.startswith("bj"):
-        return True
-    return False
+    return not (code.startswith("sh.60") or code.startswith("sz.00"))
+    # if code.startswith("sh.11"):
+    #     return True
+    # if code.startswith("sh.00"):
+    #     return True
+    # if code.startswith("sz.39"):
+    #     return True
+    # if code.startswith("sz.30"):
+    #     return True
+    # if code.startswith("sh.68"):
+    #     return True
+    # if code.startswith("bj"):
+    #     return True
+    # return False
 
 
 def is_index(code):

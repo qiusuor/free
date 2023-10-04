@@ -24,16 +24,19 @@ def train(argv):
     batch_size, epochs, LAT_SIZE = argv
     def load_data(train_val_split=0.7):
         data = []
-        for file in tqdm(os.listdir(MINUTE_DIR)):
+        for file in tqdm(os.listdir(TDX_MINUTE_DIR)):
             code = file.split("_")[0]
             if not_concern(code) or is_index(code):
                 continue
             if not file.endswith(".pkl"):
                 continue
-            path = os.path.join(MINUTE_DIR, file)
+            path = os.path.join(TDX_MINUTE_DIR, file)
             df = joblib.load(path)[["day", "price", "amount"]]
            
             data.extend([x[1][["price", "amount"]].values.reshape(-1) for x in df.groupby("day")])
+            # print(data[-1])
+            # print(code)
+            # exit(0)
         df = pd.DataFrame(data)
         df = df.fillna(0).astype("float32").values
         np.random.shuffle(df)
@@ -61,7 +64,7 @@ def train(argv):
 
     x_train, x_test = load_data()
     gc.collect()
-    feature_dim = 2 *48
+    feature_dim = 4 * 60 * 2
     
     criterion = nn.MSELoss(reduction="mean")
     train_loader = DataLoader(x_train, batch_size=batch_size, drop_last=True, shuffle=True)

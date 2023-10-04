@@ -14,14 +14,12 @@ def day2csv_data(argv):
     buf = ofile.read()
     ofile.close()
 
-    ifile = open(targetDir + os.sep + fname[:2]+'.'+fname[2:-4]+'_'+freq+ '_2' + '.csv', 'w')
     num = len(buf)
     no = num / 32
     b = 0
     e = 32
-    linename = str('date') +  ',' +'code' +','+ str('open') + ',' + str('high') + ',' + str('low') + ',' + str(
-        'close') + ',' + str('amount') + ',' + str('volume') + ',' + str('str07') + '' + '\n'
-    ifile.write(linename)
+    cols = ["date", "day", "code", "open", "high", "low", "close", "amount", "volume", "price"]
+    data = []
     for i in range(int(no)):
         a = unpack('HHfffffII', buf[b:e])
         num=a[0]
@@ -29,12 +27,15 @@ def day2csv_data(argv):
         month = (num % 2048) // 100
         day = (num % 2048) %100
         dt=datetime.datetime(year=year, month=month, day=day, hour=a[1]//60, minute=a[1]%60)
-        line = dt.strftime("%Y-%m-%d %H:%M:%S") + ',' + fname[:2]+'.'+fname[2:-4]+','+ str(a[2]) + ', ' + str(a[3]) + ' ,' + str(a[4]) + ', ' + str(
-            a[5]) + ' ,' + str(a[6]) + ', ' + str(a[7]) + ' ,' + str(a[8]) + '' + '\n'
-        ifile.write(line)
+        data.append([dt, dt.strftime("%Y-%m-%d"), fname[:2]+'.'+fname[2:-4], a[2], a[3], a[4], a[5], a[6], a[7], a[6]/(a[7]+1e-9)])
         b = b + 32
         e = e + 32
-    ifile.close()
+    df = pd.DataFrame(data, columns=cols)
+    df['date'] = pd.to_datetime(df['date'])
+    df.set_index("date", inplace=True)
+    df.sort_index(inplace=True)
+    df.to_csv(targetDir + os.sep + fname[:2]+'.'+fname[2:-4]+'_'+freq+ '_2' + '.csv')
+    joblib.dump(df, targetDir + os.sep + fname[:2]+'.'+fname[2:-4]+'_'+freq+ '_2' + '.pkl')
 
 
 if __name__ == "__main__":
