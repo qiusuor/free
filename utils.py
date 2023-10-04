@@ -211,7 +211,6 @@ def pandas_rolling_agg(ref=None):
     return rolling
 
 def get_feature_cols():
-    # return ['natr_5', 'natr_14', 'stddev_120', 'amount', 'chip_div_120', 'correl_120', 'pct_close_240', 'pctChg', 'pbMRQ', 'pct_price_240', 'rsi_10', 'correl_240', 'psTTM', 'rsi_120', 'chip_div_10', 'pct_close_60', 'rsi_5', 'chip_div_3', 'rsi_60', 'rsi_240', 'peTTM', 'adx_30', 'stddev_240', 'rsi_30', 'turn', 'correl_22', 'factor', 'pct_close_30', 'volume', 'alpha_001', 'alpha_002', 'chip_div_5', 'pct_close_10', 'chip_div_240', 'adx_7', 'min_turn_10', 'chip_div_60', 'chip_div_30', 'beta_30', 'std_turn_30', 'pct_low_30', 'pct_close_120', 'std_turn_3', 'stddev_60', 'adx_14', 'max_turn_240', 'correl_10', 'correl_60', 'beta_22', 'obv']
     for file in os.listdir(DAILY_DIR):
         code = file.split("_")[0]
         if not_concern(code) or is_index(code):
