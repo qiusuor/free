@@ -48,12 +48,13 @@ def prepare_one(path):
         old_feat = joblib.load(feat_path)
         old_feat_index = set(old_feat.index)
         feat = pd.concat([old_feat, feat[[i not in old_feat_index for i in feat.index]]], axis=0)
+    feat.sort_index()
     feat.to_csv(feat_path.replace(".pkl", ".csv"))
     dump(feat, feat_path)
     
     
 def prepare():
-    data_dir = MINUTE_DIR if not os.path.exists(os.path.join(MINUTE_FEAT, "sh.600000_5_2.csv")) else MINUTE_RECENT_DIR
+    data_dir = TDX_MINUTE_DIR if not os.path.exists(os.path.join(MINUTE_FEAT, "sh.600000_5_2.csv")) else MINUTE_RECENT_DIR
     make_dir(data_dir)
     paths = []
     for file in tqdm(os.listdir(data_dir)):
@@ -67,7 +68,7 @@ def prepare():
     # print(paths[0])
     # prepare_one(paths[0])
     # exit(0)
-    pool = Pool(32)
+    pool = Pool(8)
     pool.imap_unordered(prepare_one, paths)
     pool.close()
     pool.join()
