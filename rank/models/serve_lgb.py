@@ -56,11 +56,11 @@ if __name__ == "__main__":
                 features, label, train_start_day, train_end_day, val_start_day,
                 val_end_day, n_day, train_len, num_leaves, max_depth, min_data_in_leaf, epoch
             ]
-            if not os.path.exists(EXP_DATA_CACHE):
-                # print(argv)
-                train_lightgbm(argv)
-                print("Generate cache file this time, try again.")
-                exit(0)
+            # if not os.path.exists(EXP_DATA_CACHE):
+            #     # print(argv)
+            #     train_lightgbm(argv)
+            #     print("Generate cache file this time, try again.")
+            #     exit(0)
             argvs.append(argv)
     #     print(train_start_day, train_end_day, val_start_day, val_end_day)
     # exit(0)

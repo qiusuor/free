@@ -75,7 +75,7 @@ def train_lightgbm(argv):
         shutil.rmtree(save_dir)
     make_dir(save_dir)
     make_dir(EXP_DATA_CACHE)
-    if os.path.exists(EXP_DATA_CACHE):
+    if os.path.exists(EXP_DATA_CACHE) and not pred_mode:
         with open(EXP_DATA_CACHE, 'rb') as f:
             dataset = cPickle.load(f)
     else:
@@ -97,9 +97,9 @@ def train_lightgbm(argv):
             df = df.iloc[-250:]
             dataset.append(df)
         dataset = pd.concat(dataset, axis=0)
-
-        with open(EXP_DATA_CACHE, 'wb') as f:
-            cPickle.dump(dataset, f)
+        if not pred_mode:
+            with open(EXP_DATA_CACHE, 'wb') as f:
+                cPickle.dump(dataset, f)
     train_dataset = dataset[(dataset.date >= train_start_day) & (dataset.date <= train_end_day)]
     val_dataset = dataset[(dataset.date >= val_start_day) & (dataset.date <= val_end_day)]
     del dataset
