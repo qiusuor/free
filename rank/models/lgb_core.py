@@ -69,8 +69,11 @@ def train_lightgbm(argv):
     param_des = "_".join([str(train_len), str(num_leaves), str(max_depth), str(min_data_in_leaf)])
     root_dir = EXP_PRED_DIR if pred_mode else EXP_DIR
     save_dir = "{}/{}/{}/{}".format(root_dir, label, param_des, to_int_date(val_start_day))
-    if not pred_mode and os.path.exists(os.path.join(save_dir, "meta.json")):
-        return
+    if os.path.exists(os.path.join(save_dir, "meta.json")):
+        with open(os.path.join(save_dir, "meta.json")) as f:
+            meta = json.load(f)
+            if not np.isnan(meta["last_val"]["auc"]):
+                return
     if os.path.exists(save_dir):
         shutil.rmtree(save_dir)
     make_dir(save_dir)
@@ -180,14 +183,13 @@ def train_lightgbm(argv):
             "top5_watch": top5_watch,
             "top10_watch": top10_watch
         }
-        if not np.isnan(ap) and ap > 0:
-            meta["last_val"] = {
-                "auc": auc_score,
-                "ap": ap,
-                "top3_watch": top3_watch,
-                "top5_watch": top5_watch,
-                "top10_watch": top10_watch
-            }
+        meta["last_val"] = {
+            "auc": auc_score,
+            "ap": ap,
+            "top3_watch": top3_watch,
+            "top5_watch": top5_watch,
+            "top10_watch": top10_watch
+        }
         save_file = f"{to_int_date(i)}_T3_{top3_miss}_T5_{top5_miss}_T10_{top10_miss}_AP_{ap}_AUC_{auc_score}.csv"
         res_i.to_csv(os.path.join(save_dir, save_file))
     
