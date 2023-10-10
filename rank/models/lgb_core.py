@@ -38,7 +38,7 @@ def train_val_data_filter(df):
     return df[df.low.shift(-1) != df.high.shift(-1)]
 
 def train_lightgbm(argv):
-    features, label, train_start_day, train_end_day, val_start_day, val_end_day, n_day, train_len, num_leaves, max_depth, min_data_in_leaf, epoch = argv
+    features, label, train_start_day, train_end_day, val_start_day, val_end_day, n_day, train_len, num_leaves, max_depth, min_data_in_leaf, cache_data, epoch = argv
     params = {
         'task': 'train',
         'boosting_type': 'gbdt',
@@ -77,9 +77,9 @@ def train_lightgbm(argv):
     if os.path.exists(save_dir):
         shutil.rmtree(save_dir)
     make_dir(save_dir)
-    make_dir(EXP_DATA_CACHE)
-    if os.path.exists(EXP_DATA_CACHE) and not pred_mode:
-        with open(EXP_DATA_CACHE, 'rb') as f:
+    make_dir(cache_data)
+    if os.path.exists(cache_data):
+        with open(cache_data, 'rb') as f:
             dataset = cPickle.load(f)
     else:
         dataset = []
@@ -100,9 +100,8 @@ def train_lightgbm(argv):
             df = df.iloc[-250:]
             dataset.append(df)
         dataset = pd.concat(dataset, axis=0)
-        if not pred_mode:
-            with open(EXP_DATA_CACHE, 'wb') as f:
-                cPickle.dump(dataset, f)
+        with open(cache_data, 'wb') as f:
+            cPickle.dump(dataset, f)
     train_dataset = dataset[(dataset.date >= train_start_day) & (dataset.date <= train_end_day)]
     val_dataset = dataset[(dataset.date >= val_start_day) & (dataset.date <= val_end_day)]
     del dataset

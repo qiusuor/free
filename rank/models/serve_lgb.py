@@ -27,6 +27,7 @@ if __name__ == "__main__":
     label = "y_2_d_high_rank_10%"
     argvs = []
     trade_days = get_trade_days(update=False)
+    cache_data = EXP_DATA_CACHE.format(trade_days[-1])
     test_n_day = 10
     opt_points = [
         # ("y_2_d_high_rank_20%_safe_1d", 180, 31, 7, 3, 144), 
@@ -54,19 +55,20 @@ if __name__ == "__main__":
             val_end_day = to_date(get_offset_trade_day(train_val_split_day, n_day))
             argv = [
                 features, label, train_start_day, train_end_day, val_start_day,
-                val_end_day, n_day, train_len, num_leaves, max_depth, min_data_in_leaf, epoch
+                val_end_day, n_day, train_len, num_leaves, max_depth, min_data_in_leaf, cache_data, epoch
             ]
-            # if not os.path.exists(EXP_DATA_CACHE):
-            #     # print(argv)
-            #     train_lightgbm(argv)
-            #     print("Generate cache file this time, try again.")
-            #     exit(0)
+            if not os.path.exists(cache_data):
+                # print(argv)
+                train_lightgbm(argv)
+                print("Generate cache file this time, try again.")
+                exit(0)
             argvs.append(argv)
     #     print(train_start_day, train_end_day, val_start_day, val_end_day)
-    # exit(0)
-    np.random.shuffle(argvs)
     # print(argvs[0])
     # train_lightgbm(argvs[0])
+    # exit(0)
+
+    np.random.shuffle(argvs)
     pool = Pool(32 if "Linux" in platform.platform() else 1)
     pool.imap_unordered(train_lightgbm, argvs)
     pool.close()

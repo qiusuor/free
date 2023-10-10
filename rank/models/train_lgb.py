@@ -53,6 +53,7 @@ if __name__ == "__main__":
     
     features = get_feature_cols()
     trade_days = get_trade_days(update=False)
+    cache_data = EXP_DATA_CACHE.format(trade_days[-1])
     test_n_day = TEST_N_LAST_DAY
     argvs = []
     
@@ -76,7 +77,7 @@ if __name__ == "__main__":
                             val_end_day = to_date(get_offset_trade_day(train_val_split_day, n_day))
                             argv = [
                                 features, label, train_start_day, train_end_day, val_start_day,
-                                val_end_day, n_day, train_len, num_leaves, max_depth, min_data_in_leaf, -1
+                                val_end_day, n_day, train_len, num_leaves, max_depth, min_data_in_leaf, cache_data, -1
                             ]
                             if not os.path.exists(EXP_DATA_CACHE):
                                 # print(argv)
