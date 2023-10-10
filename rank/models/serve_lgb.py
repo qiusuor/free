@@ -18,6 +18,7 @@ import json
 from rank.models.lgb_core import *
 from rank.models.agg_prediction_info import agg_prediction_info
 import platform
+import bisect
 
 
 if __name__ == "__main__":
@@ -27,11 +28,15 @@ if __name__ == "__main__":
     label = "y_2_d_high_rank_10%"
     argvs = []
     trade_days = get_trade_days(update=False)
+    trunc_index = bisect.bisect_right(trade_days, SEARCH_END_DAY)
+    trade_days = trade_days[:trunc_index]
+
     cache_data = EXP_DATA_CACHE.format(trade_days[-1])
     opt_points = [
         # ("y_2_d_high_rank_20%_safe_1d", 180, 31, 7, 3, 144), 
-        ("y_2_d_high_rank_20%_safe_1d", 180, 31, 12, 11, 34), 
-        ("y_2_d_high_rank_20%_safe_1d", 180, 31, 9, 21, 40), 
+        # ("y_2_d_high_rank_20%_safe_1d", 180, 31, 12, 11, 34), 
+        # ("y_2_d_high_rank_20%_safe_1d", 180, 31, 9, 21, 40), 
+        ("y_2_d_high_rank_20%_safe_1d", 30, 63, 7, 5, 71), 
         # ("y_2_d_high_rank_20%", 120, 63, 9, 11, 52), 
         # ("y_2_d_high_rank_20%", 180, 63, 7, 11, 48), 
         # ("y_next_1d_close_2d_open_rate_rank_10%", 120, 15, 9, 5, 254), 

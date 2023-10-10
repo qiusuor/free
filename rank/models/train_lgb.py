@@ -17,6 +17,7 @@ import shutil
 import json
 from rank.models.lgb_core import *
 from rank.models.agg_prediction_info import agg_prediction_info
+import bisect
 
 
 if __name__ == "__main__":
@@ -53,6 +54,8 @@ if __name__ == "__main__":
     
     features = get_feature_cols()
     trade_days = get_trade_days(update=False)
+    trunc_index = bisect.bisect_right(trade_days, SEARCH_END_DAY)
+    trade_days = trade_days[:trunc_index]
     cache_data = EXP_DATA_CACHE.format(trade_days[-1])
     test_n_day = TEST_N_LAST_DAY
     argvs = []
