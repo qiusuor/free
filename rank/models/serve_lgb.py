@@ -19,8 +19,23 @@ from rank.models.lgb_core import *
 from rank.models.agg_prediction_info import agg_prediction_info
 import platform
 import bisect
+import math
 
-
+def parse_best_opts():
+    opts = []
+    
+    with open(os.path.join(EXP_DIR, "agg_info.json")) as f:
+        train_agg_info = json.load(f)
+        sharp_exp = train_agg_info["Top-3"]["sharp_exp"]
+        best_sharp_exp = sharp_exp[list(sharp_exp)[0]]
+        label = best_sharp_exp["label"]
+        config = list(map(int, best_sharp_exp["exp_config"].split("_")))
+        epoch = math.ceil(best_sharp_exp["avg_epoch"])
+        opt = [label, *config, epoch]
+        opts.append(opt)
+    
+    return opts
+    
 if __name__ == "__main__":
     
     # prepare_data(update=False)
@@ -32,18 +47,7 @@ if __name__ == "__main__":
     trade_days = trade_days[:trunc_index]
 
     cache_data = EXP_DATA_CACHE.format(trade_days[-1])
-    opt_points = [
-        # ("y_2_d_high_rank_20%_safe_1d", 180, 31, 7, 3, 144), 
-        # ("y_2_d_high_rank_20%_safe_1d", 180, 31, 12, 11, 34), 
-        # ("y_2_d_high_rank_20%_safe_1d", 180, 31, 9, 21, 40), 
-        ("y_2_d_high_rank_20%_safe_1d", 30, 63, 7, 5, 71), 
-        # ("y_2_d_high_rank_20%", 120, 63, 9, 11, 52), 
-        # ("y_2_d_high_rank_20%", 180, 63, 7, 11, 48), 
-        # ("y_next_1d_close_2d_open_rate_rank_10%", 120, 15, 9, 5, 254), 
-        # ("y_next_1d_close_2d_open_rate_rank_10%", 120, 3, 3, 41, 570), 
-        # ("y_2_d_close_high_rank_10%", 50, 15, 9, 21, 106), 
-        # ("y_2_d_close_high_rank_30%", 30, 7, 3, 21, 99),
-    ]
+    opt_points = parse_best_opts()
     
     for label, train_len, num_leaves, max_depth, min_data_in_leaf, epoch in opt_points:
         # eval on multi run
