@@ -28,7 +28,6 @@ if __name__ == "__main__":
     argvs = []
     trade_days = get_trade_days(update=False)
     cache_data = EXP_DATA_CACHE.format(trade_days[-1])
-    test_n_day = 10
     opt_points = [
         # ("y_2_d_high_rank_20%_safe_1d", 180, 31, 7, 3, 144), 
         ("y_2_d_high_rank_20%_safe_1d", 180, 31, 12, 11, 34), 
