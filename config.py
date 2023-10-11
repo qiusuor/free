@@ -3,8 +3,8 @@ from multiprocessing import cpu_count
 
 THREAD_NUM = cpu_count()
 SEARCH_END_DAY = 21990101
-# SEARCH_END_DAY = 20230731
-TEST_N_LAST_DAY = 3
+# SEARCH_END_DAY = 20231009
+TEST_N_LAST_DAY = 1
 ROOT_DIR = os.path.dirname(os.path.realpath(__file__))
 DATA_DIR = os.path.join(ROOT_DIR, "data/data")
 TICK_DIR = os.path.join(DATA_DIR, "tick")
