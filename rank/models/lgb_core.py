@@ -180,15 +180,12 @@ def train_lightgbm(argv):
             "ap": ap,
             "top3_watch": top3_watch,
             "top5_watch": top5_watch,
-            "top10_watch": top10_watch
+            "top10_watch": top10_watch,
+            "top3_miss": top3_miss,
+            "top5_miss": top5_miss,
+            "top10_miss": top10_miss,
         }
-        meta["last_val"] = {
-            "auc": auc_score,
-            "ap": ap,
-            "top3_watch": top3_watch,
-            "top5_watch": top5_watch,
-            "top10_watch": top10_watch
-        }
+        meta["last_val"] = meta["daily"][to_int_date(i)]
         save_file = f"{to_int_date(i)}_T3_{top3_miss}_T5_{top5_miss}_T10_{top10_miss}_AP_{ap}_AUC_{auc_score}.csv"
         res_i.to_csv(os.path.join(save_dir, save_file))
     

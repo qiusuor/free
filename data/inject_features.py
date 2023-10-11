@@ -152,9 +152,9 @@ def inject_price_turn_features(df):
     
     for period in max_min_period:
         for name in max_name:
-            df["max_{}_{}".format(name, period)] = df[name].rolling(period).max()
+            df["max_{}_{}".format(name, period)] = df[name].rolling(period).max() / df[name]
         for name in min_name:
-            df["min_{}_{}".format(name, period)] = df[name].rolling(period).min()
+            df["min_{}_{}".format(name, period)] = df[name].rolling(period).min() / df[name]
     
     pct_period = [3, 5, 10, 30, 60, 120, 240]
     
