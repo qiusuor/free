@@ -22,7 +22,9 @@ import bisect
 
 if __name__ == "__main__":
     
-    prepare_data(update=False)
+    df = joblib.load(os.path.join(DAILY_DIR, "sh.600000_d_2.pkl"))
+    if "code_name" not in df.columns:
+        prepare_data(update=False)
     
     search_labels = [
         # "y_next_1d_close_2d_open_rate_rank_10%",
