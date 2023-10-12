@@ -34,6 +34,7 @@ def check_daily():
 
 def check_minutes(no_last_day_data_codes, check_dir):
     last_trade_day = get_trade_days(update=False)[-1]
+    no_last_fzline_codes = set()
     for file in tqdm(os.listdir(check_dir)):
         code = file.split("_")[0]
         if not_concern(code) or is_index(code):
@@ -45,15 +46,15 @@ def check_minutes(no_last_day_data_codes, check_dir):
         assert len(set(df.index)) == len(df.index), code
         
         if to_int_date(df.index[-1]) != last_trade_day and code not in no_last_day_data_codes:
-            print(code, "no data at last trade day!")
+            no_last_fzline_codes.add(code)
         
             
             
 if __name__ == "__main__":
     no_last_day_data_codes = check_daily()
     if os.path.exists(TDX_MINUTE_DIR):
-        check_minutes(no_last_day_data_codes, TDX_MINUTE_DIR)
+        no_last_fzline_codes = check_minutes(no_last_day_data_codes, TDX_MINUTE_DIR)
     if os.path.exists(TDX_MINUTE_RECENT_DIR):
-        check_minutes(no_last_day_data_codes, TDX_MINUTE_RECENT_DIR)
+        check_minutes(no_last_fzline_codes, TDX_MINUTE_RECENT_DIR)
     
     
