@@ -38,14 +38,10 @@ def day2csv_data(argv):
     df.to_csv(targetDir + os.sep + fname[:2]+'.'+fname[2:-4]+'_'+freq+ '_2' + '.csv')
     joblib.dump(df, targetDir + os.sep + fname[:2]+'.'+fname[2:-4]+'_'+freq+ '_2' + '.pkl')
 
-
-if __name__ == "__main__":
+def parse(targetDir):
     pathdir1 = r'C:\new_tdx\vipdoc\sh\fzline'
     pathdir2 = r'C:\new_tdx\vipdoc\sz\fzline'
-
-    targetDir = TDX_MINUTE_DIR
     make_dir(targetDir)
-    
 
     argvs = [(os.path.join(pathdir1, f), targetDir) for f in os.listdir(pathdir1)]
     argvs += [(os.path.join(pathdir2, f), targetDir) for f in os.listdir(pathdir2)]
@@ -54,6 +50,15 @@ if __name__ == "__main__":
     pool.imap_unordered(day2csv_data, argvs)
     pool.close()
     pool.join()
+
+def parse_recent():
+    parse(TDX_MINUTE_RECENT_DIR)
+    
+def parse_history():
+    parse(TDX_MINUTE_DIR)
+    
+if __name__ == "__main__":
+    parse_recent()
 
 
     

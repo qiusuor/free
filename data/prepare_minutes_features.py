@@ -54,7 +54,7 @@ def prepare_one(path):
     
     
 def prepare():
-    data_dir = TDX_MINUTE_DIR if not os.path.exists(os.path.join(MINUTE_FEAT, "sh.600000_5_2.csv")) else MINUTE_RECENT_DIR
+    data_dir = TDX_MINUTE_DIR if not os.path.exists(os.path.join(MINUTE_FEAT, "sh.600000_5_2.csv")) else TDX_MINUTE_RECENT_DIR
     make_dir(MINUTE_FEAT)
     paths = []
     for file in tqdm(os.listdir(data_dir)):
