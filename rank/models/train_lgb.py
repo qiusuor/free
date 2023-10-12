@@ -22,7 +22,7 @@ import bisect
 
 if __name__ == "__main__":
     
-    # prepare_data()
+    prepare_data(update=False)
     
     search_labels = [
         # "y_next_1d_close_2d_open_rate_rank_10%",
