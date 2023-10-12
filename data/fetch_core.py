@@ -3,7 +3,7 @@ from joblib import dump
 import baostock as bs
 import pandas as pd
 import bisect
-from config import DAILY_DIR, ALL_STOCKS, MINUTE_DIR
+from config import DAILY_DIR, ALL_STOCKS
 from utils import is_index, not_concern, fetch_stock_codes, make_dir
 from multiprocessing import Pool
 import threading
