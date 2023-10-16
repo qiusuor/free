@@ -23,7 +23,7 @@ import math
 
 def parse_best_opts():
     opts = set()
-    fields = ["topk_miss_exp", "sharp_exp", "high_exp"]
+    fields = ["topk_miss_exp", "topk_ret_exp", "sharp_exp", "high_exp"]
     
     with open(os.path.join(EXP_DIR, "agg_info.json")) as f:
         train_agg_info = json.load(f)

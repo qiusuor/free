@@ -51,6 +51,11 @@ if __name__ == "__main__":
         # "y_2_d_ret_rank_20%",
         # "y_2_d_ret_rank_30%",
         # "y_2_d_ret_rank_50%",
+        
+        # "y_2_d_ret_rank_10%_safe_1d",
+        # "y_2_d_ret_rank_20%_safe_1d",
+        # "y_2_d_ret_rank_30%_safe_1d",
+        # "y_2_d_ret_rank_50%_safe_1d",
     
     ]
     

@@ -42,7 +42,7 @@ def agg_prediction_info(ana_dir=EXP_DIR):
                 configured_exp_dir = os.path.join(label_dir, exp_config)
                 if not os.path.isdir(configured_exp_dir): continue
                 epochs, last_aps, last_aucs, topk_high_means, topk_low_means, topk_sharp_means, topk_gain_means, topk_close_high_means, topk_close_low_means, topk_close_sharps, topk_1d_close_means = [], [], [], [], [], [], [], [], [], [], []
-                topk_misses = []
+                topk_misses, topk_ret_means = [], []
                 if len(os.listdir(configured_exp_dir)) < test_last_n_day: continue
                 finished = True
                 val_start_days = list(filter(lambda x: os.path.isdir(os.path.join(configured_exp_dir, x)), os.listdir(configured_exp_dir)))
@@ -73,7 +73,8 @@ def agg_prediction_info(ana_dir=EXP_DIR):
                     topk_close_low_mean = meta["last_val"]["top{}_watch".format(topk)]["y_next_2_d_close_low_ratio_topk_{}_mean".format(topk)] if "y_next_2_d_close_low_ratio_topk_{}_mean".format(topk) in meta["last_val"]["top{}_watch".format(topk)] else 0
                     topk_1d_close_mean = meta["last_val"]["top{}_watch".format(topk)]["y_next_1d_close_rate_topk_{}_mean".format(topk)] if "y_next_1d_close_rate_topk_{}_mean".format(topk) in meta["last_val"]["top{}_watch".format(topk)] else 0
                     
-                    topk_miss = meta["last_val"] = meta["last_val"]["top{}_miss".format(topk)]
+                    topk_miss = meta["last_val"]["top{}_miss".format(topk)]
+                    topk_ret_mean = meta["last_val"]["top{}_watch".format(topk)]["y_next_2_d_ret_topk_{}_mean".format(topk)]
                     
                     topk_sharp_mean = topk_high_mean * topk_low_mean
                     topk_close_sharp = topk_close_high_mean * topk_close_low_mean
@@ -90,6 +91,7 @@ def agg_prediction_info(ana_dir=EXP_DIR):
                     topk_close_sharps.append(topk_close_sharp)
                     topk_1d_close_means.append(topk_1d_close_mean)
                     topk_misses.append(topk_miss)
+                    topk_ret_means.append(topk_ret_mean)
                     
                 if not finished: continue
                 avg_epoch = np.mean(epochs)
@@ -104,12 +106,14 @@ def agg_prediction_info(ana_dir=EXP_DIR):
                 avg_close_sharp = np.mean(topk_close_sharps)
                 avg_1d_close = np.mean(topk_1d_close_means)
                 avg_topk_miss = np.mean(topk_misses)
+                avg_topk_ret = np.mean(topk_ret_means)
                 feature_importance, feature_name = zip(*sorted(list(zip(feature_importance, feature_name)), key=lambda x:-x[0]))
                 exp_result = {
                     "label": label,
                     "exp_config": exp_config,
                     "avg_epoch": avg_epoch,
                     "avg_miss": avg_topk_miss,
+                    "avg_topk_ret": avg_topk_ret,
                     "avg_ap": avg_ap,
                     "avg_auc": avg_auc,
                     "avg_high": agv_high, 
@@ -147,6 +151,7 @@ def agg_prediction_info(ana_dir=EXP_DIR):
                     
         agg_result["sharp_exp"] = to_dict(sorted(agg_result["sharp_exp"].items(), key=lambda x:-x[1]["avg_sharp"]))
         agg_result["topk_miss_exp"] = to_dict(sorted(agg_result["sharp_exp"].items(), key=lambda x:x[1]["avg_miss"]))
+        agg_result["topk_ret_exp"] = to_dict(sorted(agg_result["sharp_exp"].items(), key=lambda x:-x[1]["avg_topk_ret"]))
         agg_result["sharp_1d_safe_exp"] = to_dict(sorted(agg_result["sharp_exp"].items(), key=lambda x:-x[1]["avg_sharp"]*x[1]["avg_1d_close"]))
         agg_result["high_exp"] = to_dict(sorted(agg_result["sharp_exp"].items(), key=lambda x:-x[1]["avg_high"]))
         agg_result["close_open_strategy"] = to_dict(sorted(agg_result["close_open_strategy"].items(), key=lambda x:-x[1]["avg_close_open"]))
