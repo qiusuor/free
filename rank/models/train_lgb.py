@@ -67,7 +67,7 @@ if __name__ == "__main__":
     test_n_day = TEST_N_LAST_DAY
     argvs = []
     
-    val_delay_day = 10
+    val_delay_day = 0
     
     for label in search_labels:
         for num_leaves in [3, 7, 15, 31, 63]:
