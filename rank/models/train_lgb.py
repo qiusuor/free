@@ -67,6 +67,8 @@ if __name__ == "__main__":
     test_n_day = TEST_N_LAST_DAY
     argvs = []
     
+    val_delay_day = 10
+    
     for label in search_labels:
         for num_leaves in [3, 7, 15, 31, 63]:
             for min_data_in_leaf in [3, 5, 11, 21, 41]:
@@ -78,13 +80,13 @@ if __name__ == "__main__":
                         print(len(argvs))
                         # print(trade_days[-test_n_day-2*n_day:-2*n_day])
                         
-                        for train_val_split_day in trade_days[-test_n_day-2*n_day:-2*n_day]:
+                        for train_val_split_day in trade_days[-test_n_day-2*n_day-val_delay_day:-2*n_day-val_delay_day]:
                             train_start_day = to_date(get_offset_trade_day(train_val_split_day,
                                                                         -train_len))
                             train_end_day = to_date(get_offset_trade_day(train_val_split_day, 0))
-                            val_start_day = to_date(get_offset_trade_day(train_val_split_day, 1))
-                            # print(val_start_day)
-                            val_end_day = to_date(get_offset_trade_day(train_val_split_day, n_day))
+                            
+                            val_start_day = to_date(get_offset_trade_day(train_val_split_day, 1 + val_delay_day))
+                            val_end_day = to_date(get_offset_trade_day(to_int_date(val_start_day), n_day-1))
                             argv = [
                                 features, label, train_start_day, train_end_day, val_start_day,
                                 val_end_day, n_day, train_len, num_leaves, max_depth, min_data_in_leaf, cache_data, -1

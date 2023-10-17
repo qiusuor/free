@@ -203,6 +203,8 @@ def prepare_data(update=False):
 def get_n_val_day(label):
     if "y_2_d" in label or "1d_close_2d_open" in label:
         n_day = 2
+    elif "y_5_d" in label:
+        n_day = 5
     else:
         assert False
     return n_day
