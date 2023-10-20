@@ -303,7 +303,7 @@ def inject_joint_label():
     df = pd.concat(data)
     
     data = []
-    for i, df_i in df.groupby("date"):
+    for i, df_i in tqdm(df.groupby("date")):
         df_i["y_next_1d_close_2d_open_rate_rank"] = df_i["y_next_1d_close_2d_open_rate"].rank(pct=True, ascending=False)
         df_i["y_next_1d_close_2d_open_rate_rank_10%"] = (df_i["y_next_1d_close_2d_open_rate_rank"] <= 0.1).astype("float")
         df_i["y_next_1d_close_2d_open_rate_rank_20%"] = (df_i["y_next_1d_close_2d_open_rate_rank"] <= 0.2).astype("float")
