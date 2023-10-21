@@ -13,6 +13,7 @@ from data.fetch_daily import fetch_daily
 from data.inject_features import inject_features
 from data.inject_labels import inject_labels
 from data.inject_embedding import inject_embedding
+from data.inject_minute_feature import inject_minute_feature
 from matplotlib import pyplot as plt
 import shutil
 import json
@@ -201,6 +202,7 @@ def prepare_data(update=False):
     # inject_features()
     inject_embedding()
     inject_labels()
+    inject_minute_feature()
 
 def get_n_val_day(label):
     if "y_2_d" in label or "1d_close_2d_open" in label:

@@ -71,10 +71,11 @@ if __name__ == "__main__":
     
     for label in search_labels:
         for num_leaves in [3, 7, 15, 31, 63]:
-            for min_data_in_leaf in [3, 5, 11, 21, 41]:
+            for min_data_in_leaf in [11, 21, 41, 81]:
                 for max_depth in [3, 7, 9, 12]:
                     if 2**max_depth <= num_leaves: continue
-                    for train_len in [30, 50, 120, 180]:
+                    for train_len in [180]:
+                    # for train_len in [30, 50, 120, 180]:
                         n_day = get_n_val_day(label)
                         
                         print(len(argvs))
