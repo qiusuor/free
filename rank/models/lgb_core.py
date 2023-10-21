@@ -12,6 +12,7 @@ from utils import *
 from data.fetch_daily import fetch_daily
 from data.inject_features import inject_features
 from data.inject_labels import inject_labels
+from data.inject_embedding import inject_embedding
 from matplotlib import pyplot as plt
 import shutil
 import json
@@ -197,7 +198,8 @@ def prepare_data(update=False):
         fetch_daily()
     os.system("rm -rf {}".format(EXP_DIR))
     os.system("rm -rf {}".format(EXP_PRED_DIR))
-    inject_features()
+    # inject_features()
+    inject_embedding()
     inject_labels()
 
 def get_n_val_day(label):

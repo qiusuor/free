@@ -23,7 +23,7 @@ import bisect
 if __name__ == "__main__":
     
     df = joblib.load(os.path.join(DAILY_DIR, "sh.600000_d_2.pkl"))
-    if "code_name" not in df.columns:
+    if "emb_0_of_3_8" not in df.columns:
         prepare_data(update=False)
     
     search_labels = [
