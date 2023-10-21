@@ -316,7 +316,9 @@ def inject_joint_label():
         df_i["y_next_1d_close_rate_rank_30%"] = (df_i["y_next_1d_close_rate_rank"] <= 0.3).astype("float")
         df_i["y_next_1d_close_rate_rank_50%"] = (df_i["y_next_1d_close_rate_rank"] <= 0.5).astype("float")
         
-        for d in [2, 3, 5, 10, 22]:
+        safe_1d_rate = 0.7
+        for d in [2]:
+        # for d in [2, 3, 5, 10, 22]:
             df_i["y_{}_d_close_high_rank".format(d)] = df_i["y_next_{}_d_close_high_ratio".format(d)].rank(pct=True, ascending=False)
             df_i["y_{}_d_close_high_rank_10%".format(d)] = (df_i["y_{}_d_close_high_rank".format(d)] <= 0.1).astype("float")
             df_i["y_{}_d_close_high_rank_20%".format(d)] = (df_i["y_{}_d_close_high_rank".format(d)] <= 0.2).astype("float")
@@ -324,22 +326,22 @@ def inject_joint_label():
             df_i["y_{}_d_close_high_rank_50%".format(d)] = (df_i["y_{}_d_close_high_rank".format(d)] <= 0.5).astype("float")
             df_i["y_{}_d_high_rank".format(d)] = df_i["y_next_{}_d_high_ratio".format(d)].rank(pct=True, ascending=False)
             df_i["y_{}_d_high_rank_10%".format(d)] = (df_i["y_{}_d_high_rank".format(d)] <= 0.1).astype("float")
-            df_i["y_{}_d_high_rank_10%_safe_1d".format(d)] = ((df_i["y_{}_d_high_rank".format(d)] <= 0.1) & (df_i["y_next_1d_close_rate_rank"] > 0.3)).astype("float")
+            df_i["y_{}_d_high_rank_10%_safe_1d".format(d)] = ((df_i["y_{}_d_high_rank".format(d)] <= 0.1) & (df_i["y_next_1d_close_rate_rank"] > safe_1d_rate)).astype("float")
             df_i["y_{}_d_high_rank_20%".format(d)] = (df_i["y_{}_d_high_rank".format(d)] <= 0.2).astype("float")
-            df_i["y_{}_d_high_rank_20%_safe_1d".format(d)] = ((df_i["y_{}_d_high_rank".format(d)] <= 0.2) & (df_i["y_next_1d_close_rate_rank"] > 0.3)).astype("float")
+            df_i["y_{}_d_high_rank_20%_safe_1d".format(d)] = ((df_i["y_{}_d_high_rank".format(d)] <= 0.2) & (df_i["y_next_1d_close_rate_rank"] > safe_1d_rate)).astype("float")
             df_i["y_{}_d_high_rank_30%".format(d)] = (df_i["y_{}_d_high_rank".format(d)] <= 0.3).astype("float")
-            df_i["y_{}_d_high_rank_30%_safe_1d".format(d)] = ((df_i["y_{}_d_high_rank".format(d)] <= 0.3) & (df_i["y_next_1d_close_rate_rank"] > 0.3)).astype("float")
+            df_i["y_{}_d_high_rank_30%_safe_1d".format(d)] = ((df_i["y_{}_d_high_rank".format(d)] <= 0.3) & (df_i["y_next_1d_close_rate_rank"] > safe_1d_rate)).astype("float")
             df_i["y_{}_d_high_rank_50%".format(d)] = (df_i["y_{}_d_high_rank".format(d)] <= 0.5).astype("float")
-            df_i["y_{}_d_high_rank_50%_safe_1d".format(d)] = ((df_i["y_{}_d_high_rank".format(d)] <= 0.5) & (df_i["y_next_1d_close_rate_rank"] > 0.3)).astype("float")
+            df_i["y_{}_d_high_rank_50%_safe_1d".format(d)] = ((df_i["y_{}_d_high_rank".format(d)] <= 0.5) & (df_i["y_next_1d_close_rate_rank"] > safe_1d_rate)).astype("float")
             df_i["y_{}_d_ret_rank".format(d)] = df_i["y_next_{}_d_ret".format(d)].rank(pct=True, ascending=False)
             df_i["y_{}_d_ret_rank_10%".format(d)] = (df_i["y_{}_d_ret_rank".format(d)] <= 0.1).astype("float")
-            df_i["y_{}_d_ret_rank_10%_safe_1d".format(d)] = ((df_i["y_{}_d_ret_rank".format(d)] <= 0.1) & (df_i["y_next_1d_close_rate_rank"] > 0.3)).astype("float")
+            df_i["y_{}_d_ret_rank_10%_safe_1d".format(d)] = ((df_i["y_{}_d_ret_rank".format(d)] <= 0.1) & (df_i["y_next_1d_close_rate_rank"] > safe_1d_rate)).astype("float")
             df_i["y_{}_d_ret_rank_20%".format(d)] = (df_i["y_{}_d_ret_rank".format(d)] <= 0.2).astype("float")
-            df_i["y_{}_d_ret_rank_20%_safe_1d".format(d)] = ((df_i["y_{}_d_ret_rank".format(d)] <= 0.2) & (df_i["y_next_1d_close_rate_rank"] > 0.3)).astype("float")
+            df_i["y_{}_d_ret_rank_20%_safe_1d".format(d)] = ((df_i["y_{}_d_ret_rank".format(d)] <= 0.2) & (df_i["y_next_1d_close_rate_rank"] > safe_1d_rate)).astype("float")
             df_i["y_{}_d_ret_rank_30%".format(d)] = (df_i["y_{}_d_ret_rank".format(d)] <= 0.3).astype("float")
-            df_i["y_{}_d_ret_rank_30%".format(d)] = ((df_i["y_{}_d_ret_rank".format(d)] <= 0.3) & (df_i["y_next_1d_close_rate_rank"] > 0.3)).astype("float")
+            df_i["y_{}_d_ret_rank_30%".format(d)] = ((df_i["y_{}_d_ret_rank".format(d)] <= 0.3) & (df_i["y_next_1d_close_rate_rank"] > safe_1d_rate)).astype("float")
             df_i["y_{}_d_ret_rank_50%".format(d)] = (df_i["y_{}_d_ret_rank".format(d)] <= 0.5).astype("float")
-            df_i["y_{}_d_ret_rank_50%".format(d)] = ((df_i["y_{}_d_ret_rank".format(d)] <= 0.5) & (df_i["y_next_1d_close_rate_rank"] > 0.3)).astype("float")
+            df_i["y_{}_d_ret_rank_50%".format(d)] = ((df_i["y_{}_d_ret_rank".format(d)] <= 0.5) & (df_i["y_next_1d_close_rate_rank"] > safe_1d_rate)).astype("float")
         data.append(df_i)
         
     df = pd.concat(data)

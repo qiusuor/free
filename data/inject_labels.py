@@ -29,7 +29,8 @@ def inject_one(path):
         up, nday, ratio = explain_label(label=label)
         df[label] = get_labels(open, close, high, low, price, turn, hold_day=nday, expect_gain=ratio, tolerent_pay=ratio, up=up)
         
-    future_n_day_high_low = [2, 3, 5, 10, 22]
+    future_n_day_high_low = [2]
+    # future_n_day_high_low = [2, 3, 5, 10, 22]
     df["y_next_1d_close_2d_open_rate"] = df["open"].shift(-2) / df["close"].shift(-1)
     df["y_next_1d_close_rate"] = df["close"].shift(-1) / df["open"].shift(-1)
     for n_day in future_n_day_high_low:
