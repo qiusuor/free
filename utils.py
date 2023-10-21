@@ -223,7 +223,7 @@ def get_feature_cols():
         path = os.path.join(DAILY_DIR, file)
         df = joblib.load(path)
         no_feature_cols = set(["code", "adjustflag", "tradestatus", "code_name", "shiborON", "shibor1W", "shibor2W", "shibor3M", "shibor9M", "shibor1Y", "industry"] + [col for col in df.columns if col.startswith("y") or col.startswith("dy")])
-        feature_cols = [col for col in df.columns if col not in no_feature_cols and col.startswith("emb")]
+        feature_cols = [col for col in df.columns if col not in no_feature_cols and (col.startswith("emb") or col.startswith("minutes_emb"))]
         return feature_cols
     
 def get_industry_info():
