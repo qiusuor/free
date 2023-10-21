@@ -99,6 +99,7 @@ def train_lightgbm(argv):
             if "code_name" not in df.columns or not isinstance(df.code_name[-1], str) or "ST" in df.code_name[-1] or "st" in df.code_name[-1] or "sT" in df.code_name[-1]:
                 continue
             df["date"] = df.index
+            if len(df) < 250: continue
             df = df.iloc[-250:]
             dataset.append(df)
         dataset = pd.concat(dataset, axis=0)
@@ -130,7 +131,7 @@ def train_lightgbm(argv):
     train_ap = round(average_precision_score(train_dataset[label], train_dataset.pred), 2)
     train_auc = round(roc_auc_score(train_dataset[label], train_dataset.pred), 2)
     if pred_mode:
-        train_dataset[["code", "code_name", "pred", label, "y_next_1d_close_rate", "y_next_{}_d_ret".format(n_day), f"y_next_{n_day}_d_close_high_ratio", f"y_next_{n_day}_d_close_low_ratio", "y_next_1d_close_2d_open_rate", f"y_next_{n_day}_d_high_ratio", f"y_next_{n_day}_d_low_ratio", "price"]].to_csv(os.path.join(save_dir, "train_set_EPOCH_{}_AP_{}_AUC_{}.csv".format(epoch, train_ap, train_auc)))
+        train_dataset[["code", "pred", label, "y_next_1d_close_rate", "y_next_{}_d_ret".format(n_day), f"y_next_{n_day}_d_close_high_ratio", f"y_next_{n_day}_d_close_low_ratio", "y_next_1d_close_2d_open_rate", f"y_next_{n_day}_d_high_ratio", f"y_next_{n_day}_d_low_ratio", "price"]].to_csv(os.path.join(save_dir, "train_set_EPOCH_{}_AP_{}_AUC_{}.csv".format(epoch, train_ap, train_auc)))
     fpr, tpr, thresh = roc_curve(val_y, val_y_pred)
     val_auc = auc(fpr, tpr)
     val_ap = average_precision_score(val_y, val_y_pred)
@@ -148,7 +149,7 @@ def train_lightgbm(argv):
     plt.legend(loc="lower right")
     plt.savefig(os.path.join(save_dir, "roc_curve.png"))
     val_dataset["pred"] = val_y_pred
-    res_val = val_dataset[["code", "code_name", "pred", label, "y_next_1d_close_rate", "y_next_{}_d_ret".format(n_day), f"y_next_{n_day}_d_close_high_ratio", f"y_next_{n_day}_d_close_low_ratio", "y_next_1d_close_2d_open_rate", f"y_next_{n_day}_d_high_ratio", f"y_next_{n_day}_d_low_ratio", "price"]]
+    res_val = val_dataset[["code", "pred", label, "y_next_1d_close_rate", "y_next_{}_d_ret".format(n_day), f"y_next_{n_day}_d_close_high_ratio", f"y_next_{n_day}_d_close_low_ratio", "y_next_1d_close_2d_open_rate", f"y_next_{n_day}_d_high_ratio", f"y_next_{n_day}_d_low_ratio", "price"]]
     meta = dict()
     meta["config"] = {
         "label": label,
@@ -199,10 +200,10 @@ def prepare_data(update=False):
         fetch_daily()
     os.system("rm -rf {}".format(EXP_DIR))
     os.system("rm -rf {}".format(EXP_PRED_DIR))
-    # inject_features()
-    inject_embedding()
+    inject_features()
+    # inject_embedding()
     inject_labels()
-    inject_minute_feature()
+    # inject_minute_feature()
 
 def get_n_val_day(label):
     if "y_2_d" in label or "1d_close_2d_open" in label:
