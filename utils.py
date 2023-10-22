@@ -223,7 +223,7 @@ def get_feature_cols():
         path = os.path.join(DAILY_DIR, file)
         df = joblib.load(path)
         no_feature_cols = set(["code", "adjustflag", "tradestatus", "code_name", "shiborON", "shibor1W", "shibor2W", "shibor3M", "shibor9M", "shibor1Y", "industry"] + [col for col in df.columns if col.startswith("y") or col.startswith("dy")])
-        feature_cols = [col for col in df.columns if col not in no_feature_cols and (col.startswith("emb") or col.startswith("minutes_emb"))]
+        feature_cols = [col for col in df.columns if col not in no_feature_cols]
         return feature_cols
     
 def get_industry_info():
@@ -316,7 +316,7 @@ def inject_joint_label():
         df_i["y_next_1d_close_rate_rank_30%"] = (df_i["y_next_1d_close_rate_rank"] <= 0.3).astype("float")
         df_i["y_next_1d_close_rate_rank_50%"] = (df_i["y_next_1d_close_rate_rank"] <= 0.5).astype("float")
         
-        safe_1d_rate = 0.7
+        safe_1d_rate = 0.3
         for d in [2]:
         # for d in [2, 3, 5, 10, 22]:
             df_i["y_{}_d_close_high_rank".format(d)] = df_i["y_next_{}_d_close_high_ratio".format(d)].rank(pct=True, ascending=False)

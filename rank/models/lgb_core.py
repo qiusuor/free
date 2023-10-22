@@ -99,6 +99,7 @@ def train_lightgbm(argv):
             # if "code_name" not in df.columns or not isinstance(df.code_name[-1], str) or "ST" in df.code_name[-1] or "st" in df.code_name[-1] or "sT" in df.code_name[-1]:
             #     continue
             df["date"] = df.index
+            if len(df) < 250: continue
             df = df.iloc[-250:]
             dataset.append(df)
         dataset = pd.concat(dataset, axis=0)
@@ -199,10 +200,10 @@ def prepare_data(update=False):
         fetch_daily()
     os.system("rm -rf {}".format(EXP_DIR))
     os.system("rm -rf {}".format(EXP_PRED_DIR))
-    # inject_features()
-    inject_embedding()
+    inject_features()
+    # inject_embedding()
     inject_labels()
-    inject_minute_feature()
+    # inject_minute_feature()
 
 def get_n_val_day(label):
     if "y_2_d" in label or "1d_close_2d_open" in label:
