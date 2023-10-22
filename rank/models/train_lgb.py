@@ -37,8 +37,13 @@ if __name__ == "__main__":
         # "y_2_d_close_high_rank_30%",
         # "y_2_d_close_high_rank_50%",
         
+        # "y_02_103",
+        # "y_02_105",
+        "y_02_107",
+        # "y_02_109",
+        
         # "y_2_d_high_rank_10%_safe_1d",
-        "y_2_d_high_rank_20%_safe_1d",
+        # "y_2_d_high_rank_20%_safe_1d",
         # "y_2_d_high_rank_30%_safe_1d",
         # "y_2_d_high_rank_50%_safe_1d",
         
@@ -67,7 +72,7 @@ if __name__ == "__main__":
     test_n_day = TEST_N_LAST_DAY
     argvs = []
     
-    val_delay_day = 0
+    val_delay_day = 30
     
     for label in search_labels:
         for num_leaves in [3, 7, 15, 31, 63]:
