@@ -60,8 +60,8 @@ if __name__ == "__main__":
             train_val_split_day = trade_days[-n_day-1-k]
             
             train_start_day = to_date(get_offset_trade_day(train_val_split_day,
-                                                        -train_len))
-            train_end_day = to_date(get_offset_trade_day(train_val_split_day, 0))
+                                                        -train_len-val_delay_day))
+            train_end_day = to_date(get_offset_trade_day(train_val_split_day, 0-val_delay_day))
             val_start_day = to_date(get_offset_trade_day(train_val_split_day, 1))
             val_end_day = to_date(get_offset_trade_day(train_val_split_day, n_day))
             argv = [

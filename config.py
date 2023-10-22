@@ -5,6 +5,8 @@ THREAD_NUM = cpu_count()
 SEARCH_END_DAY = 21990101
 # SEARCH_END_DAY = 20231009
 TEST_N_LAST_DAY = 5
+val_delay_day = 30
+
 ROOT_DIR = os.path.dirname(os.path.realpath(__file__))
 DATA_DIR = os.path.join(ROOT_DIR, "data/data")
 TICK_DIR = os.path.join(DATA_DIR, "tick")
