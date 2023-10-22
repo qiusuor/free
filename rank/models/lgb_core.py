@@ -206,7 +206,7 @@ def prepare_data(update=False):
     # inject_minute_feature()
 
 def get_n_val_day(label):
-    if "y_2_d" in label or "1d_close_2d_open" in label:
+    if "y_2_d" in label or "1d_close_2d_open" in label or "y_02" in label:
         n_day = 2
     elif "y_5_d" in label:
         n_day = 5
