@@ -175,12 +175,12 @@ def render_html(code, data, html_path):
 
 def get_up_label(i, open, close, high, low, price, turn, hold_day=2, expect_gain=1.07):
     for j in range(i+2, i+hold_day+1):
-        if high[j] / close[i+1] > expect_gain: return 1
+        if high[j] / open[i+1] > expect_gain: return 1
     return 0
 
 def get_down_label(i, open, close, high, low, price, turn, hold_day=2, tolerent_pay=0.97):
     for j in range(i+2, i+hold_day+1):
-        if low[j] / close[i+1] < tolerent_pay: return 1
+        if low[j] / open[i+1] < tolerent_pay: return 1
     return 0
 
 def get_labels(open, close, high, low, price, turn, hold_day=2, expect_gain=1.07, tolerent_pay=0.97, up=True):
