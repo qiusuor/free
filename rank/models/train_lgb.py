@@ -18,6 +18,7 @@ import json
 from rank.models.lgb_core import *
 from rank.models.agg_prediction_info import agg_prediction_info
 import bisect
+import platform
 
 
 if __name__ == "__main__":
@@ -106,7 +107,7 @@ if __name__ == "__main__":
                         
 
     np.random.shuffle(argvs)
-    pool = Pool(32)
+    pool = Pool(32 if "Linux" in platform.platform() else 1)
     pool.imap_unordered(train_lightgbm, argvs)
     pool.close()
     pool.join()
