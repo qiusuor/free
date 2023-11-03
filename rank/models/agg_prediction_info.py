@@ -64,17 +64,17 @@ def agg_prediction_info(ana_dir=EXP_DIR):
                     feature_name = model.feature_name()
                     meta = json.load(open(os.path.join(val_start_day_dir, "meta.json")))
                     epoch = meta["info"]["epoch"]
-                    last_ap = meta["last_val"]["ap"]
-                    last_auc = meta["last_val"]["auc"]
-                    topk_high_mean = meta["last_val"]["top{}_watch".format(topk)]["y_next_2_d_high_ratio_topk_{}_mean".format(topk)]
-                    topk_low_mean = meta["last_val"]["top{}_watch".format(topk)]["y_next_2_d_low_ratio_topk_{}_mean".format(topk)]
-                    topk_gain_mean = meta["last_val"]["top{}_watch".format(topk)]["y_next_1d_close_2d_open_rate_topk_{}_mean".format(topk)] if "y_next_1d_close_2d_open_rate_topk_{}_mean".format(topk) in meta["last_val"]["top{}_watch".format(topk)] else 0
-                    topk_close_high_mean = meta["last_val"]["top{}_watch".format(topk)]["y_next_2_d_close_high_ratio_topk_{}_mean".format(topk)] if "y_next_2_d_close_high_ratio_topk_{}_mean".format(topk) in meta["last_val"]["top{}_watch".format(topk)] else 0
-                    topk_close_low_mean = meta["last_val"]["top{}_watch".format(topk)]["y_next_2_d_close_low_ratio_topk_{}_mean".format(topk)] if "y_next_2_d_close_low_ratio_topk_{}_mean".format(topk) in meta["last_val"]["top{}_watch".format(topk)] else 0
-                    topk_1d_close_mean = meta["last_val"]["top{}_watch".format(topk)]["y_next_1d_close_rate_topk_{}_mean".format(topk)] if "y_next_1d_close_rate_topk_{}_mean".format(topk) in meta["last_val"]["top{}_watch".format(topk)] else 0
+                    last_ap = meta["mean_val"]["ap"]
+                    last_auc = meta["mean_val"]["auc"]
+                    topk_high_mean = meta["mean_val"]["top{}_watch".format(topk)]["y_next_2_d_high_ratio_topk_{}_mean".format(topk)]
+                    topk_low_mean = meta["mean_val"]["top{}_watch".format(topk)]["y_next_2_d_low_ratio_topk_{}_mean".format(topk)]
+                    topk_gain_mean = meta["mean_val"]["top{}_watch".format(topk)]["y_next_1d_close_2d_open_rate_topk_{}_mean".format(topk)] if "y_next_1d_close_2d_open_rate_topk_{}_mean".format(topk) in meta["mean_val"]["top{}_watch".format(topk)] else 0
+                    topk_close_high_mean = meta["mean_val"]["top{}_watch".format(topk)]["y_next_2_d_close_high_ratio_topk_{}_mean".format(topk)] if "y_next_2_d_close_high_ratio_topk_{}_mean".format(topk) in meta["mean_val"]["top{}_watch".format(topk)] else 0
+                    topk_close_low_mean = meta["mean_val"]["top{}_watch".format(topk)]["y_next_2_d_close_low_ratio_topk_{}_mean".format(topk)] if "y_next_2_d_close_low_ratio_topk_{}_mean".format(topk) in meta["mean_val"]["top{}_watch".format(topk)] else 0
+                    topk_1d_close_mean = meta["mean_val"]["top{}_watch".format(topk)]["y_next_1d_close_rate_topk_{}_mean".format(topk)] if "y_next_1d_close_rate_topk_{}_mean".format(topk) in meta["mean_val"]["top{}_watch".format(topk)] else 0
                     
-                    topk_miss = meta["last_val"]["top{}_miss".format(topk)]
-                    topk_ret_mean = meta["last_val"]["top{}_watch".format(topk)]["y_next_2_d_ret_topk_{}_mean".format(topk)]
+                    topk_miss = meta["mean_val"]["top{}_miss".format(topk)]
+                    topk_ret_mean = meta["mean_val"]["top{}_watch".format(topk)]["y_next_2_d_ret_topk_{}_mean".format(topk)]
                     
                     topk_sharp_mean = topk_high_mean * topk_low_mean
                     topk_close_sharp = topk_close_high_mean * topk_close_low_mean

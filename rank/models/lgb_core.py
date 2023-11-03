@@ -192,6 +192,32 @@ def train_lightgbm(argv):
         save_file = f"{to_int_date(i)}_T3_{top3_miss}_T5_{top5_miss}_T10_{top10_miss}_AP_{ap}_AUC_{auc_score}.csv"
         res_i.to_csv(os.path.join(save_dir, save_file))
     
+    def get_topk_watch_templet(which="top3_watch"):
+        return {k:0.0 for k in meta["last_val"][which].keys()}
+    
+    meta["mean_val"] = {
+        "auc": 0,
+        "ap": 0,
+        "top3_watch": get_topk_watch_templet("top3_watch"),
+        "top5_watch": get_topk_watch_templet("top5_watch"),
+        "top10_watch": get_topk_watch_templet("top10_watch"),
+        "top3_miss": top3_miss,
+        "top5_miss": top5_miss,
+        "top10_miss": top10_miss,
+    }
+    mean_val = meta["mean_val"]
+    
+    for daily in meta["daily"].values():
+        mean_val["auc"] += daily["auc"] / n_day
+        mean_val["ap"] += daily["ap"] / n_day
+        mean_val["top3_miss"] += daily["top3_miss"] / n_day
+        mean_val["top5_miss"] += daily["top5_miss"] / n_day
+        mean_val["top10_miss"] += daily["top10_miss"] / n_day
+        for watch_key in ["top3_watch", "top5_watch", "top10_watch"]:
+            for key in mean_val[watch_key]:
+                mean_val[watch_key][key] += daily[watch_key][key] / n_day
+        
+        
     json.dump(meta, open(os.path.join(save_dir, "meta.json"), 'w'), indent=4)
     
 
