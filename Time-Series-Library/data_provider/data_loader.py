@@ -715,7 +715,7 @@ class UEAloader(Dataset):
 
 class StockDataset(Dataset):
     def __init__(self, flag):
-        self.dataset = np.load("three_days_increase_train.npz") if flag == "train" else np.load("three_days_increase_val.npz")
+        self.dataset = np.load("train_nn.npz") if flag == "train" else np.load("val_nn.npz")
         self.x = torch.from_numpy(self.dataset["x"]).transpose(1, 2).float()
         self.y = torch.from_numpy(self.dataset["y"])
         self.max_seq_len = self.x.shape[1]
