@@ -3,8 +3,8 @@ from multiprocessing import cpu_count
 
 THREAD_NUM = cpu_count()
 SEARCH_END_DAY = 21990101
-# SEARCH_END_DAY = 20231102
-VAL_N_LAST_DAY = 4
+SEARCH_END_DAY = 20231102
+VAL_N_LAST_DAY = 30
 TEST_N_LAST_DAY = 2
 val_delay_day = 30
 
@@ -60,7 +60,6 @@ labels = [
     "y_02_105",
     "y_02_107",
     "y_02_109",
-    "y_02_1094",
     "y_03_105",
     "y_03_107",
     "y_03_109",
