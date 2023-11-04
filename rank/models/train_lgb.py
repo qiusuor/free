@@ -70,7 +70,7 @@ if __name__ == "__main__":
     trunc_index = bisect.bisect_right(trade_days, SEARCH_END_DAY)
     trade_days = trade_days[:trunc_index]
     cache_data = EXP_DATA_CACHE.format(trade_days[-1])
-    test_n_day = TEST_N_LAST_DAY
+    val_n_day = VAL_N_LAST_DAY
     argvs = []
     
     
@@ -84,9 +84,9 @@ if __name__ == "__main__":
                         n_day = get_n_val_day(label)
                         
                         print(len(argvs))
-                        # print(trade_days[-test_n_day-2*n_day:-2*n_day])
+                        # print(trade_days[-val_n_day-2*n_day:-2*n_day])
                         
-                        for train_val_split_day in trade_days[-test_n_day-2*n_day-val_delay_day:-2*n_day-val_delay_day]:
+                        for train_val_split_day in trade_days[-val_n_day-2*n_day-val_delay_day:-2*n_day-val_delay_day]:
                             train_start_day = to_date(get_offset_trade_day(train_val_split_day,
                                                                         -train_len))
                             train_end_day = to_date(get_offset_trade_day(train_val_split_day, 0))
@@ -111,5 +111,5 @@ if __name__ == "__main__":
     pool.imap_unordered(train_lightgbm, argvs)
     pool.close()
     pool.join()
-    agg_prediction_info()
+    agg_prediction_info(last_n_day=val_n_day)
     

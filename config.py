@@ -2,8 +2,9 @@ import os
 from multiprocessing import cpu_count
 
 THREAD_NUM = cpu_count()
-SEARCH_END_DAY = 21990101
-# SEARCH_END_DAY = 20231009
+# SEARCH_END_DAY = 21990101
+SEARCH_END_DAY = 20231009
+VAL_N_LAST_DAY = 10
 TEST_N_LAST_DAY = 2
 val_delay_day = 30
 

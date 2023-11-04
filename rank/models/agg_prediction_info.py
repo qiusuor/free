@@ -4,8 +4,6 @@ import os
 import json
 import numpy as np
 
-test_last_n_day = TEST_N_LAST_DAY
-
 def to_dict(sorted_items):
     keys, vals = [], []
     for key, val in sorted_items:
@@ -13,7 +11,7 @@ def to_dict(sorted_items):
         vals.append(val)
     return dict(zip(keys, vals))
         
-def agg_prediction_info(ana_dir=EXP_DIR):
+def agg_prediction_info(ana_dir=EXP_DIR, last_n_day=TEST_N_LAST_DAY):
     all_agg_result = dict()
     for topk in [3, 5, 10]:
         agg_result = all_agg_result["Top-{}".format(topk)] = dict()
