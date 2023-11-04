@@ -41,11 +41,11 @@ def agg_prediction_info(ana_dir=EXP_DIR, last_n_day=TEST_N_LAST_DAY):
                 if not os.path.isdir(configured_exp_dir): continue
                 epochs, last_aps, last_aucs, topk_high_means, topk_low_means, topk_sharp_means, topk_gain_means, topk_close_high_means, topk_close_low_means, topk_close_sharps, topk_1d_close_means = [], [], [], [], [], [], [], [], [], [], []
                 topk_misses, topk_ret_means = [], []
-                if len(os.listdir(configured_exp_dir)) < test_last_n_day: continue
+                if len(os.listdir(configured_exp_dir)) < last_n_day: continue
                 finished = True
                 val_start_days = list(filter(lambda x: os.path.isdir(os.path.join(configured_exp_dir, x)), os.listdir(configured_exp_dir)))
-                if len(val_start_days) > test_last_n_day:
-                    val_start_days = list(sorted(val_start_days, key=lambda x:int(x)))[-test_last_n_day-2:-2]
+                if len(val_start_days) > last_n_day:
+                    val_start_days = list(sorted(val_start_days, key=lambda x:int(x)))[-last_n_day-2:-2]
                 # print(val_start_days)
                 feature_importance = 0
                 
