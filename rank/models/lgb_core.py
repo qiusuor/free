@@ -131,7 +131,7 @@ def train_lightgbm(argv):
     train_ap = round(average_precision_score(train_dataset[label], train_dataset.pred), 2)
     train_auc = round(roc_auc_score(train_dataset[label], train_dataset.pred), 2)
     if pred_mode:
-        train_dataset[["code", "code_name", "pred", label, "y_next_1d_close_rate", "y_next_{}_d_ret".format(n_day), f"y_next_{n_day}_d_close_high_ratio", f"y_next_{n_day}_d_close_low_ratio", "y_next_1d_close_2d_open_rate", f"y_next_{n_day}_d_high_ratio", f"y_next_{n_day}_d_low_ratio", "price"]].to_csv(os.path.join(save_dir, "train_set_EPOCH_{}_AP_{}_AUC_{}.csv".format(epoch, train_ap, train_auc)))
+        train_dataset[["code", "code_name", "pred", label, "y_next_1d_close_rate", f"y_next_{2}_d_high_ratio", f"y_next_{2}_d_low_ratio", "y_next_{}_d_ret".format(2), "y_next_1d_close_2d_open_rate", "price"]].to_csv(os.path.join(save_dir, "train_set_EPOCH_{}_AP_{}_AUC_{}.csv".format(epoch, train_ap, train_auc)))
     fpr, tpr, thresh = roc_curve(val_y, val_y_pred)
     val_auc = auc(fpr, tpr)
     val_ap = average_precision_score(val_y, val_y_pred)
@@ -149,7 +149,7 @@ def train_lightgbm(argv):
     plt.legend(loc="lower right")
     plt.savefig(os.path.join(save_dir, "roc_curve.png"))
     val_dataset["pred"] = val_y_pred
-    res_val = val_dataset[["code", "code_name", "pred", label, "y_next_1d_close_rate", "y_next_{}_d_ret".format(n_day), f"y_next_{n_day}_d_close_high_ratio", f"y_next_{n_day}_d_close_low_ratio", "y_next_1d_close_2d_open_rate", f"y_next_{n_day}_d_high_ratio", f"y_next_{n_day}_d_low_ratio", "price"]]
+    res_val = val_dataset[["code", "code_name", "pred", label, "y_next_1d_close_rate", f"y_next_{2}_d_high_ratio", f"y_next_{2}_d_low_ratio", "y_next_{}_d_ret".format(2), "y_next_1d_close_2d_open_rate", "price"]]
     meta = dict()
     meta["config"] = {
         "label": label,
@@ -168,7 +168,7 @@ def train_lightgbm(argv):
         "val_ap": val_ap,
     }
     meta["daily"] = dict()
-    watch_list = [f"y_next_{n_day}_d_high_ratio", f"y_next_{n_day}_d_low_ratio", "y_next_1d_close_2d_open_rate", f"y_next_{n_day}_d_close_high_ratio", f"y_next_{n_day}_d_close_low_ratio", "y_next_1d_close_rate", "y_next_{}_d_ret".format(n_day)]
+    watch_list = [f"y_next_{2}_d_high_ratio", f"y_next_{2}_d_low_ratio", "y_next_1d_close_2d_open_rate", "y_next_1d_close_rate", "y_next_{}_d_ret".format(2)]
     
     for i, res_i in res_val.groupby("date"):
         res_i.sort_values(by="pred", inplace=True, ascending=False)
@@ -201,9 +201,9 @@ def train_lightgbm(argv):
         "top3_watch": get_topk_watch_templet("top3_watch"),
         "top5_watch": get_topk_watch_templet("top5_watch"),
         "top10_watch": get_topk_watch_templet("top10_watch"),
-        "top3_miss": top3_miss,
-        "top5_miss": top5_miss,
-        "top10_miss": top10_miss,
+        "top3_miss": 0,
+        "top5_miss": 0,
+        "top10_miss": 0,
     }
     mean_val = meta["mean_val"]
     
@@ -232,7 +232,9 @@ def prepare_data(update=False):
     # inject_minute_feature()
 
 def get_n_val_day(label):
-    if "y_2_d" in label or "1d_close_2d_open" in label or "y_02" in label:
+    if "y_next_1d_up_to_limit" in label:
+        n_day = 1
+    elif "y_2_d" in label or "1d_close_2d_open" in label or "y_02" in label:
         n_day = 2
     elif "y_5_d" in label:
         n_day = 5

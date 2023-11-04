@@ -55,8 +55,8 @@ if __name__ == "__main__":
     
     for label, train_len, num_leaves, max_depth, min_data_in_leaf, epoch in opt_points:
         # eval on multi run
-        for k in range(TEST_N_LAST_DAY + 2):
-            n_day = get_n_val_day(label)
+        n_day = get_n_val_day(label)
+        for k in range(TEST_N_LAST_DAY + n_day):
             # print(len(argvs))
             train_val_split_day = trade_days[-n_day-1-k]
             
