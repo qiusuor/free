@@ -54,13 +54,14 @@ def train():
     print("training on device: ", device)
     
     train_data, val_data = generate_nn_train_val()
-    x_train, y_train = train_data[get_feature_cols()], train_data[label]
-    x_val, y_val = val_data[get_feature_cols()], train_data[label]
+    train_data = train_data[get_feature_cols() + [label]].values
+    val_data = val_data[get_feature_cols() + [label]].values
     
-    train_loader = DataLoader((x_train, y_train), batch_size=batch_size)
-    val_loader = DataLoader((x_val, y_val), batch_size=batch_size)
-    for x, y in train_loader:
-        print(x.shape, y.shape)
+    train_loader = DataLoader(train_data, batch_size=batch_size)
+    val_loader = DataLoader(val_data, batch_size=batch_size)
+    for data in train_loader:
+        x, y = data[:,:-1], data[:,-1]
+        print(x.shape)
         exit(0)
                 
         
