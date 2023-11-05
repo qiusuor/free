@@ -13,20 +13,19 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
+import platform
 
 
 warnings.filterwarnings("ignore")
 
 batch_size = 128
 train_val_split = 0.7
+
 features = get_feature_cols()
-label = "y_next_1d_up_to_limit"
+label = "y_02_107"
 
 def generate_nn_train_val():
-    train_x = []
-    train_y = []
-    val_x = []
-    val_y = []
+    train_data, val_data = [], []
     for file in tqdm(os.listdir(DAILY_DIR)):
         code = file.split("_")[0]
         if not_concern(code) or is_index(code):
@@ -35,31 +34,37 @@ def generate_nn_train_val():
             continue
         path = os.path.join(DAILY_DIR, file)
         df = joblib.load(path)
-        feat, label = df[features].values, df[label].valuse
-        X,Y = (train_x, train_y) if np.random.random() < train_val_split else (val_x, val_y)
-
-        X.append(feat)
-        Y.append(label)
-    train_x = np.concatenate(train_x)
-    train_y = np.concatenate(train_y)
-    val_x = np.concatenate(val_x)
-    val_y = np.concatenate(val_y)
+        data = train_data if np.random.random() < train_val_split else val_data
+        data.append(df.iloc[-300:])
+    train_data = pd.concat(train_data)
+    val_data = pd.concat(val_data)
+    train_data = train_data.sample(frac=1).reset_index(drop=True)
+    val_data = val_data.sample(frac=1).reset_index(drop=True)
+    
+    return train_data, val_data
+    
 
         
     
-def train():      
-    x_train, y_train, x_test, y_test = generate_nn_train_val()
-    num_outputs = 3
-    class_weights=class_weight.compute_class_weight(class_weight='balanced',classes=np.unique(y_train), y=y_train)
-    print("class weight:", list(class_weights))
-    criterion = nn.CrossEntropyLoss(weight=torch.tensor(class_weights, dtype=torch.float, device=device))
-    # print(x_train.shape)
-    x_train = DataLoader(x_train, batch_size=batch_size)
-    y_train = DataLoader(y_train, batch_size=batch_size)
-    x_test = DataLoader(x_test, batch_size=batch_size)
-    y_test = DataLoader(y_test, batch_size=batch_size)   
-                
+def train():
+    best_ap = 0
+    best_model_path = "rank/models/checkpoint/mlp_ranker.pth"
+    torch.set_default_dtype(torch.float32)
+    device = torch.device("mps") if platform.machine() == 'arm64' else torch.device("cuda")
+    print("training on device: ", device)
+    
+    train_data, val_data = generate_nn_train_val()
+    x_train, y_train = train_data[get_feature_cols()], train_data[label]
+    x_val, y_val = val_data[get_feature_cols()], train_data[label]
+    
+    train_loader = DataLoader((x_train, y_train), batch_size=batch_size)
+    val_loader = DataLoader((x_val, y_val), batch_size=batch_size)
+    for x, y in train_loader:
+        print(x.shape, y.shape)
+        exit(0)
                 
         
         
-   
+if __name__ == "__main__":
+    train()
+    
