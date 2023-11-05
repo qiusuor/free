@@ -18,7 +18,7 @@ from sklearn.metrics import mean_squared_error, roc_curve, auc, average_precisio
 
 warnings.filterwarnings("ignore")
 
-batch_size = 128
+batch_size = 256
 train_val_split = 0.7
 epochs = 2000
 label = "y_02_107"
@@ -54,25 +54,25 @@ class MLP(nn.Module):
         
         self.classifer = nn.Sequential(
             nn.Linear(input_size, hidden_size),
-            nn.LeakyReLU(),
+            nn.Sigmoid(),
             nn.Linear(hidden_size, hidden_size),
-            nn.LeakyReLU(),
+            nn.Sigmoid(),
             nn.Linear(hidden_size, hidden_size),
-            nn.LeakyReLU(),
+            nn.Sigmoid(),
             nn.Linear(hidden_size, hidden_size),
-            nn.LeakyReLU(),
+            nn.Sigmoid(),
             nn.Linear(hidden_size, hidden_size),
-            nn.LeakyReLU(),
+            nn.Sigmoid(),
             nn.Linear(hidden_size, hidden_size),
-            nn.LeakyReLU(),
+            nn.Sigmoid(),
             nn.Linear(hidden_size, hidden_size),
-            nn.LeakyReLU(),
+            nn.Sigmoid(),
             nn.Linear(hidden_size, hidden_size),
-            nn.LeakyReLU(),
+            nn.Sigmoid(),
             nn.Linear(hidden_size, hidden_size),
-            nn.LeakyReLU(),
+            nn.Sigmoid(),
             nn.Linear(hidden_size, hidden_size),
-            nn.LeakyReLU(),
+            nn.Sigmoid(),
             nn.Linear(hidden_size, n_classes),
         )
         
@@ -111,7 +111,7 @@ def train():
     print(f'Trainable params: {trainable_params}')
 
     optimizer = torch.optim.Adam(model.parameters(),
-                                lr=0.0005,
+                                lr=0.0001,
                                 betas=[0.9, 0.999],
                                 weight_decay = 0.0,
                                 amsgrad=False)
