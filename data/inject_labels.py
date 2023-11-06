@@ -34,7 +34,7 @@ def inject_one(path):
     df["y_next_1d_close_rate"] = df["close"].shift(-1) / df["open"].shift(-1)
     df["y_next_1d_close_rate"].fillna(0, inplace=True)
     df["y_next_1d_ret"] = df["close"].shift(-1) / df["close"]
-    df["y_next_1d_up_to_limit"] =  ((df["y_next_1d_close_rate"] > 0.03) & (df["y_next_1d_ret"] > 1.094)).astype(float)
+    df["y_next_1d_up_to_limit"] =  (df["y_next_1d_ret"] > 1.094).astype(float)
     df["y_next_1d_close_2d_open_rate"] = df["open"].shift(-2) / df["close"].shift(-1)
     for n_day in future_n_day_high_low:
         df["y_next_{}_d_ret".format(n_day)] = df["close"].shift(-n_day) / df["open"].shift(-1)
