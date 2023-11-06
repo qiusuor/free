@@ -3,6 +3,7 @@ from utils import *
 import os
 import json
 import numpy as np
+from matplotlib import pyplot as plt
 
 def to_dict(sorted_items):
     keys, vals = [], []
@@ -10,6 +11,17 @@ def to_dict(sorted_items):
         keys.append(key)
         vals.append(val)
     return dict(zip(keys, vals))
+
+def plot_sharp_rate(days, sharps, img_path):
+    plt.clf()
+    plt.figure(figsize=(16, 8))
+    plt.plot(days, sharps)
+    plt.xlabel("days")
+    plt.ylabel("sharps")
+    plt.tick_params(axis='both', labelsize=14)
+    plt.xticks(rotation=90, fontsize=14)
+    plt.grid()
+    plt.savefig(img_path)
         
 def agg_prediction_info(ana_dir=EXP_DIR, last_n_day=TEST_N_LAST_DAY):
     all_agg_result = dict()
@@ -24,12 +36,7 @@ def agg_prediction_info(ana_dir=EXP_DIR, last_n_day=TEST_N_LAST_DAY):
         max_avg_ap_config = None
         max_next_1d_close_2d_open_gain = -np.inf
         max_next_1d_close_2d_open_gain_config = None
-        max_avg_close_high = -np.inf
-        max_avg_close_high_config = None
-        max_avg_close_sharp_rate = -np.inf
-        max_avg_close_sharp_rate_config = None
         for label in tqdm(os.listdir(ana_dir)):
-            if "5_d" in label: continue
             if not label.startswith("y") and not label.startswith("dy"): continue
             label_dir = os.path.join(ana_dir, label)
             for exp_config in os.listdir(label_dir):
@@ -122,6 +129,7 @@ def agg_prediction_info(ana_dir=EXP_DIR, last_n_day=TEST_N_LAST_DAY):
                 max_avg_ap, max_avg_ap_config = compare_large(avg_ap, max_avg_ap, max_avg_ap_config)
                 max_sharp_rate, max_sharp_rate_config = compare_large(avg_sharp, max_sharp_rate, max_sharp_rate_config)
                 max_next_1d_close_2d_open_gain, max_next_1d_close_2d_open_gain_config = compare_large(avg_close_open, max_next_1d_close_2d_open_gain, max_next_1d_close_2d_open_gain_config)
+                plot_sharp_rate(val_start_days, topk_sharp_means, os.path.join(configured_exp_dir, "sharps_{}.png".format(topk)))
                     
         agg_result["sharp_exp"] = to_dict(sorted(agg_result["sharp_exp"].items(), key=lambda x:-x[1]["avg_sharp"]))
         agg_result["topk_miss_exp"] = to_dict(sorted(agg_result["sharp_exp"].items(), key=lambda x:x[1]["avg_miss"]))
