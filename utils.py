@@ -288,8 +288,14 @@ def inject_joint_label_i(argv):
     df_i.to_csv(path.replace(".pkl", ".csv"))
     dump(df_i, path)
 
+def dump_ltr_data(argv):
+    date, df_i = argv
+    path = os.path.join(DAILY_BY_DATE_DIR, "{}.pkl".format(date))
+    df_i.to_csv(path.replace(".pkl", ".csv"))
+    dump(df_i, path)
+    
 def inject_joint_label():
-
+    make_dir(DAILY_BY_DATE_DIR)
     data = []
     for file in tqdm(os.listdir(DAILY_DIR)):
         code = file.split("_")[0]
@@ -303,6 +309,7 @@ def inject_joint_label():
     df = pd.concat(data)
     
     data = []
+    data_by_date = []
     for i, df_i in tqdm(df.groupby("date")):
         df_i["y_next_1d_close_2d_open_rate_rank"] = df_i["y_next_1d_close_2d_open_rate"].rank(pct=True, ascending=False)
         df_i["y_next_1d_close_2d_open_rate_rank_10%"] = (df_i["y_next_1d_close_2d_open_rate_rank"] <= 0.1).astype("float")
@@ -315,6 +322,15 @@ def inject_joint_label():
         df_i["y_next_1d_close_rate_rank_20%"] = (df_i["y_next_1d_close_rate_rank"] <= 0.2).astype("float")
         df_i["y_next_1d_close_rate_rank_30%"] = (df_i["y_next_1d_close_rate_rank"] <= 0.3).astype("float")
         df_i["y_next_1d_close_rate_rank_50%"] = (df_i["y_next_1d_close_rate_rank"] <= 0.5).astype("float")
+        
+        df_i["y_ltr_2d_open_high_label"] = df_i["y_next_2_d_high_ratio"] 
+        df_i["y_ltr_2d_open_high_label"][df_i["y_next_2_d_high_ratio"] < 1.02] = 0
+        df_i["y_ltr_2d_open_high_label"][df_i["y_next_2_d_high_ratio"] >= 1.02] = 1
+        df_i["y_ltr_2d_open_high_label"][df_i["y_next_2_d_high_ratio"] >= 1.05] = 2
+        df_i["y_ltr_2d_open_high_label"][df_i["y_next_2_d_high_ratio"] >= 1.09] = 3
+        df_i["y_ltr_2d_open_high_label"][df_i["y_next_2_d_ret"] >= 1.09] = 5
+        df_i["y_ltr_2d_open_high_label"] = df_i["y_ltr_2d_open_high_label"].fillna(0)
+        df_i["y_ltr_2d_open_high_label"] = df_i["y_ltr_2d_open_high_label"].astype(int)
         
         safe_1d_rate = 0.3
         for d in [2]:
@@ -342,11 +358,13 @@ def inject_joint_label():
             df_i["y_{}_d_ret_rank_30%".format(d)] = ((df_i["y_{}_d_ret_rank".format(d)] <= 0.3) & (df_i["y_next_1d_close_rate_rank"] > safe_1d_rate)).astype("float")
             df_i["y_{}_d_ret_rank_50%".format(d)] = (df_i["y_{}_d_ret_rank".format(d)] <= 0.5).astype("float")
             df_i["y_{}_d_ret_rank_50%".format(d)] = ((df_i["y_{}_d_ret_rank".format(d)] <= 0.5) & (df_i["y_next_1d_close_rate_rank"] > safe_1d_rate)).astype("float")
-        path = os.path.join(DAILY_BY_DATE_DIR, "{}.pkl".format(to_int_date(i)))
-        make_dir(path)
-        df_i.to_csv(path.replace(".pkl", ".csv"))
-        dump(df_i, path)
+        data_by_date.append([to_int_date(i), df_i])
         data.append(df_i)
+        
+    pool = Pool(THREAD_NUM)
+    pool.imap_unordered(dump_ltr_data, data_by_date)
+    pool.close()
+    pool.join()
         
     df = pd.concat(data)
 

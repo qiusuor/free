@@ -41,7 +41,7 @@ if __name__ == "__main__":
         # "y_02_103",
         # "y_02_105",
         # "y_02_107",
-        "y_02_109",
+        "y_ltr_2d_open_high_label",
         # "y_next_1d_up_to_limit",
         
         # "y_2_d_high_rank_10%_safe_1d",

@@ -40,6 +40,16 @@ def topk_shot(data, label, k=10, watch_list=[]):
 def train_val_data_filter(df):
     return df[((df.close / df.close.shift(1)) >= 1.09) & (df.low.shift(-1) != df.high.shift(-1)) & (df.isST != 1)]
 
+def pred(gbm, data, groups):
+    idx = 0
+    preds = []
+    epoch = gbm.best_iteration
+    for g in groups:
+        pred = gbm.predict(data.iloc[idx:idx+g], num_iteration=epoch)
+        preds.extend(list(pred))
+        idx += g
+    return preds
+    
 def train_lightgbm(argv):
     features, label, train_start_day, train_end_day, val_start_day, val_end_day, n_day, train_len, num_leaves, max_depth, min_data_in_leaf, cache_data, epoch = argv
     params = {
@@ -99,7 +109,7 @@ def train_lightgbm(argv):
             df = train_val_data_filter(df)
             dataset.append(df)
             groups.append(len(df))
-            dates.append(int(file[-4:]))
+            dates.append(int(file[:-4]))
         with open(cache_data, 'wb') as f:
             cPickle.dump((dataset, groups, dates), f)
     train_start_day = to_int_date(train_start_day)
@@ -135,14 +145,12 @@ def train_lightgbm(argv):
     joblib.dump(gbm, os.path.join(save_dir, "model.pkl"))
     epoch = gbm.best_iteration
 
-    val_y_pred = gbm.predict(val_x, num_iteration=epoch)
-    train_y_pred = gbm.predict(train_x, num_iteration=epoch)
+    val_y_pred = pred(gbm, val_x, val_groups)
+    train_y_pred = pred(gbm, train_x, train_groups)
     train_dataset["pred"] = train_y_pred
     train_dataset.sort_values(by="pred", inplace=True, ascending=False)
-    train_ap = round(average_precision_score(train_dataset[label], train_dataset.pred), 2)
-    train_auc = round(roc_auc_score(train_dataset[label], train_dataset.pred), 2)
     if pred_mode:
-        train_dataset[["code", "code_name", "pred", label, "y_next_1d_close_rate", f"y_next_{2}_d_high_ratio", f"y_next_{2}_d_low_ratio", "y_next_{}_d_ret".format(2), "y_next_1d_close_2d_open_rate", "price"]].to_csv(os.path.join(save_dir, "train_set_EPOCH_{}_AP_{}_AUC_{}.csv".format(epoch, train_ap, train_auc)))
+        train_dataset[["code", "code_name", "pred", label, "y_next_1d_close_rate", f"y_next_{2}_d_high_ratio", f"y_next_{2}_d_low_ratio", "y_next_{}_d_ret".format(2), "y_next_1d_close_2d_open_rate", "price"]].to_csv(os.path.join(save_dir, "train_set_EPOCH_{}.csv".format(epoch)))
 
 
     val_dataset["pred"] = val_y_pred
@@ -151,8 +159,8 @@ def train_lightgbm(argv):
     meta["config"] = {
         "label": label,
         "train_len": train_len,
-        "val_start_day": to_int_date(val_start_day),
-        "val_end_day": to_int_date(val_end_day),
+        "val_start_day": val_start_day,
+        "val_end_day": val_end_day,
         "num_leaves": num_leaves,
         "max_depth": max_depth,
         "min_data_in_leaf": min_data_in_leaf,
@@ -177,15 +185,13 @@ def train_lightgbm(argv):
             "top10_miss": top10_miss,
         }
         meta["last_val"] = meta["daily"][to_int_date(i)]
-        save_file = f"{to_int_date(i)}_T3_{top3_miss}_T5_{top5_miss}_T10_{top10_miss}_AP_{ap}_AUC_{auc_score}.csv"
+        save_file = f"{to_int_date(i)}_T3_{top3_miss}_T5_{top5_miss}_T10_{top10_miss}.csv"
         res_i.to_csv(os.path.join(save_dir, save_file))
     
     def get_topk_watch_templet(which="top3_watch"):
         return {k:0.0 for k in meta["last_val"][which].keys()}
     
     meta["mean_val"] = {
-        "auc": 0,
-        "ap": 0,
         "top3_watch": get_topk_watch_templet("top3_watch"),
         "top5_watch": get_topk_watch_templet("top5_watch"),
         "top10_watch": get_topk_watch_templet("top10_watch"),
@@ -196,8 +202,6 @@ def train_lightgbm(argv):
     mean_val = meta["mean_val"]
     
     for daily in meta["daily"].values():
-        mean_val["auc"] += daily["auc"] / n_day
-        mean_val["ap"] += daily["ap"] / n_day
         mean_val["top3_miss"] += daily["top3_miss"] / n_day
         mean_val["top5_miss"] += daily["top5_miss"] / n_day
         mean_val["top10_miss"] += daily["top10_miss"] / n_day
@@ -222,7 +226,7 @@ def prepare_data(update=False):
 def get_n_val_day(label):
     if "y_next_1d_up_to_limit" in label:
         n_day = 1
-    elif "y_2_d" in label or "1d_close_2d_open" in label or "y_02" in label:
+    elif "y_2_d" in label or "1d_close_2d_open" in label or "y_02" in label or "2d" in label:
         n_day = 2
     elif "y_5_d" in label:
         n_day = 5
