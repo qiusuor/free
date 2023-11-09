@@ -24,6 +24,7 @@ import math
 def parse_best_opts():
     opts = set()
     fields = ["sharp_exp"]
+    topk = 3
     # fields = ["topk_miss_exp", "topk_ret_exp", "sharp_exp", "high_exp"]
     
     with open(os.path.join(EXP_DIR, "agg_info.json")) as f:
@@ -31,12 +32,13 @@ def parse_best_opts():
         
         for field in fields:
             exps = train_agg_info["Top-3"][field]
-            best_exp = exps[list(exps)[0]]
-            label = best_exp["label"]
-            config = list(map(int, best_exp["exp_config"].split("_")))
-            epoch = math.ceil(best_exp["avg_epoch"])
-            opt = (label, *config, epoch)
-            opts.add(opt)
+            for k in range(topk):
+                best_exp = exps[list(exps)[k]]
+                label = best_exp["label"]
+                config = list(map(int, best_exp["exp_config"].split("_")))
+                epoch = math.ceil(best_exp["avg_epoch"])
+                opt = (label, *config, epoch)
+                opts.add(opt)
         
     return opts
     
