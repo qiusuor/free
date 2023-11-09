@@ -342,6 +342,10 @@ def inject_joint_label():
             df_i["y_{}_d_ret_rank_30%".format(d)] = ((df_i["y_{}_d_ret_rank".format(d)] <= 0.3) & (df_i["y_next_1d_close_rate_rank"] > safe_1d_rate)).astype("float")
             df_i["y_{}_d_ret_rank_50%".format(d)] = (df_i["y_{}_d_ret_rank".format(d)] <= 0.5).astype("float")
             df_i["y_{}_d_ret_rank_50%".format(d)] = ((df_i["y_{}_d_ret_rank".format(d)] <= 0.5) & (df_i["y_next_1d_close_rate_rank"] > safe_1d_rate)).astype("float")
+        path = os.path.join(DAILY_BY_DATE_DIR, "{}.pkl".format(to_int_date(i)))
+        make_dir(path)
+        df_i.to_csv(path.replace(".pkl", ".csv"))
+        dump(df_i, path)
         data.append(df_i)
         
     df = pd.concat(data)
