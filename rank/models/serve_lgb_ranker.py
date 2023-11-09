@@ -15,7 +15,7 @@ from data.inject_labels import inject_labels
 from matplotlib import pyplot as plt
 import shutil
 import json
-from rank.models.lgb_core import *
+from rank.models.lgb_ranker_core import *
 from rank.models.agg_prediction_info import agg_prediction_info
 import platform
 import bisect
@@ -44,7 +44,7 @@ if __name__ == "__main__":
     
     # prepare_data(update=False)
     features = get_feature_cols()
-    label = "y_2_d_high_rank_10%"
+    label = "y_ltr_2d_open_high_label"
     argvs = []
     trade_days = get_trade_days(update=False)
     trunc_index = bisect.bisect_right(trade_days, SEARCH_END_DAY)

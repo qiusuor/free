@@ -42,7 +42,7 @@ def agg_prediction_info(ana_dir=EXP_DIR, last_n_day=TEST_N_LAST_DAY):
             for exp_config in os.listdir(label_dir):
                 configured_exp_dir = os.path.join(label_dir, exp_config)
                 if not os.path.isdir(configured_exp_dir): continue
-                epochs, last_aps, last_aucs, topk_high_means, topk_low_means, topk_sharp_means, topk_gain_means, topk_1d_close_means = [], [], [], [], [], [], [], []
+                epochs, topk_high_means, topk_low_means, topk_sharp_means, topk_gain_means, topk_1d_close_means = [], [], [], [], [], []
                 topk_misses, topk_ret_means = [], []
                 if len(os.listdir(configured_exp_dir)) < last_n_day: continue
                 finished = True
@@ -65,8 +65,6 @@ def agg_prediction_info(ana_dir=EXP_DIR, last_n_day=TEST_N_LAST_DAY):
                     feature_name = model.feature_name()
                     meta = json.load(open(os.path.join(val_start_day_dir, "meta.json")))
                     epoch = meta["info"]["epoch"]
-                    last_ap = meta["mean_val"]["ap"]
-                    last_auc = meta["mean_val"]["auc"]
                     topk_high_mean = meta["mean_val"]["top{}_watch".format(topk)]["y_next_2_d_high_ratio_topk_{}_mean".format(topk)]
                     topk_low_mean = meta["mean_val"]["top{}_watch".format(topk)]["y_next_2_d_low_ratio_topk_{}_mean".format(topk)]
                     topk_gain_mean = meta["mean_val"]["top{}_watch".format(topk)]["y_next_1d_close_2d_open_rate_topk_{}_mean".format(topk)] if "y_next_1d_close_2d_open_rate_topk_{}_mean".format(topk) in meta["mean_val"]["top{}_watch".format(topk)] else 0
@@ -78,8 +76,6 @@ def agg_prediction_info(ana_dir=EXP_DIR, last_n_day=TEST_N_LAST_DAY):
                     topk_sharp_mean = topk_high_mean * topk_low_mean
                     
                     epochs.append(epoch)
-                    last_aps.append(last_ap)
-                    last_aucs.append(last_auc)
                     topk_high_means.append(topk_high_mean)
                     topk_low_means.append(topk_low_mean)
                     topk_sharp_means.append(topk_sharp_mean)
@@ -90,8 +86,6 @@ def agg_prediction_info(ana_dir=EXP_DIR, last_n_day=TEST_N_LAST_DAY):
                     
                 if not finished: continue
                 avg_epoch = np.mean(epochs)
-                avg_auc = np.mean(last_aucs)
-                avg_ap = np.mean(last_aps)
                 agv_high = np.mean(topk_high_means)
                 avg_low = np.mean(topk_low_means)
                 avg_sharp = np.mean(topk_sharp_means)
@@ -106,8 +100,6 @@ def agg_prediction_info(ana_dir=EXP_DIR, last_n_day=TEST_N_LAST_DAY):
                     "avg_epoch": avg_epoch,
                     "avg_miss": avg_topk_miss,
                     "avg_topk_ret": avg_topk_ret,
-                    "avg_ap": avg_ap,
-                    "avg_auc": avg_auc,
                     "avg_high": agv_high, 
                     "avg_low": avg_low,
                     "avg_sharp": avg_sharp,
@@ -126,7 +118,6 @@ def agg_prediction_info(ana_dir=EXP_DIR, last_n_day=TEST_N_LAST_DAY):
                     return best, container
                 
                 max_high_rate, max_high_rate_config = compare_large(agv_high, max_high_rate, max_high_rate_config)
-                max_avg_ap, max_avg_ap_config = compare_large(avg_ap, max_avg_ap, max_avg_ap_config)
                 max_sharp_rate, max_sharp_rate_config = compare_large(avg_sharp, max_sharp_rate, max_sharp_rate_config)
                 max_next_1d_close_2d_open_gain, max_next_1d_close_2d_open_gain_config = compare_large(avg_close_open, max_next_1d_close_2d_open_gain, max_next_1d_close_2d_open_gain_config)
                 plot_sharp_rate(val_start_days, topk_sharp_means, os.path.join(configured_exp_dir, "sharps_{}.png".format(topk)))
@@ -138,7 +129,6 @@ def agg_prediction_info(ana_dir=EXP_DIR, last_n_day=TEST_N_LAST_DAY):
         agg_result["high_exp"] = to_dict(sorted(agg_result["sharp_exp"].items(), key=lambda x:-x[1]["avg_high"]))
         
         agg_result["best_sharp_exp"] = dict()
-        agg_result["best_sharp_exp"]["ap"] = max_avg_ap_config
         agg_result["best_sharp_exp"]["sharp"] = max_sharp_rate_config
         agg_result["best_sharp_exp"]["high"] = max_high_rate_config
     json.dump(all_agg_result, open(os.path.join(ana_dir, "agg_info.json"), 'w'), indent=4)

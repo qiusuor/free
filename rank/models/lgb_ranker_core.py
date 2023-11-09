@@ -57,7 +57,6 @@ def train_lightgbm(argv):
         'boosting_type': 'gbrt',  # 基学习器
         'objective': 'lambdarank',  # 排序任务(目标函数)
         'metric': 'ndcg',  # 度量的指标(评估函数)
-        'max_position': 10,  # @NDCG 位置优化
         'metric_freq': 1,  # 每隔多少次输出一次度量结果
         'train_metric': True,  # 训练时就输出度量结果
         'ndcg_at': [10],
