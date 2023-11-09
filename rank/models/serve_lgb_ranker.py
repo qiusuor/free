@@ -44,7 +44,6 @@ if __name__ == "__main__":
     
     # prepare_data(update=False)
     features = get_feature_cols()
-    label = "y_ltr_2d_open_high_label"
     argvs = []
     trade_days = get_trade_days(update=False)
     trunc_index = bisect.bisect_right(trade_days, SEARCH_END_DAY)
