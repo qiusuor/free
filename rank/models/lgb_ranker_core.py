@@ -38,25 +38,29 @@ def topk_shot(data, label, k=10, watch_list=[]):
     return miss_cnt, shot_cnt, watches
 
 def train_val_data_filter(df):
-    return df[((df.close / df.close.shift(1)) >= 1.09) & (df.low.shift(-1) != df.high.shift(-1))]
+    return df[((df.close / df.close.shift(1)) >= 1.09) & (df.low.shift(-1) != df.high.shift(-1)) & (df.isST != 1)]
 
 def train_lightgbm(argv):
     features, label, train_start_day, train_end_day, val_start_day, val_end_day, n_day, train_len, num_leaves, max_depth, min_data_in_leaf, cache_data, epoch = argv
     params = {
-        'task': 'train',
-        'boosting_type': 'gbdt',
-        'objective': 'binary',
-        'metric': {"average_precision"},
-        'num_leaves': num_leaves,
-        "min_data_in_leaf": min_data_in_leaf,
-        'learning_rate': 0.05,
+        'task': 'train',  # 执行的任务类型
+        'boosting_type': 'gbrt',  # 基学习器
+        'objective': 'lambdarank',  # 排序任务(目标函数)
+        'metric': 'ndcg',  # 度量的指标(评估函数)
+        'max_position': 10,  # @NDCG 位置优化
+        'metric_freq': 1,  # 每隔多少次输出一次度量结果
+        'train_metric': True,  # 训练时就输出度量结果
+        'ndcg_at': [10],
+        'max_bin': 255,  # 一个整数，表示最大的桶的数量。默认值为 255。lightgbm 会根据它来自动压缩内存。如max_bin=255 时，则lightgbm 将使用uint8 来表示特征的每一个值。
+        'num_iterations': 5000,  # 迭代次数，即生成的树的棵数
+        'learning_rate': 0.01,  # 学习率
         'feature_fraction': 0.99,
         'bagging_fraction': 0.7,
+        'num_leaves': num_leaves,
+        "min_data_in_leaf": min_data_in_leaf,
+        "max_depth": max_depth,
         'bagging_freq': 1,
         'verbose': 1,
-        "train_metric": True,
-        "max_depth": max_depth,
-        "num_iterations": 5000,
         "early_stopping_rounds": 20,
         "min_gain_to_split": 0,
         "num_threads": 8,
@@ -83,37 +87,43 @@ def train_lightgbm(argv):
     make_dir(cache_data)
     if os.path.exists(cache_data):
         with open(cache_data, 'rb') as f:
-            dataset = cPickle.load(f)
+            dataset, groups, dates = cPickle.load(f)
     else:
         dataset = []
-        for file in os.listdir(DAILY_DIR):
-            code = file.split("_")[0]
-            if not_concern(code) or is_index(code):
-                continue
-            if not file.endswith(".pkl"):
-                continue
-            path = os.path.join(DAILY_DIR, file)
+        groups = []
+        dates = []
+        for file in os.listdir(DAILY_BY_DATE_DIR):
+            if not file.endswith(".pkl"): continue
+            path = os.path.join(DAILY_BY_DATE_DIR, file)
             df = joblib.load(path)
-            if len(df) < 300: continue
             df = train_val_data_filter(df)
-            if len(df) <=0 or df.isST[-1]:
-                continue
-            # if "code_name" not in df.columns or not isinstance(df.code_name[-1], str) or "ST" in df.code_name[-1] or "st" in df.code_name[-1] or "sT" in df.code_name[-1]:
-            #     continue
-            df["date"] = df.index
-            df = df.iloc[-350:]
             dataset.append(df)
-        dataset = pd.concat(dataset, axis=0)
+            groups.append(len(df))
+            dates.append(int(file[-4:]))
         with open(cache_data, 'wb') as f:
-            cPickle.dump(dataset, f)
-    train_dataset = dataset[(dataset.date >= train_start_day) & (dataset.date <= train_end_day)]
-    val_dataset = dataset[(dataset.date >= val_start_day) & (dataset.date <= val_end_day)]
-    del dataset
+            cPickle.dump((dataset, groups, dates), f)
+    train_start_day = to_int_date(train_start_day)
+    train_end_day = to_int_date(train_end_day)
+    val_start_day = to_int_date(val_start_day)
+    val_end_day = to_int_date(val_end_day)
+    
+    train_dataset, val_dataset = [], []
+    train_groups, val_groups = [], []
+    for data_day, g, date in zip(dataset, groups, dates):
+        if train_start_day <= date <= train_end_day:
+            train_dataset.append(data_day)
+            train_groups.append(g)
+        elif val_start_day <= date <= val_end_day:
+            val_dataset.append(data_day)
+            val_groups.append(g)
+    train_dataset = pd.concat(train_dataset)
+    val_dataset = pd.concat(val_dataset)
+    del dataset, groups, dates
     gc.collect()
     train_x, train_y = train_dataset[features], train_dataset[label]
     val_x, val_y = val_dataset[features], val_dataset[label]
-    lgb_train = lgb.Dataset(train_x, train_y)
-    lgb_eval = lgb.Dataset(val_x, val_y, reference=lgb_train)
+    lgb_train = lgb.Dataset(train_x, train_y, group=train_groups)
+    lgb_eval = lgb.Dataset(val_x, val_y, group=val_groups, reference=lgb_train)
 
     gbm = lgb.train(params,
                     lgb_train,
@@ -133,22 +143,8 @@ def train_lightgbm(argv):
     train_auc = round(roc_auc_score(train_dataset[label], train_dataset.pred), 2)
     if pred_mode:
         train_dataset[["code", "code_name", "pred", label, "y_next_1d_close_rate", f"y_next_{2}_d_high_ratio", f"y_next_{2}_d_low_ratio", "y_next_{}_d_ret".format(2), "y_next_1d_close_2d_open_rate", "price"]].to_csv(os.path.join(save_dir, "train_set_EPOCH_{}_AP_{}_AUC_{}.csv".format(epoch, train_ap, train_auc)))
-    fpr, tpr, thresh = roc_curve(val_y, val_y_pred)
-    val_auc = auc(fpr, tpr)
-    val_ap = average_precision_score(val_y, val_y_pred)
-    plt.clf()
-    plt.plot(fpr,
-             tpr,
-             'k--',
-             label='ROC (area = {0:.2f})'.format(val_auc),
-             lw=2)
-    plt.xlim([-0.05, 1.05])
-    plt.ylim([-0.05, 1.05])
-    plt.xlabel('False Positive Rate')
-    plt.ylabel('True Positive Rate')
-    plt.title('ROC Curve')
-    plt.legend(loc="lower right")
-    plt.savefig(os.path.join(save_dir, "roc_curve.png"))
+
+
     val_dataset["pred"] = val_y_pred
     res_val = val_dataset[["code", "code_name", "pred", label, "y_next_1d_close_rate", f"y_next_{2}_d_high_ratio", f"y_next_{2}_d_low_ratio", "y_next_{}_d_ret".format(2), "y_next_1d_close_2d_open_rate", "price"]]
     meta = dict()
@@ -163,10 +159,6 @@ def train_lightgbm(argv):
     }
     meta["info"] = {
         "epoch": epoch,
-        "train_auc": train_auc,
-        "train_ap": train_ap,
-        "val_auc:": val_auc,
-        "val_ap": val_ap,
     }
     meta["daily"] = dict()
     watch_list = [f"y_next_{2}_d_high_ratio", f"y_next_{2}_d_low_ratio", "y_next_1d_close_2d_open_rate", "y_next_1d_close_rate", "y_next_{}_d_ret".format(2)]
@@ -176,12 +168,7 @@ def train_lightgbm(argv):
         top3_miss, top3_shot, top3_watch = topk_shot(res_i, label, k=3, watch_list=watch_list)
         top5_miss, top5_shot, top5_watch = topk_shot(res_i, label, k=5, watch_list=watch_list)
         top10_miss, top10_shot, top10_watch = topk_shot(res_i, label, k=10, watch_list=watch_list)
-        fpr, tpr, thresh = roc_curve(res_i[label], res_i.pred)
-        auc_score = auc(fpr, tpr)
-        ap = average_precision_score(res_i[label], res_i.pred)
         meta["daily"][to_int_date(i)] = {
-            "auc": auc_score,
-            "ap": ap,
             "top3_watch": top3_watch,
             "top5_watch": top5_watch,
             "top10_watch": top10_watch,

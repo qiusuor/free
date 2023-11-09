@@ -15,7 +15,7 @@ from data.inject_labels import inject_labels
 from matplotlib import pyplot as plt
 import shutil
 import json
-from rank.models.lgb_core import *
+from rank.models.lgb_ranker_core import *
 from rank.models.agg_prediction_info import agg_prediction_info
 import bisect
 import platform
