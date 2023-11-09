@@ -37,9 +37,6 @@ def topk_shot(data, label, k=10, watch_list=[]):
     watches[f"sharp_{k}"] = watches[f"y_next_2_d_high_ratio_topk_{k}_mean"] * watches[f"y_next_2_d_high_ratio_topk_{k}_mean"]
     return miss_cnt, shot_cnt, watches
 
-def train_val_data_filter(df):
-    return df[((df.close / df.close.shift(1)) >= 1.09) & (df.low.shift(-1) != df.high.shift(-1)) & (df.isST != 1)]
-
 def pred(gbm, data, groups):
     idx = 0
     preds = []
@@ -72,7 +69,7 @@ def train_lightgbm(argv):
         'verbose': 1,
         "early_stopping_rounds": 20,
         "min_gain_to_split": 0,
-        "num_threads": 8,
+        "num_threads": 16,
     }
     
     pred_mode = False
@@ -105,7 +102,6 @@ def train_lightgbm(argv):
             if not file.endswith(".pkl"): continue
             path = os.path.join(DAILY_BY_DATE_DIR, file)
             df = joblib.load(path)
-            df = train_val_data_filter(df)
             dataset.append(df)
             groups.append(len(df))
             dates.append(int(file[:-4]))

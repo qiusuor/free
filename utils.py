@@ -294,6 +294,9 @@ def dump_ltr_data(argv):
     df_i.to_csv(path.replace(".pkl", ".csv"))
     dump(df_i, path)
     
+def train_val_data_filter(df):
+    return df[((df.close / df.close.shift(1)) >= 1.09) & (df.low.shift(-1) != df.high.shift(-1)) & (df.isST != 1)]
+    
 def inject_joint_label():
     make_dir(DAILY_BY_DATE_DIR)
     data = []
