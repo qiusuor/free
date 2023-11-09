@@ -76,9 +76,9 @@ if __name__ == "__main__":
     
     
     for label in search_labels:
-        for num_leaves in [3, 7, 15, 31, 63]:
+        for num_leaves in [15, 31, 63]:
             for min_data_in_leaf in [11, 21, 41, 81]:
-                for max_depth in [3, 7, 9, 12]:
+                for max_depth in [7, 9]:
                     if 2**max_depth <= num_leaves: continue
                     for train_len in [250]:
                     # for train_len in [30, 50, 120, 180]:

@@ -142,7 +142,8 @@ def train_lightgbm(argv):
 
     gbm.save_model(os.path.join(save_dir, "model.txt"))
     joblib.dump(gbm, os.path.join(save_dir, "model.pkl"))
-    epoch = gbm.best_iteration
+    if epoch <= 0:
+        epoch = gbm.best_iteration
 
     val_y_pred = pred(gbm, val_x, val_groups)
     train_y_pred = pred(gbm, train_x, train_groups)
