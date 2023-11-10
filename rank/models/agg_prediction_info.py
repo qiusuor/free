@@ -51,7 +51,6 @@ def agg_prediction_info(ana_dir=EXP_DIR, last_n_day=TEST_N_LAST_DAY):
                     val_start_days = list(sorted(val_start_days, key=lambda x:int(x)))[-last_n_day-2:-2]
                 # print(val_start_days)
                 feature_importance = 0
-                
                 for val_start_day in val_start_days:
                     val_start_day_dir = os.path.join(configured_exp_dir, val_start_day)
                     # print(val_start_day_dir)

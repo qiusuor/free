@@ -15,7 +15,7 @@ from data.inject_labels import inject_labels
 from matplotlib import pyplot as plt
 import shutil
 import json
-from rank.models.lgb_ranker_core import *
+from rank.models.lgb_classifier_core import *
 from rank.models.agg_prediction_info import agg_prediction_info
 import platform
 import bisect
@@ -32,7 +32,7 @@ def parse_best_opts():
         
         for field in fields:
             exps = train_agg_info["Top-3"][field]
-            for k in range(min(topk, len(exps))):
+            for k in range(topk):
                 best_exp = exps[list(exps)[k]]
                 label = best_exp["label"]
                 config = list(map(int, best_exp["exp_config"].split("_")))
@@ -82,7 +82,7 @@ if __name__ == "__main__":
     # exit(0)
 
     np.random.shuffle(argvs)
-    pool = Pool(16 if "Linux" in platform.platform() else 2)
+    pool = Pool(32 if "Linux" in platform.platform() else 2)
     pool.imap_unordered(train_lightgbm, argvs)
     pool.close()
     pool.join()
