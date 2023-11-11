@@ -34,7 +34,7 @@ def topk_shot(data, label, k=10, watch_list=[]):
         watches[watch+f"_topk_{k}_max"] = data[watch][:k].max()
         watches[watch+f"_topk_{k}_min"] = data[watch][:k].min()
         watches[watch+f"_topk_{k}_mean"] = data[watch][:k].mean()
-    watches[f"sharp_{k}"] = watches[f"y_next_2_d_high_ratio_topk_{k}_mean"] * watches[f"y_next_2_d_high_ratio_topk_{k}_mean"]
+    watches[f"sharp_{k}"] = watches[f"y_next_2_d_high_ratio_topk_{k}_mean"] * watches[f"y_next_2_d_low_ratio_topk_{k}_mean"]
     return miss_cnt, shot_cnt, watches
 
 def train_val_data_filter(df):
