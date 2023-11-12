@@ -27,7 +27,7 @@ def parse_best_opts():
     topk = 3
     # fields = ["topk_miss_exp", "topk_ret_exp", "sharp_exp", "high_exp"]
     
-    with open(os.path.join(EXP_DIR, "agg_info.json")) as f:
+    with open(os.path.join(EXP_RANK_DIR, "agg_info.json")) as f:
         train_agg_info = json.load(f)
         
         for field in fields:
@@ -51,7 +51,7 @@ if __name__ == "__main__":
     trunc_index = bisect.bisect_right(trade_days, SEARCH_END_DAY)
     trade_days = trade_days[:trunc_index]
 
-    cache_data = EXP_DATA_CACHE.format(trade_days[-1])
+    cache_data = EXP_RANK_DATA_CACHE.format(trade_days[-1])
     opt_points = parse_best_opts()
     
     for label, train_len, num_leaves, max_depth, min_data_in_leaf, epoch in opt_points:
@@ -86,5 +86,5 @@ if __name__ == "__main__":
     pool.imap_unordered(train_lightgbm, argvs)
     pool.close()
     pool.join()
-    agg_prediction_info(EXP_PRED_DIR, last_n_day=TEST_N_LAST_DAY)
+    agg_prediction_info(EXP_RANK_PRED_DIR, last_n_day=TEST_N_LAST_DAY)
     

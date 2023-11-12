@@ -16,9 +16,15 @@ DAILY_BY_DATE_DIR = os.path.join(DATA_DIR, "daily_by_date")
 TDX_MINUTE_DIR = os.path.join(DATA_DIR, "tdx_minutes")
 TDX_MINUTE_RECENT_DIR = os.path.join(DATA_DIR, "tdx_minutes_recent")
 MINUTE_FEAT = os.path.join(DATA_DIR, "minutes_features")
-EXP_DIR = os.path.join(ROOT_DIR, "rank/exp")
-EXP_DATA_CACHE = os.path.join(EXP_DIR, "cache_{}.pkl")
-EXP_PRED_DIR = os.path.join(ROOT_DIR, "rank/exp_pred")
+
+EXP_CLS_DIR = os.path.join(ROOT_DIR, "rank/exp_cls")
+EXP_CLS_DATA_CACHE = os.path.join(EXP_CLS_DIR, "cache_{}.pkl")
+EXP_CLS_PRED_DIR = os.path.join(ROOT_DIR, "rank/exp_cls_pred")
+
+EXP_RANK_DIR = os.path.join(ROOT_DIR, "rank/exp_rank")
+EXP_RANK_DATA_CACHE = os.path.join(EXP_RANK_DIR, "cache_{}.pkl")
+EXP_RANK_PRED_DIR = os.path.join(ROOT_DIR, "rank/exp_rank_pred")
+
 INDUSTRY_INFO = os.path.join(DATA_DIR, "market/industry.pkl")
 SHIBOR_INFO = os.path.join(DATA_DIR, "market/shibor.pkl")
 TRADE_DAYS = os.path.join(DATA_DIR, "market/trade_days.csv")

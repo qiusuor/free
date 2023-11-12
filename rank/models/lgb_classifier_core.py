@@ -70,7 +70,7 @@ def train_lightgbm(argv):
         pred_mode = True
         
     param_des = "_".join([str(train_len), str(num_leaves), str(max_depth), str(min_data_in_leaf)])
-    root_dir = EXP_PRED_DIR if pred_mode else EXP_DIR
+    root_dir = EXP_CLS_PRED_DIR if pred_mode else EXP_CLS_DIR
     save_dir = "{}/{}/{}/{}".format(root_dir, label, param_des, to_int_date(val_start_day))
     if os.path.exists(os.path.join(save_dir, "meta.json")):
         with open(os.path.join(save_dir, "meta.json")) as f:
@@ -226,8 +226,8 @@ def train_lightgbm(argv):
 def prepare_data(update=False):
     if update:
         fetch_daily()
-    os.system("rm -rf {}".format(EXP_DIR))
-    os.system("rm -rf {}".format(EXP_PRED_DIR))
+    os.system("rm -rf {}".format(EXP_CLS_DIR))
+    os.system("rm -rf {}".format(EXP_CLS_PRED_DIR))
     inject_features()
     # inject_embedding()
     inject_labels()

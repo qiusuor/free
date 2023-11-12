@@ -70,7 +70,7 @@ if __name__ == "__main__":
     trade_days = get_trade_days(update=False)
     trunc_index = bisect.bisect_right(trade_days, SEARCH_END_DAY)
     trade_days = trade_days[:trunc_index]
-    cache_data = EXP_DATA_CACHE.format(trade_days[-1])
+    cache_data = EXP_RANK_DATA_CACHE.format(trade_days[-1])
     val_n_day = VAL_N_LAST_DAY
     argvs = []
     
@@ -112,5 +112,5 @@ if __name__ == "__main__":
     pool.imap_unordered(train_lightgbm, argvs)
     pool.close()
     pool.join()
-    agg_prediction_info(last_n_day=val_n_day)
+    agg_prediction_info(ana_dir=EXP_RANK_DIR, last_n_day=val_n_day)
     

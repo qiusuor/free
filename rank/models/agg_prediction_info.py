@@ -23,7 +23,7 @@ def plot_sharp_rate(days, sharps, img_path):
     plt.grid()
     plt.savefig(img_path)
         
-def agg_prediction_info(ana_dir=EXP_DIR, last_n_day=TEST_N_LAST_DAY):
+def agg_prediction_info(ana_dir=EXP_CLS_DIR, last_n_day=TEST_N_LAST_DAY):
     all_agg_result = dict()
     for topk in [3, 5, 10]:
         agg_result = all_agg_result["Top-{}".format(topk)] = dict()
@@ -47,8 +47,9 @@ def agg_prediction_info(ana_dir=EXP_DIR, last_n_day=TEST_N_LAST_DAY):
                 if len(os.listdir(configured_exp_dir)) < last_n_day: continue
                 finished = True
                 val_start_days = list(filter(lambda x: os.path.isdir(os.path.join(configured_exp_dir, x)), os.listdir(configured_exp_dir)))
+                val_start_days = list(sorted(val_start_days, key=lambda x:int(x)))
                 if len(val_start_days) > last_n_day:
-                    val_start_days = list(sorted(val_start_days, key=lambda x:int(x)))[-last_n_day-2:-2]
+                    val_start_days = val_start_days[-last_n_day-2:-2]
                 # print(val_start_days)
                 feature_importance = 0
                 for val_start_day in val_start_days:
