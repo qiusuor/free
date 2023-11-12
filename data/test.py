@@ -58,8 +58,17 @@ def compare(dir_a, dir_b):
         # exit(0)
         
         
+def check_feature_importance():
+    model_a = joblib.load("/home/qiusuo/free/rank/exp_rank_pred/y_ltr_2d_open_high_label/250_31_9_81/20231018/model.pkl")
+    model_b = joblib.load("/home/qiusuo/free/rank/exp_rank_pred/y_ltr_2d_open_high_label/250_31_9_81/20231023/model.pkl")
+    
+    def print_model_feature_importance(model):
+        print(list(zip(model.feature_importance(), model.feature_name())))
+    print_model_feature_importance(model_a)
+    print_model_feature_importance(model_b)
 
 if __name__ == "__main__":
-    dir_a = "/home/qiusuo/free/data/data/daily"
-    dir_b = "/home/qiusuo/free/data/data/daily_20231110"
-    compare(dir_a, dir_b)
+    # dir_a = "/home/qiusuo/free/data/data/daily"
+    # dir_b = "/home/qiusuo/free/data/data/daily_20231110"
+    # compare(dir_a, dir_b)
+    check_feature_importance()
