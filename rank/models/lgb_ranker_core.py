@@ -18,6 +18,7 @@ from matplotlib import pyplot as plt
 import shutil
 import json
 import gc
+from data.generate_ltr_data import generate_ltr_data
 
 
 def topk_shot(data, label, k=10, watch_list=[]):
@@ -215,8 +216,10 @@ def prepare_data(update=False):
     os.system("rm -rf {}".format(EXP_RANK_DIR))
     os.system("rm -rf {}".format(EXP_RANK_PRED_DIR))
     inject_features()
-    # inject_embedding()
+    inject_embedding()
     inject_labels()
+    generate_ltr_data()
+    
     # inject_minute_feature()
 
 def get_n_val_day(label):

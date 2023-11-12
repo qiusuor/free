@@ -229,7 +229,7 @@ def prepare_data(update=False):
     os.system("rm -rf {}".format(EXP_CLS_DIR))
     os.system("rm -rf {}".format(EXP_CLS_PRED_DIR))
     inject_features()
-    # inject_embedding()
+    inject_embedding()
     inject_labels()
     # inject_minute_feature()
 
