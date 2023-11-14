@@ -24,7 +24,7 @@ import math
 def parse_best_opts():
     opts = set()
     fields = ["sharp_exp"]
-    topk = 3
+    topk = 5
     # fields = ["topk_miss_exp", "topk_ret_exp", "sharp_exp", "high_exp"]
     
     with open(os.path.join(EXP_CLS_DIR, "agg_info.json")) as f:
