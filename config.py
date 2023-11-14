@@ -3,7 +3,8 @@ from multiprocessing import cpu_count
 
 THREAD_NUM = cpu_count()
 SEARCH_END_DAY = 21990101
-# SEARCH_END_DAY = 20231102
+if "SEARCH_END_DAY" in os.environ:
+    SEARCH_END_DAY = int(os.environ["SEARCH_END_DAY"])
 VAL_N_LAST_DAY = 15
 TEST_N_LAST_DAY = 15
 val_delay_day = 30
@@ -11,6 +12,7 @@ val_delay_day = 30
 ROOT_DIR = os.path.dirname(os.path.realpath(__file__))
 DATA_DIR = os.path.join(ROOT_DIR, "data/data")
 TICK_DIR = os.path.join(DATA_DIR, "tick")
+DAILY_DOWLOAD_DIR = os.path.join(DATA_DIR, "daily_download")
 DAILY_DIR = os.path.join(DATA_DIR, "daily")
 DAILY_BY_DATE_DIR = os.path.join(DATA_DIR, "daily_by_date")
 TDX_MINUTE_DIR = os.path.join(DATA_DIR, "tdx_minutes")

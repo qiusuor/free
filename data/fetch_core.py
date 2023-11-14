@@ -146,7 +146,7 @@ def fetch_one(code, login, frequency, adjustflag, start_date="2020-01-01", save_
         return -1
 
 
-def fetch(adjustflag='2', freqs=['m', 'w', 'd', '60', '30', '15', '5'], code_list=[], start_date="2020-01-01", save_dir=DAILY_DIR, num_thread=16):
+def fetch(adjustflag='2', freqs=['m', 'w', 'd', '60', '30', '15', '5'], code_list=[], start_date="2020-01-01", save_dir=DAILY_DOWLOAD_DIR, num_thread=16):
     fetch_stock_codes()
     get_industry_info()
     stockes = pd.read_csv(ALL_STOCKS)

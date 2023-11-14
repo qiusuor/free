@@ -8,30 +8,39 @@ from utils import *
 from tqdm import tqdm
 from joblib import dump
 import warnings
+import shutil
+from fetch_core import dealTime
 
 warnings.filterwarnings("ignore")
 
 def discard_one(path):
-    df = joblib.load(path)
-    df = df[df["volume"] != 0]
-    
+    df = pd.read_csv(path)
+    dealTime(df)
     keep_columns = "code,open,high,low,close,preclose,volume,amount,adjustflag,turn,tradestatus,pctChg,peTTM,pbMRQ,psTTM,pcfNcfTTM,isST,factor,price".split(",")
     df = df[keep_columns]
-    df.to_csv(path.replace(".pkl", ".csv"))
-    dump(df, path)
+    df = df[:to_date(SEARCH_END_DAY)]
+    path = os.path.join(DAILY_DIR, os.path.basename(path))
+    df.to_csv(path)
+    dump(df, path.replace(".csv", ".pkl"))
     
 
 def discard_labels():
     pool = Pool(THREAD_NUM)
     paths = []
-    for file in tqdm(os.listdir(DAILY_DIR)):
+    src_dir = DAILY_DOWLOAD_DIR
+    if os.path.exists(DAILY_DIR):
+        shutil.rmtree(DAILY_DIR)
+    make_dir(DAILY_DIR)
+    for file in tqdm(os.listdir(src_dir)):
         code = file.split("_")[0]
         if not_concern(code) or is_index(code):
             continue
-        if not file.endswith(".pkl"):
+        if not file.endswith(".csv"):
             continue
-        path = os.path.join(DAILY_DIR, file)
+        path = os.path.join(src_dir, file)
         paths.append(path)
+    # discard_one(paths[0])
+    # exit(0)
     pool.imap_unordered(discard_one, paths)
     pool.close()
     pool.join()

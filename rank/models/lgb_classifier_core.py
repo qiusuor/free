@@ -226,8 +226,8 @@ def train_lightgbm(argv):
 def prepare_data(update=False):
     if update:
         fetch_daily()
-    os.system("rm -rf {}".format(EXP_CLS_DIR))
-    os.system("rm -rf {}".format(EXP_CLS_PRED_DIR))
+    remove_dir(EXP_CLS_DIR)
+    remove_dir(EXP_CLS_PRED_DIR)
     inject_features()
     inject_embedding()
     inject_labels()

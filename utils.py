@@ -17,6 +17,7 @@ from collections import defaultdict
 from multiprocessing import Pool
 from joblib import dump
 from tqdm import tqdm
+import shutil
 
 def make_dir(file_name):
     if "." in os.path.basename(file_name):
@@ -25,6 +26,10 @@ def make_dir(file_name):
         dir_name = file_name
     if not os.path.exists(dir_name):
         os.makedirs(dir_name)
+        
+def remove_dir(dir):
+    if os.path.exists(dir):
+        shutil.rmtree(dir)
         
 def not_concern(code):
     if code.startswith("sh.000001"):
