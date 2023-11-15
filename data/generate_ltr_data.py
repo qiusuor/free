@@ -15,7 +15,7 @@ def train_val_data_filter(df):
     return df[(df.low.shift(-1) != df.high.shift(-1)) & (df.isST != 1)]
     
 def generate_ltr_data():
-    shutil.rmtree(DAILY_BY_DATE_DIR)
+    remove_dir(DAILY_BY_DATE_DIR)
     make_dir(DAILY_BY_DATE_DIR)
     data = []
     for file in tqdm(os.listdir(DAILY_DIR)):
