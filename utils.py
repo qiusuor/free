@@ -18,6 +18,8 @@ from multiprocessing import Pool
 from joblib import dump
 from tqdm import tqdm
 import shutil
+import os
+import paramiko
 
 def make_dir(file_name):
     if "." in os.path.basename(file_name):
@@ -273,3 +275,53 @@ def get_profit(code, login):
         bs.logout()
     return result_profit
 
+ 
+class SSHConnection(object):
+ 
+    def __init__(self, host, port, username, pwd):
+        self.host = host
+        self.port = port
+ 
+        self.username = username
+        self.pwd = pwd
+        self.__k = None
+ 
+    def connect(self):
+        transport = paramiko.Transport((self.host, self.port))
+        transport.connect(username=self.username, password=self.pwd)
+        self.__transport = transport
+ 
+    def close(self):
+        self.__transport.close()
+ 
+    def upload(self, local_path, target_path):
+        sftp = paramiko.SFTPClient.from_transport(self.__transport)
+        sftp.put(local_path, target_path)
+ 
+    def download(self, remote_path, local_path):
+        sftp = paramiko.SFTPClient.from_transport(self.__transport)
+        sftp.get(remote_path, local_path)
+ 
+    def cmd(self, command):
+        ssh = paramiko.SSHClient()
+        ssh._transport = self.__transport
+        # 执行命令
+        stdin, stdout, stderr = ssh.exec_command(command)
+        # 获取命令结果
+        result = stdout.read()
+        print(str(result, encoding='utf-8'))
+        return result
+ 
+ 
+def upload_data():
+    ssh = SSHConnection(host='192.168.137.13', port=22, username='qiusuo', pwd='bahksysdd')
+    ssh.connect()
+    local_paths = [r'C:\Users\qiusuo\Desktop\free\data\data\daily_download', r"C:\Users\qiusuo\Desktop\free\data\data\market"]
+    target_paths = ["/home/qiusuo/free/data/data/daily_download/", "/home/qiusuo/free/data/data/market/"]
+    for local_path, target_path in zip(local_paths, target_paths):
+        ssh.cmd("rm -rf {}".format(target_path))
+        ssh.cmd("mkdir {}".format(target_path))
+        for filename in tqdm(os.listdir(local_path)):
+            ssh.upload(os.path.join(local_path, filename), target_path + filename)
+    ssh.close()
+    
