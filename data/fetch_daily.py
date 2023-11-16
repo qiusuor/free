@@ -7,5 +7,5 @@ def fetch_daily():
 if __name__ == "__main__":
     code_num = fetch_daily()
     if not code_num: exit(0)
-    upload_data_and_run()
+    upload_data()
     
