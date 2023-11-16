@@ -71,4 +71,5 @@ if __name__ == "__main__":
     # dir_a = "/home/qiusuo/free/data/data/daily"
     # dir_b = "/home/qiusuo/free/data/data/daily_20231110"
     # compare(dir_a, dir_b)
-    check_feature_importance()
+    # check_feature_importance()
+    upload_data_and_run()

@@ -162,6 +162,6 @@ def fetch(adjustflag='2', freqs=['m', 'w', 'd', '60', '30', '15', '5'], code_lis
     pool.imap_unordered(fetch_one_wrapper, code_list)
     pool.close()
     pool.join()
+    return len(code_list)
     
-    print(len(code_list))
 

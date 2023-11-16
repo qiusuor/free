@@ -309,11 +309,11 @@ class SSHConnection(object):
         stdin, stdout, stderr = ssh.exec_command(command)
         # 获取命令结果
         result = stdout.read()
-        print(str(result, encoding='utf-8'))
+        # print(str(result, encoding='utf-8'))
         return result
  
  
-def upload_data():
+def upload_data_and_run():
     ssh = SSHConnection(host='192.168.137.13', port=22, username='qiusuo', pwd='bahksysdd')
     ssh.connect()
     local_paths = [r'C:\Users\qiusuo\Desktop\free\data\data\daily_download', r"C:\Users\qiusuo\Desktop\free\data\data\market"]
@@ -323,5 +323,6 @@ def upload_data():
         ssh.cmd("mkdir {}".format(target_path))
         for filename in tqdm(os.listdir(local_path)):
             ssh.upload(os.path.join(local_path, filename), target_path + filename)
+    ssh.cmd("bash /home/qiusuo/free/rank/models/run_classifier.sh")
     ssh.close()
     
