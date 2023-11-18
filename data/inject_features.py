@@ -150,6 +150,7 @@ def inject_chip_features(df):
     for period in chip_div_avg_period:
         df["chip_avg_{}".format(period)] = df["close"].rolling(period).apply(calc_chip_avg, raw=False)
         df["chip_div_{}".format(period)] = df["close"].rolling(period).apply(calc_chip_div, raw=False)
+        df["price_div_chip_avg_{}".format(period)] = df["price"] / (df["chip_avg_{}".format(period)] + 1e-9)
     return df
     
 def inject_price_turn_features(df):
@@ -179,6 +180,7 @@ def inject_price_turn_features(df):
         df["max_turn_{}".format(period)] = df["turn"].rolling(period).max()
         df["min_turn_{}".format(period)] = df["turn"].rolling(period).min()
         df["std_turn_{}".format(period)] = df["turn"].rolling(period).std()
+        df["turn_div_mean_turn_{}".format(period)] = df["turn"] / (df["mean_turn_{}".format(period)] + 1e-9)
     return df
     
 def inject_alpha_features(df):
@@ -224,6 +226,18 @@ def inject_shibor(df):
     df["shibor9M"] = shibor["shibor9M"]
     df["shibor1Y"] = shibor["shibor1Y"]
     
+def inject_style_feature(df):
+    df["limit_up_1d"] = is_limit_up(df)
+    df["limit_up_2d"] = is_limit_up(df) & (df["limit_up_1d"].shift(1))
+    df["limit_up_3d"] = is_limit_up(df) & (df["limit_up_2d"].shift(1))
+    df["limit_up_4d"] = is_limit_up(df) & (df["limit_up_3d"].shift(1))
+    df["limit_up_5d"] = is_limit_up(df) & (df["limit_up_4d"].shift(1))
+    df["limit_up_5_plus_d"] = is_limit_up(df) & (df["limit_up_5d"].shift(1))
+    
+    df["limit_down_1d"] = is_limit_down(df)
+    df["limit_down_2d"] = is_limit_down(df) & (df["limit_down_1d"].shift(1))
+    df["limit_down_3d"] = is_limit_down(df) & (df["limit_down_2d"].shift(1))
+     
 def inject_one(path):
     df = joblib.load(path)
     
@@ -232,6 +246,7 @@ def inject_one(path):
     inject_price_turn_features(df)
     inject_alpha_features(df)
     inject_industry_and_name(df)
+    inject_style_feature(df)
 
     df.to_csv(path.replace(".pkl", ".csv"))
     dump(df, path)
