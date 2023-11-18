@@ -342,8 +342,14 @@ def is_limit_down(df):
 def is_limit_up_line(df):
     return is_limit_up(df) & (df.high == df.low)
 
+def not_limit_up_line(df):
+    return ~is_limit_up_line(df)
+
 def is_limit_down_line(df):
     return is_limit_down(df) & (df.high == df.low)
+
+def not_limit_down_line(df):
+    return ~is_limit_down_line(df)
 
 def is_reach_limit(df):
     return is_limit_down(df) | is_limit_up(df)
