@@ -324,4 +324,39 @@ def upload_data():
         for filename in tqdm(os.listdir(local_path)):
             ssh.upload(os.path.join(local_path, filename), target_path + filename)
     ssh.close()
+
+def floor2(x):
+    if np.isnan(x): return 1e6
+    return (math.floor(x * 100)) / 100
     
+def ceil2(x):
+    if np.isnan(x): return -1e6
+    return (math.ceil(x * 100)) / 100
+    
+def is_limit_up(df):
+    return (df.close >= (df.close.shift(1) * 1.1).apply(floor2))
+
+def is_limit_down(df):
+    return (df.close <= (df.close.shift(1) * 0.9).apply(ceil2))
+
+def is_limit_up_line(df):
+    return is_limit_up(df) & (df.high == df.low)
+
+def is_limit_down_line(df):
+    return is_limit_down(df) & (df.high == df.low)
+
+def is_reach_limit(df):
+    return is_limit_down(df) | is_limit_up(df)
+
+def not_reach_limit(df):
+    return ~is_reach_limit(df)
+
+def is_reach_limit_line(df):
+    return is_limit_down_line(df) | is_limit_up_line(df)
+
+def not_reach_limit_line(df):
+    return ~is_reach_limit_line(df)
+
+def reserve_n_last(index, n=1):
+    index.iloc[-n:] = True
+    return index.astype(bool)

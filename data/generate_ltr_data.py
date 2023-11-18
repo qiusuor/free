@@ -12,7 +12,7 @@ def dump_ltr_data(argv):
     dump(df_i, path)
     
 def train_val_data_filter(df):
-    return df[(df.low.shift(-1) != df.high.shift(-1)) & (df.isST != 1)]
+    return df[reserve_n_last(not_reach_limit_line(df).shift(-1)) & (df.isST != 1)]
     
 def generate_ltr_data():
     remove_dir(DAILY_BY_DATE_DIR)
