@@ -351,11 +351,11 @@ def is_reach_limit(df):
 def not_reach_limit(df):
     return ~is_reach_limit(df)
 
-def is_reach_limit_line(df):
+def is_limit_line(df):
     return is_limit_down_line(df) | is_limit_up_line(df)
 
-def not_reach_limit_line(df):
-    return ~is_reach_limit_line(df)
+def not_limit_line(df):
+    return ~is_limit_line(df)
 
 def reserve_n_last(index, n=1):
     index.iloc[-n:] = True
