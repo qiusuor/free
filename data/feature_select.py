@@ -27,6 +27,9 @@ def calc_bin_distribution_kl(series_all, series_train, series_val):
 
 def get_rel_dist(a, b):
     return abs(a - b) / max(min(a, b), 1e-9)
+
+def get_abs_dist(a, b):
+    return abs(a - b)
     
 def analyse_single_feature(train_start_day, train_end_day, val_start_day, val_end_day, label):
     dataset = []
@@ -64,9 +67,9 @@ def analyse_single_feature(train_start_day, train_end_day, val_start_day, val_en
         # all_data_feature = all_dateset[feature][all_data_label].astype(float)
         train_feature = train_dataset[feature][train_label].astype(float)
         val_feature = val_dataset[feature][val_label].astype(float)
-        skew_dis = get_rel_dist(train_feature.skew(), val_feature.skew())
-        kurt_dis = get_rel_dist(train_feature.kurt(), val_feature.kurt())
-        mean_dis = get_rel_dist(train_feature.mean(), val_feature.mean())
+        skew_dis = get_abs_dist(train_feature.skew(), val_feature.skew())
+        kurt_dis = get_abs_dist(train_feature.kurt(), val_feature.kurt())
+        mean_dis = get_abs_dist(train_feature.mean(), val_feature.mean())
         # kl =  calc_bin_distribution_kl(all_data_feature, train_feature, val_feature)
         feature_alignment.append([feature, mean_dis, skew_dis, kurt_dis])
         # print(feature, kl)
