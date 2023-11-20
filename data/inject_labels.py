@@ -38,6 +38,11 @@ def inject_one(path):
     df["y_next_1d_close_2d_open_rate"] = df["open"].shift(-2) / df["close"].shift(-1)
     for n_day in future_n_day_high_low:
         df["y_next_{}_d_ret".format(n_day)] = df["close"].shift(-n_day) / df["open"].shift(-1)
+        df["y_next_{}_d_ret_03".format(n_day)] = df["y_next_{}_d_ret".format(n_day)] > 1.03
+        df["y_next_{}_d_ret_04".format(n_day)] = df["y_next_{}_d_ret".format(n_day)] > 1.04
+        df["y_next_{}_d_ret_05".format(n_day)] = df["y_next_{}_d_ret".format(n_day)] > 1.05
+        df["y_next_{}_d_ret_07".format(n_day)] = df["y_next_{}_d_ret".format(n_day)] > 1.07
+        df["y_next_{}_d_ret_095".format(n_day)] = df["y_next_{}_d_ret".format(n_day)] >= 1.095
         df["y_next_{}_d_close_high_ratio".format(n_day)] = df["high"].shift(-n_day) / df["close"].shift(-1)
         df["y_next_{}_d_close_low_ratio".format(n_day)] = df["low"].shift(-n_day) / df["close"].shift(-1)
         df["y_next_{}_d_high".format(n_day)] = df["high"].rolling(n_day).apply(lambda x:max(x[1:])).shift(-n_day)

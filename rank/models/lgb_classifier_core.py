@@ -236,7 +236,7 @@ def prepare_data(update=False):
 def get_n_val_day(label):
     if "y_next_1d_up_to_limit" in label:
         n_day = 1
-    elif "y_2_d" in label or "1d_close_2d_open" in label or "y_02" in label:
+    elif "y_2_d" in label or "1d_close_2d_open" in label or "y_02" in label or "y_next_2_d" in label:
         n_day = 2
     elif "y_5_d" in label:
         n_day = 5

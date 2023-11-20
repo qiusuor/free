@@ -32,7 +32,7 @@ def parse_best_opts():
         
         for field in fields:
             exps = train_agg_info["Top-3"][field]
-            for k in range(topk):
+            for k in range(min(topk, len(exps))):
                 best_exp = exps[list(exps)[k]]
                 label = best_exp["label"]
                 config = list(map(int, best_exp["exp_config"].split("_")))

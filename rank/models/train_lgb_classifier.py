@@ -44,6 +44,12 @@ if __name__ == "__main__":
         "y_02_109",
         # "y_next_1d_up_to_limit",
         
+        # "y_next_2_d_ret_03",
+        "y_next_2_d_ret_04",
+        # "y_next_2_d_ret_05",
+        # "y_next_2_d_ret_07",
+        # "y_next_2_d_ret_095",
+        
         # "y_2_d_high_rank_10%_safe_1d",
         # "y_2_d_high_rank_20%_safe_1d",
         # "y_2_d_high_rank_30%_safe_1d",
