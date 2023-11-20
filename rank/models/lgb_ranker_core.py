@@ -84,10 +84,7 @@ def train_lightgbm(argv):
     root_dir = EXP_RANK_PRED_DIR if pred_mode else EXP_RANK_DIR
     save_dir = "{}/{}/{}/{}".format(root_dir, label, param_des, to_int_date(val_start_day))
     if os.path.exists(os.path.join(save_dir, "meta.json")):
-        with open(os.path.join(save_dir, "meta.json")) as f:
-            meta = json.load(f)
-            if not np.isnan(meta["last_val"]["auc"]):
-                return
+        return
     if os.path.exists(save_dir):
         shutil.rmtree(save_dir)
     make_dir(save_dir)
