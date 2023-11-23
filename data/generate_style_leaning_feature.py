@@ -4,6 +4,10 @@ from multiprocessing import Pool
 
 def agg_groups(df):
     groups = {
+        "limit_up": is_limit_up(df),
+        "limit_down": is_limit_down(df),
+        "limit_up_line": is_limit_up_line(df),
+        "limit_down_line": is_limit_down_line(df),
         "limit_up_1d": df["limit_up_1d"],
         "limit_up_2d": df["limit_up_2d"],
         "limit_up_3d": df["limit_up_3d"],
@@ -79,6 +83,9 @@ def generate_style_learning_info():
     df = pd.DataFrame(values, columns=names)
     df.set_index("date", inplace=True)
     df.sort_index(inplace=True)
+    df = df.iloc[1:-1]
+    
+    joblib.dump(df, "style_learning_info.pkl")
     df.to_csv("style_learning_info.csv")
     
 if __name__ == "__main__":
