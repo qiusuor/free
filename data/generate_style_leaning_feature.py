@@ -20,8 +20,8 @@ def agg_groups(df):
         "mid_turn_60": (df["turn_div_mean_turn_60"] > 1) & (df["turn_div_mean_turn_60"] <= 2.5),
         "low_turn_60": df["turn_div_mean_turn_60"] <= 1,
         "whole": df["price_div_chip_avg_60"] > -1,
-        "up": df["close"] > df["pre_close"],
-        "down": df["close"] < df["pre_close"],
+        "up": df["close"] > df["preclose"],
+        "down": df["close"] < df["preclose"],
         "red": df["close"] > df["open"],
         "blue": df["close"] < df["open"],
         "up_and_down": (df["high"] / df["close"] > 1.03) & (df["high"] / df["open"] > 1.05),
@@ -40,8 +40,8 @@ def stats_values(df, group_name, group, date):
     }
     
     group = df[group]
-    group_agg_names = ["date"]
-    group_agg_values = [date]
+    group_agg_names = []
+    group_agg_values = []
     for obs_name in observe:
         group_value = group[obs_name]
         for agg_name, agg_func in agg_methods.items():
@@ -54,8 +54,8 @@ def generate_style_learning_info_one(argv):
     path, date = argv
     df = joblib.load(path)
     groups = agg_groups(df)
-    agg_values = []
-    agg_names = []
+    agg_values = [date]
+    agg_names = ["date"]
     for group_name, group in groups.items():
         group_agg_names, group_agg_values = stats_values(df, group_name, group, date)
         agg_values.extend(group_agg_values)
@@ -69,16 +69,16 @@ def generate_style_learning_info():
         if not file.endswith(".pkl"): continue
         path = os.path.join(DAILY_BY_DATE_DIR, file)
         argvs.append((path, int(file[:-4])))
-    generate_style_learning_info_one(argvs[0])
     pool = Pool(THREAD_NUM)
     rets = pool.map(generate_style_learning_info_one, argvs)
     pool.close()
     pool.join()
     
     names = rets[0][0]
-    values = list(zip(*rets)[1])
+    values = list(list(zip(*rets))[1])
     df = pd.DataFrame(values, columns=names)
-    df.set_index("date")
+    df.set_index("date", inplace=True)
+    df.sort_index(inplace=True)
     df.to_csv("style_learning_info.csv")
     
 if __name__ == "__main__":
