@@ -239,42 +239,6 @@ def get_industry_info():
     result.to_csv(INDUSTRY_INFO.replace("pkl", "csv"))
     bs.logout()
 
-    
-def get_shibor():
-    lg = bs.login()
-    rs = bs.query_shibor_data(start_date="2020-01-01")
-
-    data_list = []
-    while (rs.error_code == '0') & rs.next():
-        data_list.append(rs.get_row_data())
-    result = pd.DataFrame(data_list, columns=rs.fields)
-    result['date'] = pd.to_datetime(result['date'])
-    result.set_index("date", inplace=True)
-    result.to_csv(SHIBOR_INFO.replace("pkl", "csv"))
-    joblib.dump(result, SHIBOR_INFO)
-    bs.logout()
-    
-    
-def get_profit(code, login):
-    if not login:
-        lg = bs.login()
-
-    profit_list = []
-    quarter = (datetime.datetime.now().month - 1) // 3
-    year = datetime.datetime.now().year
-    if quarter == 0:
-        quarter = 4
-        year -= 1
-    rs_profit = bs.query_profit_data(code=code, year=year, quarter=quarter)
-    while (rs_profit.error_code == '0') & rs_profit.next():
-        profit_list.append(rs_profit.get_row_data())
-    result_profit = pd.DataFrame(profit_list, columns=rs_profit.fields)
-    # print(result_profit)
-
-    if not login:
-        bs.logout()
-    return result_profit
-
  
 class SSHConnection(object):
  
