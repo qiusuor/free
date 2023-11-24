@@ -4,6 +4,7 @@ import os
 import json
 import numpy as np
 from matplotlib import pyplot as plt
+from collections import defaultdict
 
 def to_dict(sorted_items):
     keys, vals = [], []
@@ -42,16 +43,18 @@ def agg_prediction_info(ana_dir=EXP_CLS_DIR, last_n_day=TEST_N_LAST_DAY):
             for exp_config in os.listdir(label_dir):
                 configured_exp_dir = os.path.join(label_dir, exp_config)
                 if not os.path.isdir(configured_exp_dir): continue
-                epochs, topk_high_means, topk_low_means, topk_sharp_means, topk_gain_means, topk_1d_close_means = [], [], [], [], [], []
-                topk_misses, topk_ret_means = [], []
+                epochs = []
+                topk_high_means, topk_low_means, topk_sharp_means, topk_gain_means, topk_1d_close_means = defaultdict(list), defaultdict(list), defaultdict(list), defaultdict(list), defaultdict(list)
+                topk_misses, topk_ret_means = defaultdict(list), defaultdict(list)
                 if len(os.listdir(configured_exp_dir)) < last_n_day: continue
                 finished = True
                 val_start_days = list(filter(lambda x: os.path.isdir(os.path.join(configured_exp_dir, x)), os.listdir(configured_exp_dir)))
                 val_start_days = list(sorted(val_start_days, key=lambda x:int(x)))
                 if len(val_start_days) > last_n_day:
-                    val_start_days = val_start_days[-last_n_day-2:-2]
+                    val_start_days = val_start_days[-last_n_day-2:-1]
                 # print(val_start_days)
                 feature_importance = 0
+                val_days = set()
                 for val_start_day in val_start_days:
                     val_start_day_dir = os.path.join(configured_exp_dir, val_start_day)
                     # print(val_start_day_dir)
@@ -65,34 +68,46 @@ def agg_prediction_info(ana_dir=EXP_CLS_DIR, last_n_day=TEST_N_LAST_DAY):
                     feature_name = model.feature_name()
                     meta = json.load(open(os.path.join(val_start_day_dir, "meta.json")))
                     epoch = meta["info"]["epoch"]
-                    topk_high_mean = meta["mean_val"]["top{}_watch".format(topk)]["y_next_2_d_high_ratio_topk_{}_mean".format(topk)]
-                    topk_low_mean = meta["mean_val"]["top{}_watch".format(topk)]["y_next_2_d_low_ratio_topk_{}_mean".format(topk)]
-                    topk_gain_mean = meta["mean_val"]["top{}_watch".format(topk)]["y_next_1d_close_2d_open_rate_topk_{}_mean".format(topk)] if "y_next_1d_close_2d_open_rate_topk_{}_mean".format(topk) in meta["mean_val"]["top{}_watch".format(topk)] else 0
-                    topk_1d_close_mean = meta["mean_val"]["top{}_watch".format(topk)]["y_next_1d_close_rate_topk_{}_mean".format(topk)] if "y_next_1d_close_rate_topk_{}_mean".format(topk) in meta["mean_val"]["top{}_watch".format(topk)] else 0
-                    
-                    topk_miss = meta["mean_val"]["top{}_miss".format(topk)]
-                    topk_ret_mean = meta["mean_val"]["top{}_watch".format(topk)]["y_next_2_d_ret_topk_{}_mean".format(topk)]
-                    
-                    topk_sharp_mean = topk_high_mean * topk_low_mean
-                    
                     epochs.append(epoch)
-                    topk_high_means.append(topk_high_mean)
-                    topk_low_means.append(topk_low_mean)
-                    topk_sharp_means.append(topk_sharp_mean)
-                    topk_gain_means.append(topk_gain_mean)
-                    topk_1d_close_means.append(topk_1d_close_mean)
-                    topk_misses.append(topk_miss)
-                    topk_ret_means.append(topk_ret_mean)
+                    
+                    for val_day in meta["daily"]:
+                        if np.isnan(meta["daily"][val_day]["top3_watch"]["sharp_3"]): continue
+                        val_days.add(val_day)
+                        topk_high_mean = meta["daily"][val_day]["top{}_watch".format(topk)]["y_next_2_d_high_ratio_topk_{}_mean".format(topk)]
+                        topk_low_mean = meta["daily"][val_day]["top{}_watch".format(topk)]["y_next_2_d_low_ratio_topk_{}_mean".format(topk)]
+                        topk_gain_mean = meta["daily"][val_day]["top{}_watch".format(topk)]["y_next_1d_close_2d_open_rate_topk_{}_mean".format(topk)] if "y_next_1d_close_2d_open_rate_topk_{}_mean".format(topk) in meta["daily"][val_day]["top{}_watch".format(topk)] else 0
+                        topk_1d_close_mean = meta["daily"][val_day]["top{}_watch".format(topk)]["y_next_1d_close_rate_topk_{}_mean".format(topk)] if "y_next_1d_close_rate_topk_{}_mean".format(topk) in meta["daily"][val_day]["top{}_watch".format(topk)] else 0
+                        
+                        topk_miss = meta["daily"][val_day]["top{}_miss".format(topk)]
+                        topk_ret_mean = meta["daily"][val_day]["top{}_watch".format(topk)]["y_next_2_d_ret_topk_{}_mean".format(topk)]
+                        
+                        topk_sharp_mean = topk_high_mean * topk_low_mean
+                        
+                        topk_high_means[val_day].append(topk_high_mean)
+                        topk_low_means[val_day].append(topk_low_mean)
+                        topk_sharp_means[val_day].append(topk_sharp_mean)
+                        topk_gain_means[val_day].append(topk_gain_mean)
+                        topk_1d_close_means[val_day].append(topk_1d_close_mean)
+                        topk_misses[val_day].append(topk_miss)
+                        topk_ret_means[val_day].append(topk_ret_mean)
                     
                 if not finished: continue
+                for val_day in val_days:
+                    topk_high_means[val_day] = np.mean(topk_high_means[val_day])
+                    topk_low_means[val_day] = np.mean(topk_low_means[val_day])
+                    topk_sharp_means[val_day] = np.mean(topk_sharp_means[val_day])
+                    topk_gain_means[val_day] = np.mean(topk_gain_means[val_day])
+                    topk_1d_close_means[val_day] = np.mean(topk_1d_close_means[val_day])
+                    topk_misses[val_day] = np.mean(topk_misses[val_day])
+                    topk_ret_means[val_day] = np.mean(topk_ret_means[val_day])
                 avg_epoch = np.mean(epochs)
-                agv_high = np.mean(topk_high_means)
-                avg_low = np.mean(topk_low_means)
-                avg_sharp = np.mean(topk_sharp_means)
-                avg_close_open = np.mean(topk_gain_means)
-                avg_1d_close = np.mean(topk_1d_close_means)
-                avg_topk_miss = np.mean(topk_misses)
-                avg_topk_ret = np.mean(topk_ret_means)
+                agv_high = np.mean(list(topk_high_means.values()))
+                avg_low = np.mean(list(topk_low_means.values()))
+                avg_sharp = np.mean(list(topk_sharp_means.values()))
+                avg_close_open = np.mean(list(topk_gain_means.values()))
+                avg_1d_close = np.mean(list(topk_1d_close_means.values()))
+                avg_topk_miss = np.mean(list(topk_misses.values()))
+                avg_topk_ret = np.mean(list(topk_ret_means.values()))
                 feature_importance, feature_name = zip(*sorted(list(zip(feature_importance, feature_name)), key=lambda x:-x[0]))
                 exp_result = {
                     "label": label,
@@ -120,7 +135,7 @@ def agg_prediction_info(ana_dir=EXP_CLS_DIR, last_n_day=TEST_N_LAST_DAY):
                 max_high_rate, max_high_rate_config = compare_large(agv_high, max_high_rate, max_high_rate_config)
                 max_sharp_rate, max_sharp_rate_config = compare_large(avg_sharp, max_sharp_rate, max_sharp_rate_config)
                 max_next_1d_close_2d_open_gain, max_next_1d_close_2d_open_gain_config = compare_large(avg_close_open, max_next_1d_close_2d_open_gain, max_next_1d_close_2d_open_gain_config)
-                plot_sharp_rate(val_start_days, topk_sharp_means, os.path.join(configured_exp_dir, "sharps_{}.png".format(topk)))
+                plot_sharp_rate(topk_sharp_means.keys(), topk_sharp_means.values(), os.path.join(configured_exp_dir, "sharps_{}.png".format(topk)))
                     
         agg_result["sharp_exp"] = to_dict(sorted(agg_result["sharp_exp"].items(), key=lambda x:-x[1]["avg_sharp"]))
         agg_result["topk_miss_exp"] = to_dict(sorted(agg_result["sharp_exp"].items(), key=lambda x:x[1]["avg_miss"]))

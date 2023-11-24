@@ -165,6 +165,7 @@ def train_lightgbm(argv):
     meta["daily"] = dict()
     watch_list = [f"y_next_{2}_d_high_ratio", f"y_next_{2}_d_low_ratio", "y_next_1d_close_2d_open_rate", "y_next_1d_close_rate", "y_next_{}_d_ret".format(2)]
     
+    labeled_day = 0
     for i, res_i in res_val.groupby("date"):
         res_i.sort_values(by="pred", inplace=True, ascending=False)
         top3_miss, top3_shot, top3_watch = topk_shot(res_i, label, k=3, watch_list=watch_list)
@@ -178,6 +179,8 @@ def train_lightgbm(argv):
             "top5_miss": top5_miss,
             "top10_miss": top10_miss,
         }
+        if not np.isnan(top3_watch["sharp_3"]):
+            labeled_day += 1
         meta["last_val"] = meta["daily"][to_int_date(i)]
         save_file = f"{to_int_date(i)}_T3_{top3_miss}_T5_{top5_miss}_T10_{top10_miss}.csv"
         res_i.to_csv(os.path.join(save_dir, save_file))
@@ -196,12 +199,13 @@ def train_lightgbm(argv):
     mean_val = meta["mean_val"]
     
     for daily in meta["daily"].values():
-        mean_val["top3_miss"] += daily["top3_miss"] / n_day
-        mean_val["top5_miss"] += daily["top5_miss"] / n_day
-        mean_val["top10_miss"] += daily["top10_miss"] / n_day
+        if np.isnan(daily["auc"]): continue
+        mean_val["top3_miss"] += daily["top3_miss"] / labeled_day
+        mean_val["top5_miss"] += daily["top5_miss"] / labeled_day
+        mean_val["top10_miss"] += daily["top10_miss"] / labeled_day
         for watch_key in ["top3_watch", "top5_watch", "top10_watch"]:
             for key in mean_val[watch_key]:
-                mean_val[watch_key][key] += daily[watch_key][key] / n_day
+                mean_val[watch_key][key] += daily[watch_key][key] / labeled_day
         
         
     json.dump(meta, open(os.path.join(save_dir, "meta.json"), 'w'), indent=4)
