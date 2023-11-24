@@ -8,6 +8,8 @@ from utils import *
 from tqdm import tqdm
 from joblib import dump
 import warnings
+from inject_features import inject_style_feature
+
 
 warnings.filterwarnings("ignore")
 
@@ -51,6 +53,7 @@ def inject_one(path):
         df["y_next_{}_d_low".format(n_day)] = df["low"].rolling(n_day).apply(lambda x:min(x[1:])).shift(-n_day)
         df["y_next_{}_d_low_ratio".format(n_day)] = df["y_next_{}_d_low".format(n_day)] / df["open"].shift(-1)
         
+    inject_style_feature(df)
     df.to_csv(path.replace(".pkl", ".csv"))
     dump(df, path)
     

@@ -26,6 +26,8 @@ def generate_ltr_data():
             continue
         path = os.path.join(DAILY_DIR, file)
         df = joblib.load(path)
+        if "code_name" not in df.columns or not isinstance(df.code_name[-1], str) or "ST" in df.code_name[-1] or "st" in df.code_name[-1] or "sT" in df.code_name[-1]:
+                continue
         if len(df) < 300: continue
         df = train_val_data_filter(df)
         data.append(df)

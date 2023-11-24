@@ -98,8 +98,8 @@ def train_lightgbm(argv):
             df = train_val_data_filter(df)
             if len(df) <=0 or df.isST[-1]:
                 continue
-            # if "code_name" not in df.columns or not isinstance(df.code_name[-1], str) or "ST" in df.code_name[-1] or "st" in df.code_name[-1] or "sT" in df.code_name[-1]:
-            #     continue
+            if "code_name" not in df.columns or not isinstance(df.code_name[-1], str) or "ST" in df.code_name[-1] or "st" in df.code_name[-1] or "sT" in df.code_name[-1]:
+                continue
             df["date"] = df.index
             df = df.iloc[-350:]
             dataset.append(df)
