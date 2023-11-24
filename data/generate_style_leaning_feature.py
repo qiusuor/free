@@ -8,42 +8,45 @@ def agg_groups(df):
     groups = {
         "limit_up": is_limit_up(df),
         "limit_down": is_limit_down(df),
-        "limit_up_line": is_limit_up_line(df),
-        "limit_down_line": is_limit_down_line(df),
-        "limit_up_1d": df["limit_up_1d"],
-        "limit_up_2d": df["limit_up_2d"],
-        "limit_up_3d": df["limit_up_3d"],
-        "limit_up_4d": df["limit_up_4d"],
-        "limit_up_5d": df["limit_up_5d"],
-        "limit_up_5_plus_d": df["limit_up_5_plus_d"],
-        "limit_down_1d": df["limit_down_1d"],
-        "limit_down_2d": df["limit_down_2d"],
-        "limit_down_3d": df["limit_down_3d"],
-        "high_price_60": df["price_div_chip_avg_60"] > 1.5,
-        "mid_price_60": (df["price_div_chip_avg_60"] > 1.0) & (df["price_div_chip_avg_60"] <= 1.5),
-        "low_price_60": df["price_div_chip_avg_60"] <= 1.0,
-        "high_turn_60": df["turn_div_mean_turn_60"] > 2.5,
-        "mid_turn_60": (df["turn_div_mean_turn_60"] > 1) & (df["turn_div_mean_turn_60"] <= 2.5),
-        "low_turn_60": df["turn_div_mean_turn_60"] <= 1,
-        "whole": df["price_div_chip_avg_60"] > -1,
-        "up": df["close"] > df["preclose"],
-        "down": df["close"] < df["preclose"],
-        "red": df["close"] > df["open"],
-        "blue": df["close"] < df["open"],
-        "up_and_down": (df["high"] / df["close"] > 1.03) & (df["high"] / df["open"] > 1.05),
-        "down_and_up": (df["low"] / df["close"] < 0.97) & (df["low"] / df["open"] < 0.95),
+        "limit_up_and_high_price_60": is_limit_up(df) & (df["price_div_chip_avg_60"] > 1.5),
+        
+        # "limit_up_line": is_limit_up_line(df),
+        # "limit_down_line": is_limit_down_line(df),
+        # "limit_up_1d": df["limit_up_1d"],
+        # "limit_up_2d": df["limit_up_2d"],
+        # "limit_up_3d": df["limit_up_3d"],
+        # "limit_up_4d": df["limit_up_4d"],
+        # "limit_up_5d": df["limit_up_5d"],
+        # "limit_up_5_plus_d": df["limit_up_5_plus_d"],
+        # "limit_down_1d": df["limit_down_1d"],
+        # "limit_down_2d": df["limit_down_2d"],
+        # "limit_down_3d": df["limit_down_3d"],
+        # "high_price_60": df["price_div_chip_avg_60"] > 1.5,
+        # "mid_price_60": (df["price_div_chip_avg_60"] > 1.0) & (df["price_div_chip_avg_60"] <= 1.5),
+        # "low_price_60": df["price_div_chip_avg_60"] <= 1.0,
+        # "high_turn_60": df["turn_div_mean_turn_60"] > 2.5,
+        # "mid_turn_60": (df["turn_div_mean_turn_60"] > 1) & (df["turn_div_mean_turn_60"] <= 2.5),
+        # "low_turn_60": df["turn_div_mean_turn_60"] <= 1,
+        # "whole": df["price_div_chip_avg_60"] > -1,
+        # "up": df["close"] > df["preclose"],
+        # "down": df["close"] < df["preclose"],
+        # "red": df["close"] > df["open"],
+        # "blue": df["close"] < df["open"],
+        # "up_and_down": (df["high"] / df["close"] > 1.03) & (df["high"] / df["open"] > 1.05),
+        # "down_and_up": (df["low"] / df["close"] < 0.97) & (df["low"] / df["open"] < 0.95),
         
     }
     return groups
 
 def stats_values(df, group_name, group, date):
-    observe = ["y_next_1d_ret", "y_next_1d_close_rate", "y_next_1d_up_to_limit"]
+    observe = ["y_next_1d_ret", "y_next_1d_close_rate"]
+    # observe = ["y_next_1d_ret", "y_next_1d_close_rate", "y_next_1d_up_to_limit"]
     agg_methods = {
         "mean": np.mean, 
-        "std": np.std, 
-        "max": np.max,
-        "min": np.min,
-        "num": len
+        # "std": np.std, 
+        # "max": np.max,
+        # "min": np.min,
+        # "num": len
     }
     
     group = df[group]
@@ -87,7 +90,7 @@ def generate_style_learning_info():
     df.set_index("date", inplace=True)
     df.sort_index(inplace=True)
     df = df.iloc[1:-1]
-    df["label"] = df["y_next_1d_ret_mean_limit_up"].shift(-1) > 1.0
+    df["label"] = df["y_next_1d_ret_mean_limit_up_and_high_price_60"].shift(-1) > 0.99
     joblib.dump(df, "style_learning_info.pkl")
     df.to_csv("style_learning_info.csv")
     

@@ -120,7 +120,6 @@ def render_html(data, title, html_path):
             is_symbol_show=False,
         )
     line = line.set_global_opts(
-        title_opts=opts.TitleOpts(title="{}".format(title)),
         tooltip_opts=opts.TooltipOpts(trigger="axis"),
         datazoom_opts=[
             opts.DataZoomOpts(xaxis_index=0),
