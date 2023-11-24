@@ -105,66 +105,38 @@ def fetch_stock_codes():
     result.to_csv(ALL_STOCKS, index=False)
     bs.logout()
 
-def render_html(code, data, html_path):
-    (
-        Line(init_opts=opts.InitOpts(width="1450px",
-                                     height="650px",
-                                     page_title=str(code)))
-        .add_xaxis(xaxis_data=[str(item[0]) for item in data])
-        .add_yaxis(
-            series_name="div",
-            y_axis=[item[1] for item in data],
+def render_html(data, title, html_path):
+    line = Line(init_opts=opts.InitOpts(width="1450px",
+                                    height="650px",
+                                    page_title=title))
+    line = line.add_xaxis(xaxis_data=data.index)
+    for col in data.columns:
+        if col == "date": continue
+        line = line.add_yaxis(
+            series_name=col,
+            y_axis=data[col],
             yaxis_index=0,
             is_smooth=False,
             is_symbol_show=False,
         )
-        .add_yaxis(
-            series_name="div_diff",
-            y_axis=[item[2] for item in data],
-            yaxis_index=0,
-            is_smooth=False,
-            is_symbol_show=False,
+    line = line.set_global_opts(
+        title_opts=opts.TitleOpts(title="{}".format(title)),
+        tooltip_opts=opts.TooltipOpts(trigger="axis"),
+        datazoom_opts=[
+            opts.DataZoomOpts(xaxis_index=0),
+            opts.DataZoomOpts(type_="inside", xaxis_index=0),
+        ],
+        xaxis_opts=opts.AxisOpts(type_="category",
+                                    is_scale=True,
+                                    ),
+        yaxis_opts=opts.AxisOpts(
+            type_="value",
+            name_location="start",
+            is_scale=False,
+            axistick_opts=opts.AxisTickOpts(is_inside=False),
         )
-        .add_yaxis(
-            series_name="div_ratio",
-            y_axis=[item[3] for item in data],
-            yaxis_index=0,
-            is_smooth=False,
-            is_symbol_show=False,
-        )
-        .add_yaxis(
-            series_name="avg",
-            y_axis=[item[4] for item in data],
-            yaxis_index=0,
-            is_smooth=False,
-            is_symbol_show=False,
-        )
-        .add_yaxis(
-            series_name="price",
-            y_axis=[item[5] for item in data],
-            yaxis_index=0,
-            is_smooth=False,
-            is_symbol_show=False,
-        )
-        .set_global_opts(
-            title_opts=opts.TitleOpts(title="{}".format(code)),
-            tooltip_opts=opts.TooltipOpts(trigger="axis"),
-            datazoom_opts=[
-                opts.DataZoomOpts(xaxis_index=0),
-                opts.DataZoomOpts(type_="inside", xaxis_index=0),
-            ],
-            xaxis_opts=opts.AxisOpts(type_="category",
-                                     is_scale=True,
-                                     ),
-            yaxis_opts=opts.AxisOpts(
-                type_="value",
-                name_location="start",
-                is_scale=False,
-                axistick_opts=opts.AxisTickOpts(is_inside=False),
-            )
-        )
-        .render(html_path)
     )
+    line.render(html_path)
 
 
 def get_up_label(i, open, close, high, low, price, turn, hold_day=2, expect_gain=1.07):
