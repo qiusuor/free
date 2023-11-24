@@ -1,6 +1,8 @@
 from utils import *
 from config import *
 from multiprocessing import Pool
+from ydata_profiling import ProfileReport
+
 
 def agg_groups(df):
     groups = {
@@ -41,6 +43,7 @@ def stats_values(df, group_name, group, date):
         "std": np.std, 
         "max": np.max,
         "min": np.min,
+        "num": len
     }
     
     group = df[group]
@@ -84,9 +87,13 @@ def generate_style_learning_info():
     df.set_index("date", inplace=True)
     df.sort_index(inplace=True)
     df = df.iloc[1:-1]
-    
+    df["label"] = df["y_next_1d_ret_mean_limit_up"].shift(-1) > 1.0
     joblib.dump(df, "style_learning_info.pkl")
     df.to_csv("style_learning_info.csv")
+    
+    profile = ProfileReport(df[["y_next_1d_close_rate_mean_limit_up", "label"]], title="Style analyse")
+    profile.to_file("style_analyse.html")
+    
     
 if __name__ == "__main__":
     generate_style_learning_info()
