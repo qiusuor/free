@@ -137,8 +137,8 @@ def agg_prediction_info(ana_dir=EXP_CLS_DIR, last_n_day=TEST_N_LAST_DAY):
                 max_next_1d_close_2d_open_gain, max_next_1d_close_2d_open_gain_config = compare_large(avg_close_open, max_next_1d_close_2d_open_gain, max_next_1d_close_2d_open_gain_config)
                 plot_sharp_rate(topk_sharp_means.keys(), topk_sharp_means.values(), os.path.join(configured_exp_dir, "sharps_{}.png".format(topk)))
                     
-        agg_result["sharp_exp"] = to_dict(sorted(agg_result["sharp_exp"].items(), key=lambda x:-x[1]["avg_sharp"]))
         agg_result["topk_miss_exp"] = to_dict(sorted(agg_result["sharp_exp"].items(), key=lambda x:x[1]["avg_miss"]))
+        agg_result["sharp_exp"] = to_dict(sorted(agg_result["sharp_exp"].items(), key=lambda x:-x[1]["avg_sharp"]))
         agg_result["topk_ret_exp"] = to_dict(sorted(agg_result["sharp_exp"].items(), key=lambda x:-x[1]["avg_topk_ret"]))
         agg_result["1d_open_close_exp"] = to_dict(sorted(agg_result["sharp_exp"].items(), key=lambda x:-x[1]["avg_1d_open_close"]))
         agg_result["high_exp"] = to_dict(sorted(agg_result["sharp_exp"].items(), key=lambda x:-x[1]["avg_high"]))
