@@ -23,7 +23,7 @@ def inject_one(path):
     for batch_size, epochs, K, LAT_SIZE in auto_encoder_config:
         model = MLPAutoEncoder(input_size=len(auto_encoder_features)*K, lat_size=LAT_SIZE)
         model_path = "embedding/checkpoint/mlp_autoencoder_{}_{}.pth".format(K, LAT_SIZE)
-        model.load_state_dict(torch.load(model_path))
+        model.load_state_dict(torch.load(model_path, map_location=device))
         model.to(device)
         model.eval()
         mean, std = joblib.load("embedding/checkpoint/mean_std_{}_{}.pkl".format(K, LAT_SIZE))
@@ -59,6 +59,7 @@ def inject_embedding():
             paths.append(path)
     # print(paths[0])
     # inject_one(paths[0])
+    # exit(0)
     pool = Pool(32)
     pool.imap_unordered(inject_one, paths)
     pool.close()
