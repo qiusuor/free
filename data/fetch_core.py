@@ -132,7 +132,8 @@ def fetch_one(code, login, frequency, adjustflag, start_date="2020-01-01", save_
         trade_day_inverse_mapping = dict(zip(trade_days, range(len(trade_days))))
         index = list(map(lambda x: trade_day_inverse_mapping[to_int_date(x)], list(result.index)))
         start_index = len(index) - 1
-        while start_index >=1 and index[start_index] - index[start_index-1] < 30:
+        closes = result.close.values
+        while start_index >=1 and index[start_index] - index[start_index-1] < 30 and abs(closes[start_index] - closes[start_index-1]) / closes[start_index-1] <=0.11:
             start_index -= 1
         result = result.iloc[start_index:]
         # print(result)
