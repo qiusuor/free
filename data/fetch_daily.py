@@ -1,7 +1,7 @@
 from data.fetch_core import fetch
 from utils import *
 import platform
-from check_data import check_daily
+from data.check_data import check_daily
 
 def fetch_daily():
     return fetch(freqs=['d'], num_thread=8)

@@ -8,7 +8,7 @@ from utils import *
 from tqdm import tqdm
 from joblib import dump
 import warnings
-from inject_features import inject_style_feature, inject_industry_and_name
+from data.inject_features import inject_style_feature, inject_industry_and_name
 
 
 warnings.filterwarnings("ignore")
