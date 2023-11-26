@@ -28,13 +28,13 @@ from query_model import TCN_LSTM
 
 feature_cols = ["open", "high", "low", "close", "price", "turn", "volume"]
 # feature_cols = get_feature_cols()
-label_col = ["y_next_2_d_ret"]
+label_col = ["y_next_2_d_ret_04"]
 
 hist_len = 30
 batch_size = 256
 epochs = 500
 device = torch.device("mps") if platform.machine() == 'arm64' else torch.device("cuda")
-best_ap = -1
+
 
 def train_val_data_filter(df):
     return df[reserve_n_last(not_limit_line(df).shift(-1)) & (df.isST != 1)]
@@ -67,8 +67,8 @@ def load_data(n_val_day=30, val_delay_day=30):
                 val_data.append([feat.values, label])
             elif i >= n_val_day + val_delay_day:
                 train_data.append([feat.values, label])
-        if (len(train_data) > 1000):
-            break
+        # if (len(train_data) > 1000):
+        #     break
     Xs = pd.concat(Xs)
     mean = Xs.mean(0).values
     std = Xs.std(0).values
@@ -79,6 +79,7 @@ def load_data(n_val_day=30, val_delay_day=30):
 
 def train():
     global batch_size, epochs
+    best_ap = -1
     model = TCN_LSTM(input_size=len(feature_cols))
     model = model.to(device)
     train_data, val_data = load_data()
@@ -113,8 +114,8 @@ def train():
             loss.backward()
             optimizer.step()
             train_loss.append(loss.data.item())
-            train_gt.extend(target.cpu().numpy().tolist())
-            train_pred.extend(ouput.cpu().numpy().tolist())
+            train_gt.extend(target.detach().cpu().reshape(-1).numpy().tolist())
+            train_pred.extend(ouput.detach().cpu().reshape(-1).numpy().tolist())
             
         scheduler.step()
         train_avg_loss = np.mean(train_loss)
@@ -135,8 +136,8 @@ def train():
                 target = target.to(device)
                 loss = criterion(ouput, target)
                 val_loss.append(loss.data.item())
-                val_gt.extend(target.cpu().numpy().tolist())
-                val_pred.extend(ouput.cpu().numpy().tolist())
+                val_gt.extend(target.cpu().reshape(-1).numpy().tolist())
+                val_pred.extend(ouput.cpu().reshape(-1).numpy().tolist())
                 
             val_avg_loss = np.mean(val_loss)
             val_ap = average_precision_score(val_gt, val_pred)
@@ -145,7 +146,7 @@ def train():
             if val_ap < best_ap:
                 best_ap = val_ap
                 model_path = best_model_path
-                print('    ---> K: {} Lat size: {} New Best Score: {}. Saving model to {}'.format(K, LAT_SIZE, best_score, model_path))
+                print('    ---> New Best Score: {}. Saving model to {}'.format(best_ap, model_path))
                 torch.save(model.state_dict(), model_path)
 
 if __name__ == "__main__":

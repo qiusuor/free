@@ -16,7 +16,7 @@ class TCN_LSTM(nn.Module):
     def forward(self, x): # N, L, C
         # x needs to have dimension (N, C, L) in order to be passed into CNN
         output = self.tcn(x.transpose(1, 2)).transpose(1, 2) # N, L, C
-        output = self.lstm(output)
+        output = self.lstm(output)[0]
         output = self.linear(output[:, -1, :])
         return self.sig(output)
 
