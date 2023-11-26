@@ -18,6 +18,8 @@ from matplotlib import pyplot as plt
 import shutil
 import json
 import gc
+from data.generate_ltr_data import generate_ltr_data
+from data.generate_style_leaning_feature import generate_style_learning_info
 
 
 def topk_shot(data, label, k=10, watch_list=[]):
@@ -226,7 +228,11 @@ def train_lightgbm(argv):
         
     json.dump(meta, open(os.path.join(save_dir, "meta.json"), 'w'), indent=4)
     
-
+def join_style_info():
+    generate_ltr_data()
+    generate_style_learning_info()
+    
+    
 def prepare_data(update=False):
     if update:
         fetch_daily()
@@ -235,6 +241,7 @@ def prepare_data(update=False):
     inject_features()
     inject_embedding()
     inject_labels()
+    join_style_info()
     # inject_minute_feature()
 
 def get_n_val_day(label):

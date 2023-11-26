@@ -71,9 +71,9 @@ if __name__ == "__main__":
     for label in search_labels:
         # for train_len, num_leaves, max_depth, min_data_in_leaf in [[250, 7, 3, 21]]:
         
-        for num_leaves in [3, 7, 15, 31, 63]:
-            for min_data_in_leaf in [11, 21, 41, 81]:
-                for max_depth in [3, 7, 9, 12]:
+        for num_leaves in [3, 7, 15, 31, 63, 127, 255]:
+            for min_data_in_leaf in [5, 11, 21, 41, 81]:
+                for max_depth in [3, 7, 9, 12, 15]:
                     if 2**max_depth <= num_leaves: continue
                     for train_len in [250]:
                     # for train_len in [30, 50, 120, 180]:
@@ -103,7 +103,7 @@ if __name__ == "__main__":
                         
 
     np.random.shuffle(argvs)
-    pool = Pool(32 if "Linux" in platform.platform() else 2)
+    pool = Pool(16 if "Linux" in platform.platform() else 2)
     pool.imap_unordered(train_lightgbm, argvs)
     pool.close()
     pool.join()

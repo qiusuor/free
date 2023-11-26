@@ -33,6 +33,7 @@ TRADE_DAYS = os.path.join(DATA_DIR, "market/trade_days.csv")
 TRADE_DAYS_PKL = os.path.join(DATA_DIR, "market/trade_days.pkl")
 ALL_STOCKS = os.path.join(DATA_DIR, "market/all_stocks.csv")
 GT_MAIN_WAVE = os.path.join(DATA_DIR, "market/gt_main_waves.csv")
+STYLE_FEATS = os.path.join(DATA_DIR, "market/style_features.pkl")
 
 # main wave 
 HTML_PATH_MAIN_WAVE_RETR = os.path.join(
