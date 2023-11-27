@@ -5,7 +5,7 @@ import torch.nn.functional as F
 
 
 class TCN_LSTM(nn.Module):
-    def __init__(self, input_size, output_size=1, num_channels=[16, 16, 32, 64, 32, 16, 16], kernel_size=5, dropout=0.1, lstm_layers=3, bidirectional=True):
+    def __init__(self, input_size, output_size=1, num_channels=[32, 32, 64, 128, 64, 32, 32], kernel_size=3, dropout=0.0, lstm_layers=4, bidirectional=True):
         super(TCN_LSTM, self).__init__()
         self.tcn = TemporalConvNet(input_size, num_channels, kernel_size, dropout=dropout)
         self.hidden_size = num_channels[-1]
@@ -18,5 +18,6 @@ class TCN_LSTM(nn.Module):
         output = self.tcn(x.transpose(1, 2)).transpose(1, 2) # N, L, C
         output = self.lstm(output)[0]
         output = self.linear(output[:, -1, :])
-        return self.sig(output)
+        # return self.sig(output)
+        return output
 

@@ -20,6 +20,9 @@ from tqdm import tqdm
 import shutil
 import os
 import paramiko
+import _pickle as cPickle
+import hashlib
+import inspect
 
 def make_dir(file_name):
     if "." in os.path.basename(file_name):
@@ -170,6 +173,12 @@ def explain_label(label):
     return up, nday, ratio
 
 
+def md5_encode(input_string):
+    md5 = hashlib.md5()
+    md5.update(input_string.encode('utf-8'))
+    md5_digest = md5.hexdigest()
+    return md5_digest
+
 def pandas_rolling_agg(ref=None):
     def rolling(func):
         def agg(df_w):
@@ -177,6 +186,26 @@ def pandas_rolling_agg(ref=None):
             return func(dfi) 
         return agg
     return rolling
+
+def hard_disk_cache(force_update=False):
+    def get_result(func):
+        md5 = md5_encode(inspect.getsource(func))
+        cache_name = os.path.join(HARD_DISK_CACHE_DIR, func.__name__ + "_{}.pkl".format(md5))
+        make_dir(cache_name)
+        if force_update:
+            if os.path.exists(cache_name):
+                shutil.rmtree(cache_name)
+        def wrapper(*args, **kw):
+            if os.path.exists(cache_name):
+                with open(cache_name, "rb") as f:
+                    return cPickle.load(f)
+            else:
+                value = func(*args, **kw)
+                with open(cache_name, "wb") as f:
+                    cPickle.dump(value, f)
+                return value
+        return wrapper
+    return get_result
 
 def get_feature_cols():
     for file in os.listdir(DAILY_DIR):

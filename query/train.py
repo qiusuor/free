@@ -27,9 +27,11 @@ import gc
 from query_model import TCN_LSTM
 
 feature_cols = ["open", "high", "low", "close", "price", "turn", "volume"]
-feature_cols += get_feature_cols()
-label_col = ["y_next_2_d_ret_04"]
+# feature_cols += get_feature_cols()
+label_col = ["y_next_2_d_ret"]
+# label_col = ["y_next_2_d_ret_04"]
 
+all_cols = feature_cols + label_col
 hist_len = 30
 batch_size = 256
 epochs = 500
@@ -39,6 +41,7 @@ device = torch.device("mps") if platform.machine() == 'arm64' else torch.device(
 def train_val_data_filter(df):
     return df[reserve_n_last(not_limit_line(df).shift(-1)) & (df.isST != 1)]
 
+@hard_disk_cache(force_update=False)
 def load_data(n_val_day=30, val_delay_day=30):
     train_data, val_data = [], []
     Xs = []
@@ -56,19 +59,35 @@ def load_data(n_val_day=30, val_delay_day=30):
             continue
         if "code_name" not in df.columns or not isinstance(df.code_name[-1], str) or "ST" in df.code_name[-1] or "st" in df.code_name[-1] or "sT" in df.code_name[-1]:
             continue
-        df["date"] = df.index
-        df = df.iloc[-500:].fillna(0)
+        # df["date"] = df.index
+        # print(df)
+        # print(df[label_col].describe())
+        df = df[all_cols].iloc[-500:]
+        df = df.fillna(0)
+        # print(df)
+        # df[df.isna()] = 0
+        # df = df.loc[(df[label_col[0]] >= 0.79).index]
+        df = df.drop(df[df[label_col[0]] == 0].index)
+        # print(df)
+        # exit(0)
+        # print(df[label_col].describe())
+        
         Xs.append(df[feature_cols].astype(np.float32))
         for i, data_i in enumerate(list(df.rolling(hist_len))[::-1]):
             feat = data_i[feature_cols].astype(np.float32)
             if (len(feat) < hist_len): continue
             label = data_i[label_col].iloc[-1].astype(np.float32).values
+            # print(data_i[label_col], label)
+            assert not np.isnan(label), data_i[label_col]
             if i < n_val_day:
                 val_data.append([feat.values, label])
             elif i >= n_val_day + val_delay_day:
                 train_data.append([feat.values, label])
-        # if (len(train_data) > 10000):
+        # if (len(train_data) > 100000):
         #     break
+    #     print(file)
+    #     print(label)
+    # exit(0)
     Xs = pd.concat(Xs)
     mean = Xs.mean(0).values
     std = Xs.std(0).values
@@ -79,7 +98,7 @@ def load_data(n_val_day=30, val_delay_day=30):
 
 def train():
     global batch_size, epochs
-    best_ap = -1
+    best_val_loss = 1e9
     model = TCN_LSTM(input_size=len(feature_cols))
     model = model.to(device)
     train_data, val_data = load_data()
@@ -87,7 +106,9 @@ def train():
     test_loader = DataLoader(val_data, batch_size=batch_size, drop_last=True)
 
 
-    criterion = nn.BCELoss()
+    criterion = nn.L1Loss()
+    # criterion = nn.BCELoss()
+    binary_cls_task = criterion == nn.BCELoss()
     optimizer = torch.optim.Adam(model.parameters(),
                                 lr=0.0001,
                                 betas=[0.9, 0.999],
@@ -108,6 +129,8 @@ def train():
             input = (input - mean) / (std + 1e-9)
             input = torch.FloatTensor(input).to(device)
             target = target.to(device)
+            # print(target)
+            
             ouput = model(input)
             loss = criterion(ouput, target)
             optimizer.zero_grad()
@@ -119,8 +142,9 @@ def train():
             
         scheduler.step()
         train_avg_loss = np.mean(train_loss)
-        train_ap = average_precision_score(train_gt, train_pred)
-        train_auc = roc_auc_score(train_gt, train_pred)
+        if binary_cls_task:
+            train_ap = average_precision_score(train_gt, train_pred)
+            train_auc = roc_auc_score(train_gt, train_pred)
         
         with torch.no_grad():
             model.eval()
@@ -135,18 +159,23 @@ def train():
                 ouput = model(input)
                 target = target.to(device)
                 loss = criterion(ouput, target)
+                # print(target, ouput)
                 val_loss.append(loss.data.item())
                 val_gt.extend(target.cpu().reshape(-1).numpy().tolist())
                 val_pred.extend(ouput.cpu().reshape(-1).numpy().tolist())
                 
             val_avg_loss = np.mean(val_loss)
-            val_ap = average_precision_score(val_gt, val_pred)
-            val_auc = roc_auc_score(val_gt, val_pred)
-            print("Train avg loss: {} Val avg loss: {} Train AUC: {} Val AUC: {} Train AP: {} Val AP: {}".format(train_avg_loss, val_avg_loss, train_auc, val_auc, train_ap, val_ap))
-            if val_ap > best_ap:
-                best_ap = val_ap
+            if binary_cls_task:
+                val_ap = average_precision_score(val_gt, val_pred)
+                val_auc = roc_auc_score(val_gt, val_pred)
+            print("Train avg loss: {} Val avg loss: {}".format(train_avg_loss, val_avg_loss))
+            if binary_cls_task:
+                print("Train AUC: {} Val AUC: {} Train AP: {} Val AP: {}".format(train_auc, val_auc, train_ap, val_ap))
+                
+            if val_avg_loss < best_val_loss:
+                best_val_loss = val_avg_loss
                 model_path = best_model_path
-                print('    ---> New Best Score: {}. Saving model to {}'.format(best_ap, model_path))
+                print('    ---> New Best Score: {}. Saving model to {}'.format(best_val_loss, model_path))
                 torch.save(model.state_dict(), model_path)
 
 if __name__ == "__main__":

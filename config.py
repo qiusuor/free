@@ -35,6 +35,9 @@ ALL_STOCKS = os.path.join(DATA_DIR, "market/all_stocks.csv")
 GT_MAIN_WAVE = os.path.join(DATA_DIR, "market/gt_main_waves.csv")
 STYLE_FEATS = os.path.join(DATA_DIR, "market/style_features.pkl")
 
+HARD_DISK_CACHE_DIR = os.path.join(DATA_DIR, "cache")
+
+
 # main wave 
 HTML_PATH_MAIN_WAVE_RETR = os.path.join(
     ROOT_DIR, "retrieve/rules/main_wave/html_main_wave_retr")
