@@ -8,8 +8,7 @@ from utils import *
 from tqdm import tqdm
 from joblib import dump
 import warnings
-from data.inject_features import inject_style_feature, inject_industry_and_name
-
+import platform
 
 warnings.filterwarnings("ignore")
 
@@ -53,14 +52,12 @@ def inject_one(path):
         df["y_next_{}_d_low".format(n_day)] = df["low"].rolling(n_day).apply(lambda x:min(x[1:])).shift(-n_day)
         df["y_next_{}_d_low_ratio".format(n_day)] = df["y_next_{}_d_low".format(n_day)] / df["open"].shift(-1)
         
-    inject_style_feature(df)
-    inject_industry_and_name(df)
     df.to_csv(path.replace(".pkl", ".csv"))
     dump(df, path)
     
 
 def inject_labels():
-    pool = Pool(THREAD_NUM)
+    pool = Pool(8)
     paths = []
     for file in tqdm(os.listdir(DAILY_DIR)):
         code = file.split("_")[0]

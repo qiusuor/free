@@ -59,7 +59,7 @@ def inject_embedding():
             paths.append(path)
     # print(paths[0])
     # inject_one(paths[0])
-    pool = Pool(16 if "Linux" in platform.platform() else 4)
+    pool = Pool(6 if "Linux" in platform.platform() else 4)
     pool.imap_unordered(inject_one, paths)
     pool.close()
     pool.join()

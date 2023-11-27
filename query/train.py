@@ -27,7 +27,7 @@ import gc
 from query_model import TCN_LSTM
 
 feature_cols = ["open", "high", "low", "close", "price", "turn", "volume"]
-# feature_cols = get_feature_cols()
+feature_cols += get_feature_cols()
 label_col = ["y_next_2_d_ret_04"]
 
 hist_len = 30
@@ -57,7 +57,7 @@ def load_data(n_val_day=30, val_delay_day=30):
         if "code_name" not in df.columns or not isinstance(df.code_name[-1], str) or "ST" in df.code_name[-1] or "st" in df.code_name[-1] or "sT" in df.code_name[-1]:
             continue
         df["date"] = df.index
-        df = df.iloc[-350:]
+        df = df.iloc[-500:].fillna(0)
         Xs.append(df[feature_cols].astype(np.float32))
         for i, data_i in enumerate(list(df.rolling(hist_len))[::-1]):
             feat = data_i[feature_cols].astype(np.float32)
@@ -67,7 +67,7 @@ def load_data(n_val_day=30, val_delay_day=30):
                 val_data.append([feat.values, label])
             elif i >= n_val_day + val_delay_day:
                 train_data.append([feat.values, label])
-        # if (len(train_data) > 1000):
+        # if (len(train_data) > 10000):
         #     break
     Xs = pd.concat(Xs)
     mean = Xs.mean(0).values
@@ -143,7 +143,7 @@ def train():
             val_ap = average_precision_score(val_gt, val_pred)
             val_auc = roc_auc_score(val_gt, val_pred)
             print("Train avg loss: {} Val avg loss: {} Train AUC: {} Val AUC: {} Train AP: {} Val AP: {}".format(train_avg_loss, val_avg_loss, train_auc, val_auc, train_ap, val_ap))
-            if val_ap < best_ap:
+            if val_ap > best_ap:
                 best_ap = val_ap
                 model_path = best_model_path
                 print('    ---> New Best Score: {}. Saving model to {}'.format(best_ap, model_path))

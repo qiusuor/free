@@ -128,7 +128,7 @@ def merge_style_info():
             continue
         path = os.path.join(DAILY_DIR, file)
         paths.append(path)
-    pool = Pool(8 if "Linux" in platform.platform() else 8)
+    pool = Pool(8)
     pool.imap_unordered(merge_style_info_one, paths)
     pool.close()
     pool.join()
