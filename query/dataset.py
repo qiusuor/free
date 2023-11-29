@@ -18,7 +18,7 @@ class TripletDataset(Dataset):
         self.feats = [it[0] for it in self.data]
         self.rank = pd.Series(self.labels).rank(pct=True)
         self.pos_lower = ((self.rank - self.pos_lowwer_ratio) * self.N).astype(int).apply(lambda x: max(0, x)).values
-        self.pos_upper = ((self.rank + self.pos_upper_ratio) * self.N).astype(int).apply(lambda x: min(self.N, x)).values
+        self.pos_upper = ((self.rank + self.pos_upper_ratio) * self.N).astype(int).apply(lambda x: min(self.N-1, x)).values
         
     def __len__(self):
         return self.N
@@ -31,7 +31,7 @@ class TripletDataset(Dataset):
         pos_index = np.random.random_integers(low=lower_index, high=upper_index)
         pos = self.feats[pos_index].astype(np.float32)
         pos_label = self.labels[pos_index].astype(np.float32)
-        neg_index = np.random.random_integers(low=upper_index, high=self.N+lower_index) % self.N
+        neg_index = np.random.random_integers(low=upper_index+1, high=self.N+lower_index) % self.N
         neg = self.feats[neg_index].astype(np.float32)
         neg_label = self.labels[neg_index].astype(np.float32)
         

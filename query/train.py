@@ -152,6 +152,8 @@ def train():
         train_triplet_loss = []
         train_gt = []
         train_pred = []
+        train_achor_diff_pos = []
+        train_achor_diff_neg = []
         
         for i, (anchor, anchor_label, pos, pos_label, neg, neg_label) in enumerate(train_loader):
             anchor, anchor_label, pos, pos_label, neg, neg_label = normalize(anchor, anchor_label, pos, pos_label, neg, neg_label)
@@ -168,6 +170,8 @@ def train():
             train_triplet_loss.append(triplet.data.item())
             train_gt.extend(anchor_score.detach().cpu().reshape(-1).numpy().tolist())
             train_pred.extend(anchor_label.detach().cpu().reshape(-1).numpy().tolist())
+            train_achor_diff_pos.append((anchor_label-pos_label).reshape(-1).detach().abs().mean().cpu())
+            train_achor_diff_neg.append((anchor_label-neg_label).reshape(-1).detach().abs().mean().cpu())
             
         scheduler.step()
         train_avg_loss = np.mean(train_loss)
@@ -175,6 +179,8 @@ def train():
         train_avg_pos_loss = np.mean(train_pos_loss)
         train_avg_neg_loss = np.mean(train_neg_loss)
         train_avg_triplet_loss = np.mean(train_triplet_loss)
+        train_avg_anchor_diff_pos = np.mean(train_achor_diff_pos)
+        train_avg_anchor_diff_neg = np.mean(train_achor_diff_neg)
         if binary_cls_task:
             train_ap = average_precision_score(train_gt, train_pred)
             train_auc = roc_auc_score(train_gt, train_pred)
@@ -188,15 +194,13 @@ def train():
             val_triplet_loss = []
             val_gt = []
             val_pred = []
+            
 
             for i, (anchor, anchor_label, pos, pos_label, neg, neg_label) in enumerate(test_loader):
                 anchor, anchor_label, pos, pos_label, neg, neg_label = normalize(anchor, anchor_label, pos, pos_label, neg, neg_label)
                 
                 anchor_feat, anchor_score, pos_feat, pos_score, neg_feat, neg_score = model(anchor, pos, neg)
                 loss, anchor_reg, pos_reg, neg_reg, triplet = criterion(anchor_feat, anchor_score, anchor_label, pos_feat, pos_score, pos_label, neg_feat, neg_score, neg_label)
-                optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
                 val_loss.append(loss.data.item())
                 val_anchor_loss.append(anchor_reg.data.item())
                 val_pos_loss.append(pos_reg.data.item())
@@ -213,7 +217,7 @@ def train():
             if binary_cls_task:
                 val_ap = average_precision_score(val_gt, val_pred)
                 val_auc = roc_auc_score(val_gt, val_pred)
-            print("Train avg loss: {} Val avg loss: {} Train anchor: {} Val anchor: {} Train pos: {} Val pos: {} Train neg: {} Val neg: {} Train triplet: {} Val triplet: {}".format(train_avg_loss, val_avg_loss, train_avg_anchor_loss, val_avg_anchor_loss, train_avg_pos_loss, val_avg_pos_loss, train_avg_neg_loss, val_avg_neg_loss, train_avg_triplet_loss, val_avg_triplet_loss))
+            print("anchor-pos: {} anchor-neg: {} Train avg loss: {} Val avg loss: {} Train anchor: {} Val anchor: {} Train pos: {} Val pos: {} Train neg: {} Val neg: {} Train triplet: {} Val triplet: {}".format(train_avg_anchor_diff_pos, train_avg_anchor_diff_neg, train_avg_loss, val_avg_loss, train_avg_anchor_loss, val_avg_anchor_loss, train_avg_pos_loss, val_avg_pos_loss, train_avg_neg_loss, val_avg_neg_loss, train_avg_triplet_loss, val_avg_triplet_loss))
             if binary_cls_task:
                 print("Train AUC: {} Val AUC: {} Train AP: {} Val AP: {}".format(train_auc, val_auc, train_ap, val_ap))
                 
