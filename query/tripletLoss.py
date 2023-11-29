@@ -21,7 +21,22 @@ class CosineTripletLoss(nn.Module):
         loss = F.relu(self.margin + positive_similarity - negative_similarity)
 
         return loss.mean()
-
+    
+class CosineTripletLossWithL1(nn.Module):
+    def __init__(self, margin=0.2, reg_weight=1.0, triplet_weight=1.0) -> None:
+        super().__init__()
+        self.triplet_loss = CosineTripletLoss(margin=margin)
+        self.reg_loss = nn.L1Loss()
+        self.reg_weight = reg_weight
+        self.triplet_weight = triplet_weight
+    
+    def forward(self, anchor_feat, anchor_score, anchor_label, pos_feat, pos_score, pos_label, neg_feat, neg_score, neg_label):
+        anchor_reg = self.reg_loss(anchor_score, anchor_label)
+        pos_reg = self.reg_loss(pos_score, pos_label)
+        neg_reg = self.reg_loss(neg_score, neg_label)
+        triplet = self.triplet_loss(anchor_feat, pos_feat, neg_feat)
+        return (anchor_reg + pos_reg + neg_reg) * self.reg_weight + triplet * self.triplet_weight, anchor_reg, pos_reg, neg_reg, triplet
+        
 if __name__ == "__main__":
     # 示例使用
     triplet_loss = CosineTripletLoss(margin=0.2)

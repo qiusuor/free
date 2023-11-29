@@ -11,13 +11,17 @@ class TCN_LSTM(nn.Module):
         self.hidden_size = num_channels[-1]
         self.lstm = nn.LSTM(input_size=self.hidden_size, hidden_size=self.hidden_size, num_layers=lstm_layers, batch_first=True, bidirectional=bidirectional)
         self.linear = nn.Linear(num_channels[-1]*2 if bidirectional else num_channels[-1], output_size)
-        self.sig = nn.Sigmoid()
-
-    def forward(self, x): # N, L, C
+        
+    def single_embedding_flow(self, x):
         # x needs to have dimension (N, C, L) in order to be passed into CNN
         output = self.tcn(x.transpose(1, 2)).transpose(1, 2) # N, L, C
-        output = self.lstm(output)[0]
-        output = self.linear(output[:, -1, :])
-        # return self.sig(output)
-        return output
+        feat = self.lstm(output)[0][:, -1, :]
+        score = self.linear(feat)
+        return feat, score
+
+    def forward(self, anchor, pos, neg): # N, L, C
+        anchor_feat, anchor_score = self.single_embedding_flow(anchor)
+        pos_feat, pos_score = self.single_embedding_flow(pos)
+        neg_feat, neg_score = self.single_embedding_flow(neg)
+        return anchor_feat, anchor_score, pos_feat, pos_score, neg_feat, neg_score
 

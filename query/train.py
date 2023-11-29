@@ -25,6 +25,8 @@ from collections import Counter
 import platform
 import gc
 from query_model import TCN_LSTM
+from query.dataset import TripletDataset
+from query.tripletLoss import CosineTripletLossWithL1
 
 batch_size = 256
 epochs = 500
@@ -36,7 +38,7 @@ def train_val_data_filter(df):
 
 @hard_disk_cache(force_update=False)
 def load_data(n_val_day=30, val_delay_day=30):
-    feature_cols = ["open", "high", "low", "close", "price", "turn", "volume", "peTTM", "pbMRQ", "psTTM", "pcfNcfTTM"]
+    feature_cols = ["open", "high", "low", "close", "price", "turn", "volume", "peTTM", "pbMRQ", "psTTM", "pcfNcfTTM", "style_feat_shif1_of_y_next_1d_ret_mean_limit_up", "style_feat_shif1_of_y_next_1d_ret_std_limit_up", "style_feat_shif1_of_y_next_1d_ret_mean_limit_up_and_high_price_60", "style_feat_shif1_of_y_next_1d_ret_std_limit_up_and_high_price_60"]
     label_col = ["y_next_2_d_ret"]
     # label_col = ["y_next_2_d_ret_04"]
 
@@ -108,14 +110,17 @@ def train():
     global batch_size, epochs
     best_val_loss = 1e9
     train_data, val_data = load_data()
+    train_data_set = TripletDataset(train_data)
+    val_data_set = TripletDataset(val_data)
     
     model = TCN_LSTM(input_size=len(train_data[0][0][0]))
     model = model.to(device)
-    train_loader = DataLoader(train_data, batch_size=batch_size, drop_last=True, shuffle=True)
-    test_loader = DataLoader(val_data, batch_size=batch_size, drop_last=True)
+    
+    train_loader = DataLoader(train_data_set, batch_size=batch_size, drop_last=True, shuffle=True)
+    test_loader = DataLoader(val_data_set, batch_size=batch_size, drop_last=True)
 
-
-    criterion = nn.L1Loss()
+    criterion = CosineTripletLossWithL1()
+    
     # criterion = nn.BCELoss()
     binary_cls_task = criterion == nn.BCELoss()
     optimizer = torch.optim.Adam(model.parameters(),
@@ -127,30 +132,49 @@ def train():
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[100, 200, 300, 400], gamma=0.3)
     mean, std = joblib.load("query/checkpoint/mean_std.pkl")
     best_model_path = "query/checkpoint/tcn_lstm.pth"
+    
+    def normalize_core(anchor, anchor_label):
+        anchor[:, :, :-1] = (anchor[:, :, :-1] - mean) / (std + 1e-9)
+        anchor = torch.FloatTensor(anchor.float()).to(device)
+        anchor_label = anchor_label.to(device)
+        return [anchor, anchor_label]
+    
+    def normalize(anchor, anchor_label, pos, pos_label, neg, neg_label):
+        return normalize_core(anchor, anchor_label) + normalize_core(pos, pos_label) + normalize_core(neg, neg_label)
+    
     for epoch in range(epochs):
         print('EPOCH {} / {}:'.format(epoch + 1, epochs))
         model.train()
         train_loss = []
+        train_anchor_loss = []
+        train_pos_loss = []
+        train_neg_loss = []
+        train_triplet_loss = []
         train_gt = []
         train_pred = []
-        for i, data_i in enumerate(train_loader):
-            input, target = data_i
-            input[:, :, :-1] = (input[:, :, :-1] - mean) / (std + 1e-9)
-            input = torch.FloatTensor(input.float()).to(device)
-            target = target.to(device)
-            # print(target)
+        
+        for i, (anchor, anchor_label, pos, pos_label, neg, neg_label) in enumerate(train_loader):
+            anchor, anchor_label, pos, pos_label, neg, neg_label = normalize(anchor, anchor_label, pos, pos_label, neg, neg_label)
             
-            ouput = model(input)
-            loss = criterion(ouput, target)
+            anchor_feat, anchor_score, pos_feat, pos_score, neg_feat, neg_score = model(anchor, pos, neg)
+            loss, anchor_reg, pos_reg, neg_reg, triplet = criterion(anchor_feat, anchor_score, anchor_label, pos_feat, pos_score, pos_label, neg_feat, neg_score, neg_label)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
             train_loss.append(loss.data.item())
-            train_gt.extend(target.detach().cpu().reshape(-1).numpy().tolist())
-            train_pred.extend(ouput.detach().cpu().reshape(-1).numpy().tolist())
+            train_anchor_loss.append(anchor_reg.data.item())
+            train_pos_loss.append(pos_reg.data.item())
+            train_neg_loss.append(neg_reg.data.item())
+            train_triplet_loss.append(triplet.data.item())
+            train_gt.extend(anchor_score.detach().cpu().reshape(-1).numpy().tolist())
+            train_pred.extend(anchor_label.detach().cpu().reshape(-1).numpy().tolist())
             
         scheduler.step()
         train_avg_loss = np.mean(train_loss)
+        train_avg_anchor_loss = np.mean(train_anchor_loss)
+        train_avg_pos_loss = np.mean(train_pos_loss)
+        train_avg_neg_loss = np.mean(train_neg_loss)
+        train_avg_triplet_loss = np.mean(train_triplet_loss)
         if binary_cls_task:
             train_ap = average_precision_score(train_gt, train_pred)
             train_auc = roc_auc_score(train_gt, train_pred)
@@ -158,26 +182,38 @@ def train():
         with torch.no_grad():
             model.eval()
             val_loss = []
+            val_anchor_loss = []
+            val_pos_loss = []
+            val_neg_loss = []
+            val_triplet_loss = []
             val_gt = []
             val_pred = []
 
-            for i, data_i in enumerate(test_loader):
-                input, target = data_i
-                input[:, :, :-1] = (input[:, :, :-1] - mean) / (std + 1e-9)
-                input = torch.FloatTensor(input.float()).to(device)
-                ouput = model(input)
-                target = target.to(device)
-                loss = criterion(ouput, target)
-                # print(target, ouput)
+            for i, (anchor, anchor_label, pos, pos_label, neg, neg_label) in enumerate(test_loader):
+                anchor, anchor_label, pos, pos_label, neg, neg_label = normalize(anchor, anchor_label, pos, pos_label, neg, neg_label)
+                
+                anchor_feat, anchor_score, pos_feat, pos_score, neg_feat, neg_score = model(anchor, pos, neg)
+                loss, anchor_reg, pos_reg, neg_reg, triplet = criterion(anchor_feat, anchor_score, anchor_label, pos_feat, pos_score, pos_label, neg_feat, neg_score, neg_label)
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
                 val_loss.append(loss.data.item())
-                val_gt.extend(target.cpu().reshape(-1).numpy().tolist())
-                val_pred.extend(ouput.cpu().reshape(-1).numpy().tolist())
+                val_anchor_loss.append(anchor_reg.data.item())
+                val_pos_loss.append(pos_reg.data.item())
+                val_neg_loss.append(neg_reg.data.item())
+                val_triplet_loss.append(triplet.data.item())
+                val_gt.extend(anchor_score.detach().cpu().reshape(-1).numpy().tolist())
+                val_pred.extend(anchor_label.detach().cpu().reshape(-1).numpy().tolist())
                 
             val_avg_loss = np.mean(val_loss)
+            val_avg_anchor_loss = np.mean(val_anchor_loss)
+            val_avg_pos_loss = np.mean(val_pos_loss)
+            val_avg_neg_loss = np.mean(val_neg_loss)
+            val_avg_triplet_loss = np.mean(val_triplet_loss)
             if binary_cls_task:
                 val_ap = average_precision_score(val_gt, val_pred)
                 val_auc = roc_auc_score(val_gt, val_pred)
-            print("Train avg loss: {} Val avg loss: {}".format(train_avg_loss, val_avg_loss))
+            print("Train avg loss: {} Val avg loss: {} Train anchor: {} Val anchor: {} Train pos: {} Val pos: {} Train neg: {} Val neg: {} Train triplet: {} Val triplet: {}".format(train_avg_loss, val_avg_loss, train_avg_anchor_loss, val_avg_anchor_loss, train_avg_pos_loss, val_avg_pos_loss, train_avg_neg_loss, val_avg_neg_loss, train_avg_triplet_loss, val_avg_triplet_loss))
             if binary_cls_task:
                 print("Train AUC: {} Val AUC: {} Train AP: {} Val AP: {}".format(train_auc, val_auc, train_ap, val_ap))
                 
