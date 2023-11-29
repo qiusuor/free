@@ -71,7 +71,7 @@ def load_data(n_val_day=30, val_delay_day=30):
         # print(df)
         # df[df.isna()] = 0
         # df = df.loc[(df[label_col[0]] >= 0.79).index]
-        df = df.drop(df[df[label_col[0]] == 0].index)
+        df = df.drop(df[df[label_col[0]] < 0.79].index)
         # print(df)
         # exit(0)
         # print(df[label_col].describe())
