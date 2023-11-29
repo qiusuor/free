@@ -26,13 +26,6 @@ import platform
 import gc
 from query_model import TCN_LSTM
 
-feature_cols = ["open", "high", "low", "close", "price", "turn", "volume"]
-# feature_cols += get_feature_cols()
-label_col = ["y_next_2_d_ret"]
-# label_col = ["y_next_2_d_ret_04"]
-
-all_cols = feature_cols + label_col
-hist_len = 30
 batch_size = 256
 epochs = 500
 device = torch.device("mps") if platform.machine() == 'arm64' else torch.device("cuda")
@@ -43,6 +36,15 @@ def train_val_data_filter(df):
 
 @hard_disk_cache(force_update=False)
 def load_data(n_val_day=30, val_delay_day=30):
+    feature_cols = ["open", "high", "low", "close", "price", "turn", "volume", "peTTM", "pbMRQ", "psTTM", "pcfNcfTTM"]
+    label_col = ["y_next_2_d_ret"]
+    # label_col = ["y_next_2_d_ret_04"]
+
+    all_cols = feature_cols + label_col
+    min_hist_len = 30
+    max_hist_len = 350
+    
+
     train_data, val_data = [], []
     Xs = []
     for file in tqdm(os.listdir(DAILY_DIR)):
@@ -73,17 +75,23 @@ def load_data(n_val_day=30, val_delay_day=30):
         # print(df[label_col].describe())
         
         Xs.append(df[feature_cols].astype(np.float32))
-        for i, data_i in enumerate(list(df.rolling(hist_len))[::-1]):
+        for i, data_i in enumerate(list(df.rolling(max_hist_len))[::-1]):
             feat = data_i[feature_cols].astype(np.float32)
-            if (len(feat) < hist_len): continue
+            if (len(feat) < min_hist_len): continue
+            feat["mask"] = list(range(1, len(feat)+1))[::-1]
+            # print(len(feat))
+            
+            feat = np.pad(feat.values, pad_width=((max_hist_len-len(feat), 0), (0, 0)), mode="constant", constant_values=0.0)
+            # print(feat.shape)
+            # print(feat)
             label = data_i[label_col].iloc[-1].astype(np.float32).values
             # print(data_i[label_col], label)
             assert not np.isnan(label), data_i[label_col]
             if i < n_val_day:
-                val_data.append([feat.values, label])
+                val_data.append([feat, label])
             elif i >= n_val_day + val_delay_day:
-                train_data.append([feat.values, label])
-        # if (len(train_data) > 100000):
+                train_data.append([feat, label])
+        # if (len(train_data) > 10000):
         #     break
     #     print(file)
     #     print(label)
@@ -99,9 +107,10 @@ def load_data(n_val_day=30, val_delay_day=30):
 def train():
     global batch_size, epochs
     best_val_loss = 1e9
-    model = TCN_LSTM(input_size=len(feature_cols))
-    model = model.to(device)
     train_data, val_data = load_data()
+    
+    model = TCN_LSTM(input_size=len(train_data[0][0][0]))
+    model = model.to(device)
     train_loader = DataLoader(train_data, batch_size=batch_size, drop_last=True, shuffle=True)
     test_loader = DataLoader(val_data, batch_size=batch_size, drop_last=True)
 
@@ -126,8 +135,8 @@ def train():
         train_pred = []
         for i, data_i in enumerate(train_loader):
             input, target = data_i
-            input = (input - mean) / (std + 1e-9)
-            input = torch.FloatTensor(input).to(device)
+            input[:, :, :-1] = (input[:, :, :-1] - mean) / (std + 1e-9)
+            input = torch.FloatTensor(input.float()).to(device)
             target = target.to(device)
             # print(target)
             
@@ -154,8 +163,8 @@ def train():
 
             for i, data_i in enumerate(test_loader):
                 input, target = data_i
-                input = (input - mean) / (std + 1e-9)
-                input = torch.FloatTensor(input).to(device)
+                input[:, :, :-1] = (input[:, :, :-1] - mean) / (std + 1e-9)
+                input = torch.FloatTensor(input.float()).to(device)
                 ouput = model(input)
                 target = target.to(device)
                 loss = criterion(ouput, target)
