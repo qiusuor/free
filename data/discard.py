@@ -16,7 +16,7 @@ warnings.filterwarnings("ignore")
 def discard_one(path):
     df = pd.read_csv(path)
     dealTime(df)
-    keep_columns = "code,open,high,low,close,preclose,volume,amount,adjustflag,turn,tradestatus,pctChg,peTTM,pbMRQ,psTTM,pcfNcfTTM,isST,factor,price".split(",")
+    keep_columns = "code,open,high,low,close,preclose,volume,amount,adjustflag,turn,tradestatus,pctChg,peTTM,pbMRQ,psTTM,pcfNcfTTM,isST,factor,price,value".split(",")
     df = df[keep_columns]
     df = df[:to_date(SEARCH_END_DAY)]
     path = os.path.join(DAILY_DIR, os.path.basename(path))

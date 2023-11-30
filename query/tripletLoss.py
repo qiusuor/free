@@ -48,9 +48,9 @@ class CosineTripletLoss(nn.Module):
         return loss.mean()
     
 class CosineTripletLossWithL1(nn.Module):
-    def __init__(self, margin=0.05, reg_weight=1.0, triplet_weight=5.0) -> None:
+    def __init__(self, margin=0.05, reg_weight=1.0, triplet_weight=10.0) -> None:
         super().__init__()
-        self.triplet_loss = TripletLoss(margin=margin)
+        self.triplet_loss = CosineTripletLoss(margin=margin)
         self.reg_loss = nn.L1Loss()
         self.reg_weight = reg_weight
         self.triplet_weight = triplet_weight
@@ -64,7 +64,7 @@ class CosineTripletLossWithL1(nn.Module):
         
 if __name__ == "__main__":
     # 示例使用
-    triplet_loss = CosineTripletLoss(margin=0.2)
+    triplet_loss = CosineTripletLoss(margin=0.05)
     anchor = torch.randn(10, 128)  # 假设每个样本是128维
     positive = torch.randn(10, 128)
     negative = torch.randn(10, 128)

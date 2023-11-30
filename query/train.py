@@ -38,7 +38,8 @@ def train_val_data_filter(df):
 
 @hard_disk_cache(force_update=False)
 def load_data(n_val_day=30, val_delay_day=30):
-    feature_cols = ["open", "high", "low", "close", "price", "turn", "volume", "peTTM", "pbMRQ", "psTTM", "pcfNcfTTM", "style_feat_shif1_of_y_next_1d_ret_mean_limit_up", "style_feat_shif1_of_y_next_1d_ret_std_limit_up", "style_feat_shif1_of_y_next_1d_ret_mean_limit_up_and_high_price_60", "style_feat_shif1_of_y_next_1d_ret_std_limit_up_and_high_price_60"]
+    feature_cols = ["open", "high", "low", "close", "price", "turn", "volume", "peTTM", "pbMRQ", "psTTM", "pcfNcfTTM"]
+    # feature_cols = ["open", "high", "low", "close", "price", "turn", "volume", "peTTM", "pbMRQ", "psTTM", "pcfNcfTTM", "style_feat_shif1_of_y_next_1d_ret_mean_limit_up", "style_feat_shif1_of_y_next_1d_ret_std_limit_up", "style_feat_shif1_of_y_next_1d_ret_mean_limit_up_and_high_price_60", "style_feat_shif1_of_y_next_1d_ret_std_limit_up_and_high_price_60"]
     label_col = ["y_next_2_d_ret"]
     # label_col = ["y_next_2_d_ret_04"]
 
@@ -49,6 +50,7 @@ def load_data(n_val_day=30, val_delay_day=30):
 
     train_data, val_data = [], []
     Xs = []
+    whole_data = []
     for file in tqdm(os.listdir(DAILY_DIR)):
         code = file.split("_")[0]
         if not_concern(code) or is_index(code):
@@ -63,6 +65,8 @@ def load_data(n_val_day=30, val_delay_day=30):
             continue
         if "code_name" not in df.columns or not isinstance(df.code_name[-1], str) or "ST" in df.code_name[-1] or "st" in df.code_name[-1] or "sT" in df.code_name[-1]:
             continue
+        if max(df.price) > 50: continue
+        
         # df["date"] = df.index
         # print(df)
         # print(df[label_col].describe())
@@ -70,12 +74,8 @@ def load_data(n_val_day=30, val_delay_day=30):
         df = df.fillna(0)
         # print(df)
         # df[df.isna()] = 0
-        # df = df.loc[(df[label_col[0]] >= 0.79).index]
-        df = df.drop(df[df[label_col[0]] < 0.79].index)
-        # print(df)
-        # exit(0)
-        # print(df[label_col].describe())
-        
+        df = df.iloc[:-2]
+        whole_data.append(df)
         Xs.append(df[feature_cols].astype(np.float32))
         for i, data_i in enumerate(list(df.rolling(max_hist_len))[::-1]):
             feat = data_i[feature_cols].astype(np.float32)
@@ -98,6 +98,8 @@ def load_data(n_val_day=30, val_delay_day=30):
     #     print(file)
     #     print(label)
     # exit(0)
+    whole_data = pd.concat(whole_data)
+    cPickle.dump(whole_data, open("whole_data.pkl", 'wb'))
     Xs = pd.concat(Xs)
     mean = Xs.mean(0).values
     std = Xs.std(0).values
