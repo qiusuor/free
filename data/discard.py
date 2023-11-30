@@ -9,7 +9,7 @@ from tqdm import tqdm
 from joblib import dump
 import warnings
 import shutil
-from fetch_core import dealTime
+from data.fetch_core import dealTime
 
 warnings.filterwarnings("ignore")
 

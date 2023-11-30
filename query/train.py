@@ -38,7 +38,7 @@ def train_val_data_filter(df):
 
 @hard_disk_cache(force_update=False)
 def load_data(n_val_day=30, val_delay_day=30):
-    feature_cols = ["open", "high", "low", "close", "price", "turn", "volume", "peTTM", "pbMRQ", "psTTM", "pcfNcfTTM"]
+    feature_cols = ["open", "high", "low", "close", "price", "turn", "volume", "value", "peTTM", "pbMRQ", "psTTM", "pcfNcfTTM"]
     # feature_cols = ["open", "high", "low", "close", "price", "turn", "volume", "peTTM", "pbMRQ", "psTTM", "pcfNcfTTM", "style_feat_shif1_of_y_next_1d_ret_mean_limit_up", "style_feat_shif1_of_y_next_1d_ret_std_limit_up", "style_feat_shif1_of_y_next_1d_ret_mean_limit_up_and_high_price_60", "style_feat_shif1_of_y_next_1d_ret_std_limit_up_and_high_price_60"]
     label_col = ["y_next_2_d_ret"]
     # label_col = ["y_next_2_d_ret_04"]
@@ -65,7 +65,7 @@ def load_data(n_val_day=30, val_delay_day=30):
             continue
         if "code_name" not in df.columns or not isinstance(df.code_name[-1], str) or "ST" in df.code_name[-1] or "st" in df.code_name[-1] or "sT" in df.code_name[-1]:
             continue
-        if max(df.price) > 50: continue
+        if df.price[-1] > 50: continue
         
         # df["date"] = df.index
         # print(df)
@@ -121,7 +121,7 @@ def train():
     train_loader = DataLoader(train_data_set, batch_size=batch_size, drop_last=True, shuffle=True)
     test_loader = DataLoader(val_data_set, batch_size=batch_size, drop_last=True)
 
-    criterion = CosineTripletLossWithL1()
+    criterion = CosineTripletLossWithL1(margin=0.05, reg_weight=0.001, triplet_weight=10)
     
     # criterion = nn.BCELoss()
     binary_cls_task = criterion == nn.BCELoss()

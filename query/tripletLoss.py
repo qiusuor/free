@@ -44,6 +44,7 @@ class CosineTripletLoss(nn.Module):
 
         # 计算损失
         loss = F.relu(self.margin + positive_similarity - negative_similarity)
+        print(positive_similarity.mean(), negative_similarity.mean())
 
         return loss.mean()
     
