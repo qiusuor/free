@@ -12,7 +12,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 def check_daily():
-    last_trade_day = get_trade_days(update=False)[-1]
+    last_trade_day = get_last_trade_day(update=False)
     no_last_day_data_codes = set()
     for file in tqdm(os.listdir(DAILY_DIR)):
         code = file.split("_")[0]
@@ -33,7 +33,7 @@ def check_daily():
     
 
 def check_minutes(no_last_day_data_codes, check_dir):
-    last_trade_day = get_trade_days(update=False)[-1]
+    last_trade_day = get_last_trade_day(update=False)
     no_last_fzline_codes = set()
     for file in tqdm(os.listdir(check_dir)):
         code = file.split("_")[0]
