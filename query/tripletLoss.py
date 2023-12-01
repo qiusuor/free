@@ -35,7 +35,9 @@ class CosineTripletLoss(nn.Module):
     def forward(self, anchor, positive, negative):
         # 计算余弦相似度
         cos_similarity = nn.CosineSimilarity(dim=1, eps=1e-6)
-
+        print(anchor[0])
+        print(positive[0])
+        print(negative[0])
         # 计算anchor和positive之间的余弦相似度
         positive_similarity = cos_similarity(anchor, positive)
 

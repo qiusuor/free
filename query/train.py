@@ -38,7 +38,7 @@ def train_val_data_filter(df):
 
 @hard_disk_cache(force_update=False)
 def load_data(n_val_day=30, val_delay_day=30):
-    feature_cols = ["open", "high", "low", "close", "price", "turn", "volume", "value", "peTTM", "pbMRQ", "psTTM", "pcfNcfTTM"]
+    feature_cols = ["open", "high", "low", "close", "price", "turn", "volume", "value"]
     # feature_cols = ["open", "high", "low", "close", "price", "turn", "volume", "peTTM", "pbMRQ", "psTTM", "pcfNcfTTM", "style_feat_shif1_of_y_next_1d_ret_mean_limit_up", "style_feat_shif1_of_y_next_1d_ret_std_limit_up", "style_feat_shif1_of_y_next_1d_ret_mean_limit_up_and_high_price_60", "style_feat_shif1_of_y_next_1d_ret_std_limit_up_and_high_price_60"]
     label_col = ["y_next_2_d_ret"]
     # label_col = ["y_next_2_d_ret_04"]
@@ -72,6 +72,7 @@ def load_data(n_val_day=30, val_delay_day=30):
         # print(df[label_col].describe())
         df = df[all_cols].iloc[-500:]
         df = df.fillna(0)
+        df["value"] = df["value"].apply(np.log)
         # print(df)
         # df[df.isna()] = 0
         df = df.iloc[:-2]
