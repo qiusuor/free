@@ -6,9 +6,10 @@ class TripletLoss(nn.Module):
     '''
     Compute normal triplet loss or soft margin triplet loss given triplets
     '''
-    def __init__(self, margin=None):
+    def __init__(self, margin=None, device="cpu"):
         super(TripletLoss, self).__init__()
         self.margin = margin
+        self.device = device
         if self.margin is None:  # if no margin assigned, use soft-margin
             self.Loss = nn.SoftMarginLoss()
         else:
@@ -17,10 +18,11 @@ class TripletLoss(nn.Module):
     def forward(self, anchor, pos, neg):
         if self.margin is None:
             num_samples = anchor.shape[0]
-            y = torch.ones((num_samples, 1)).view(-1)
+            y = torch.ones((num_samples, 1)).view(-1).to(device=self.device)
             if anchor.is_cuda: y = y.cuda()
             ap_dist = torch.norm(anchor-pos, 2, dim=1).view(-1)
             an_dist = torch.norm(anchor-neg, 2, dim=1).view(-1)
+            # print(ap_dist.mean(), an_dist.mean())
             loss = self.Loss(an_dist - ap_dist, y)
         else:
             loss = self.Loss(anchor, pos, neg)
@@ -35,9 +37,9 @@ class CosineTripletLoss(nn.Module):
     def forward(self, anchor, positive, negative):
         # 计算余弦相似度
         cos_similarity = nn.CosineSimilarity(dim=1, eps=1e-6)
-        print(anchor[0])
-        print(positive[0])
-        print(negative[0])
+        # print(anchor[0])
+        # print(positive[0])
+        # print(negative[0])
         # 计算anchor和positive之间的余弦相似度
         positive_similarity = cos_similarity(anchor, positive)
 
@@ -45,13 +47,13 @@ class CosineTripletLoss(nn.Module):
         negative_similarity = cos_similarity(anchor, negative)
 
         # 计算损失
-        loss = F.relu(self.margin + positive_similarity - negative_similarity)
-        print(positive_similarity.mean(), negative_similarity.mean())
+        loss = F.relu(self.margin - positive_similarity + negative_similarity)
+        # print(positive_similarity.mean(), negative_similarity.mean())
 
         return loss.mean()
     
 class CosineTripletLossWithL1(nn.Module):
-    def __init__(self, margin=0.05, reg_weight=1.0, triplet_weight=10.0) -> None:
+    def __init__(self, margin=0.5, reg_weight=1.0, triplet_weight=10.0, device="cuda") -> None:
         super().__init__()
         self.triplet_loss = CosineTripletLoss(margin=margin)
         self.reg_loss = nn.L1Loss()

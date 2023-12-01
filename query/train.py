@@ -28,8 +28,11 @@ from query_model import TCN_LSTM
 from query.dataset import TripletDataset
 from query.tripletLoss import CosineTripletLossWithL1
 
-batch_size = 256
-epochs = 500
+batch_size = 32
+epochs = 5000
+max_train_days = 30
+n_val_day = 5
+val_delay_day = 5
 device = torch.device("mps") if platform.machine() == 'arm64' else torch.device("cuda")
 
 
@@ -37,8 +40,8 @@ def train_val_data_filter(df):
     return df[reserve_n_last(not_limit_line(df).shift(-1)) & (df.isST != 1)]
 
 @hard_disk_cache(force_update=False)
-def load_data(n_val_day=30, val_delay_day=30):
-    feature_cols = ["open", "high", "low", "close", "price", "turn", "volume", "value"]
+def load_data(n_val_day=n_val_day, val_delay_day=val_delay_day):
+    feature_cols = ["open", "high", "low", "close", "price", "turn", "volume"]
     # feature_cols = ["open", "high", "low", "close", "price", "turn", "volume", "peTTM", "pbMRQ", "psTTM", "pcfNcfTTM", "style_feat_shif1_of_y_next_1d_ret_mean_limit_up", "style_feat_shif1_of_y_next_1d_ret_std_limit_up", "style_feat_shif1_of_y_next_1d_ret_mean_limit_up_and_high_price_60", "style_feat_shif1_of_y_next_1d_ret_std_limit_up_and_high_price_60"]
     label_col = ["y_next_2_d_ret"]
     # label_col = ["y_next_2_d_ret_04"]
@@ -72,13 +75,16 @@ def load_data(n_val_day=30, val_delay_day=30):
         # print(df[label_col].describe())
         df = df[all_cols].iloc[-500:]
         df = df.fillna(0)
-        df["value"] = df["value"].apply(np.log)
+        df[label_col[0]] = df[label_col[0]] - 1
+        # df["value"] = df["value"].apply(np.log)
         # print(df)
         # df[df.isna()] = 0
         df = df.iloc[:-2]
         whole_data.append(df)
         Xs.append(df[feature_cols].astype(np.float32))
+        # print(len(df))
         for i, data_i in enumerate(list(df.rolling(max_hist_len))[::-1]):
+            if i > n_val_day + val_delay_day + max_train_days: break
             feat = data_i[feature_cols].astype(np.float32)
             if (len(feat) < min_hist_len): continue
             feat["mask"] = list(range(1, len(feat)+1))[::-1]
@@ -115,6 +121,7 @@ def train():
     train_data, val_data = load_data()
     train_data_set = TripletDataset(train_data)
     val_data_set = TripletDataset(val_data)
+    print(len(train_data))
     
     model = TCN_LSTM(input_size=len(train_data[0][0][0]))
     model = model.to(device)
@@ -122,7 +129,7 @@ def train():
     train_loader = DataLoader(train_data_set, batch_size=batch_size, drop_last=True, shuffle=True)
     test_loader = DataLoader(val_data_set, batch_size=batch_size, drop_last=True)
 
-    criterion = CosineTripletLossWithL1(margin=0.05, reg_weight=0.001, triplet_weight=10)
+    criterion = CosineTripletLossWithL1(margin=0.5, reg_weight=10, triplet_weight=1, device=device)
     
     # criterion = nn.BCELoss()
     binary_cls_task = criterion == nn.BCELoss()
@@ -132,7 +139,7 @@ def train():
                                 weight_decay = 0.0,
                                 amsgrad=False)
     
-    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[100, 200, 300, 400], gamma=0.3)
+    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[1000, 2000, 3000], gamma=0.3)
     mean, std = joblib.load("query/checkpoint/mean_std.pkl")
     best_model_path = "query/checkpoint/tcn_lstm.pth"
     
@@ -158,7 +165,7 @@ def train():
         train_achor_diff_pos = []
         train_achor_diff_neg = []
         
-        for i, (anchor, anchor_label, pos, pos_label, neg, neg_label) in enumerate(train_loader):
+        for i, (anchor, anchor_label, pos, pos_label, neg, neg_label) in tqdm(enumerate(train_loader), total=len(train_loader)):
             anchor, anchor_label, pos, pos_label, neg, neg_label = normalize(anchor, anchor_label, pos, pos_label, neg, neg_label)
             
             anchor_feat, anchor_score, pos_feat, pos_score, neg_feat, neg_score = model(anchor, pos, neg)
