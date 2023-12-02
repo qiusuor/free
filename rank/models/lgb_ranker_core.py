@@ -197,9 +197,10 @@ def train_lightgbm(argv):
         "top10_miss": 0,
     }
     mean_val = meta["mean_val"]
+    # print(meta["daily"])
     
     for daily in meta["daily"].values():
-        if np.isnan(daily["auc"]): continue
+        if np.isnan(daily["top3_watch"]["sharp_3"]): continue
         mean_val["top3_miss"] += daily["top3_miss"] / labeled_day
         mean_val["top5_miss"] += daily["top5_miss"] / labeled_day
         mean_val["top10_miss"] += daily["top10_miss"] / labeled_day
@@ -217,7 +218,7 @@ def prepare_data(update=False):
     remove_dir(EXP_RANK_DIR)
     remove_dir(EXP_RANK_PRED_DIR)
     inject_features()
-    inject_embedding()
+    # inject_embedding()
     inject_labels()
     generate_ltr_data()
     

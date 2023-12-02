@@ -103,7 +103,7 @@ if __name__ == "__main__":
                         
 
     np.random.shuffle(argvs)
-    pool = Pool(16 if "Linux" in platform.platform() else 2)
+    pool = Pool(32 if "Linux" in platform.platform() else 2)
     pool.imap_unordered(train_lightgbm, argvs)
     pool.close()
     pool.join()

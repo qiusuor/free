@@ -239,7 +239,7 @@ def prepare_data(update=False):
     remove_dir(EXP_CLS_DIR)
     remove_dir(EXP_CLS_PRED_DIR)
     inject_features()
-    inject_embedding()
+    # inject_embedding()
     inject_labels()
     join_style_info()
     # inject_minute_feature()
