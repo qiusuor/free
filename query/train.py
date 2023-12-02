@@ -48,7 +48,7 @@ def load_data(n_val_day=n_val_day, val_delay_day=val_delay_day):
 
     all_cols = feature_cols + label_col
     min_hist_len = 30
-    max_hist_len = 350
+    max_hist_len = 30
     
 
     train_data, val_data = [], []
