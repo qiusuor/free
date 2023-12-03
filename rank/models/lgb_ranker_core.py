@@ -14,6 +14,7 @@ from data.inject_features import inject_features
 from data.inject_labels import inject_labels
 from data.inject_embedding import inject_embedding
 from data.inject_minute_feature import inject_minute_feature
+from data.generate_style_leaning_feature import generate_style_learning_info
 from matplotlib import pyplot as plt
 import shutil
 import json
@@ -220,6 +221,8 @@ def prepare_data(update=False):
     inject_features()
     # inject_embedding()
     inject_labels()
+    generate_ltr_data()
+    generate_style_learning_info()
     generate_ltr_data()
     
     # inject_minute_feature()

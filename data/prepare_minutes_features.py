@@ -65,7 +65,6 @@ def prepare():
             continue
         path = os.path.join(data_dir, file)
         paths.append(path)
-    # print(paths[0])
     # prepare_one(paths[0])
     # exit(0)
     pool = Pool(8)
