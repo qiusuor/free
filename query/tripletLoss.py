@@ -22,7 +22,6 @@ class TripletLoss(nn.Module):
             if anchor.is_cuda: y = y.cuda()
             ap_dist = torch.norm(anchor-pos, 2, dim=1).view(-1)
             an_dist = torch.norm(anchor-neg, 2, dim=1).view(-1)
-            # print(ap_dist.mean(), an_dist.mean())
             loss = self.Loss(an_dist - ap_dist, y)
         else:
             loss = self.Loss(anchor, pos, neg)
