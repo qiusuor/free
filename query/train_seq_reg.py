@@ -24,34 +24,37 @@ from sklearn.metrics import average_precision_score, roc_auc_score
 from collections import Counter
 import platform
 import gc
-from mlp_query_model import MlpQuery
+from query_model import TCN_LSTM
 from query.dataset import TripletDataset
 from query.tripletLoss import CosineTripletLossWithL1
 
-batch_size = 512
+batch_size = 32
 epochs = 5000
-# max_train_days = 30
-# n_val_day = 5
-# val_delay_day = 5
+max_train_days = 30
+n_val_day = 5
+val_delay_day = 5
 device = torch.device("mps") if platform.machine() == 'arm64' else torch.device("cuda")
 
 
 def train_val_data_filter(df):
     return df[reserve_n_last(not_limit_line(df).shift(-1)) & (df.isST != 1)]
 
-
 @hard_disk_cache(force_update=False)
-def load_data():
-    feature_cols = get_feature_cols()
+def load_data(n_val_day=n_val_day, val_delay_day=val_delay_day):
+    feature_cols = ["open", "high", "low", "close", "price", "turn", "volume"]
     # feature_cols = ["open", "high", "low", "close", "price", "turn", "volume", "peTTM", "pbMRQ", "psTTM", "pcfNcfTTM", "style_feat_shif1_of_y_next_1d_ret_mean_limit_up", "style_feat_shif1_of_y_next_1d_ret_std_limit_up", "style_feat_shif1_of_y_next_1d_ret_mean_limit_up_and_high_price_60", "style_feat_shif1_of_y_next_1d_ret_std_limit_up_and_high_price_60"]
     label_col = ["y_next_2_d_ret"]
     # label_col = ["y_next_2_d_ret_04"]
-    dataset = []
+
+    all_cols = feature_cols + label_col
+    min_hist_len = 30
+    max_hist_len = 30
     
 
-
-    dataset = []
-    for file in os.listdir(DAILY_DIR):
+    train_data, val_data = [], []
+    Xs = []
+    whole_data = []
+    for file in tqdm(os.listdir(DAILY_DIR)):
         code = file.split("_")[0]
         if not_concern(code) or is_index(code):
             continue
@@ -65,31 +68,49 @@ def load_data():
             continue
         if "code_name" not in df.columns or not isinstance(df.code_name[-1], str) or "ST" in df.code_name[-1] or "st" in df.code_name[-1] or "sT" in df.code_name[-1]:
             continue
-        df["date"] = df.index
-        df = df.iloc[-350:]
-        dataset.append(df)
-    dataset = pd.concat(dataset, axis=0)
-    dataset = dataset.fillna(0)
-    Xs = dataset[feature_cols]
+        if df.price[-1] > 50: continue
+        
+        # df["date"] = df.index
+        # print(df)
+        # print(df[label_col].describe())
+        df = df[all_cols].iloc[-500:]
+        df = df.fillna(0)
+        df[label_col[0]] = df[label_col[0]] - 1
+        # df["value"] = df["value"].apply(np.log)
+        # print(df)
+        # df[df.isna()] = 0
+        df = df.iloc[:-2]
+        whole_data.append(df)
+        Xs.append(df[feature_cols].astype(np.float32))
+        # print(len(df))
+        for i, data_i in enumerate(list(df.rolling(max_hist_len))[::-1]):
+            if i > n_val_day + val_delay_day + max_train_days: break
+            feat = data_i[feature_cols].astype(np.float32)
+            if (len(feat) < min_hist_len): continue
+            feat["mask"] = list(range(1, len(feat)+1))[::-1]
+            # print(len(feat))
+            
+            feat = np.pad(feat.values, pad_width=((max_hist_len-len(feat), 0), (0, 0)), mode="constant", constant_values=0.0)
+            # print(feat.shape)
+            # print(feat)
+            label = data_i[label_col].iloc[-1].astype(np.float32).values
+            # print(data_i[label_col], label)
+            assert not np.isnan(label), data_i[label_col]
+            if i < n_val_day:
+                val_data.append([feat, label])
+            elif i >= n_val_day + val_delay_day:
+                train_data.append([feat, label])
+        # if (len(train_data) > 10000):
+        #     break
+    #     print(file)
+    #     print(label)
+    # exit(0)
+    whole_data = pd.concat(whole_data)
+    cPickle.dump(whole_data, open("whole_data.pkl", 'wb'))
+    Xs = pd.concat(Xs)
     mean = Xs.mean(0).values
     std = Xs.std(0).values
-    joblib.dump((mean, std), "query/checkpoint/mean_std_mlp.pkl")
-    
-    trade_days = get_trade_days(update=False)
-    trunc_index = bisect.bisect_right(trade_days, SEARCH_END_DAY)
-    trade_days = trade_days[:trunc_index]
-    train_start_day = to_date(trade_days[-250])
-    train_end_day = to_date(trade_days[-50])
-    val_start_day = to_date(trade_days[-30])
-    val_end_day = to_date(trade_days[-1])
-    train_dataset = dataset[(dataset.date >= train_start_day) & (dataset.date <= train_end_day)]
-    # print(len(train_dataset))
-    # exit(0)
-    val_dataset = dataset[(dataset.date >= val_start_day) & (dataset.date <= val_end_day)]
-    train_data = list(zip(train_dataset[feature_cols].values, train_dataset[label_col].values))
-    # print(len(train_data))
-    val_data = list(zip(val_dataset[feature_cols].values, val_dataset[label_col].values))
-    # print(len(val_data))
+    joblib.dump((mean, std), "query/checkpoint/mean_std.pkl")
     return train_data, val_data
 
 
@@ -102,7 +123,7 @@ def train():
     val_data_set = TripletDataset(val_data)
     print(len(train_data))
     
-    model = MlpQuery(input_size=len(train_data[0][0]), output_size=1)
+    model = TCN_LSTM(input_size=len(train_data[0][0][0]))
     model = model.to(device)
     
     train_loader = DataLoader(train_data_set, batch_size=batch_size, drop_last=True, shuffle=True)
@@ -119,11 +140,11 @@ def train():
                                 amsgrad=False)
     
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[1000, 2000, 3000], gamma=0.3)
-    mean, std = joblib.load("query/checkpoint/mean_std_mlp.pkl")
-    best_model_path = "query/checkpoint/query_mlp.pth"
+    mean, std = joblib.load("query/checkpoint/mean_std.pkl")
+    best_model_path = "query/checkpoint/tcn_lstm.pth"
     
     def normalize_core(anchor, anchor_label):
-        anchor = (anchor - mean) / (std + 1e-9)
+        anchor[:, :, :-1] = (anchor[:, :, :-1] - mean) / (std + 1e-9)
         anchor = torch.FloatTensor(anchor.float()).to(device)
         anchor_label = anchor_label.to(device)
         return [anchor, anchor_label]
@@ -162,8 +183,6 @@ def train():
             train_achor_diff_pos.append((anchor_label-pos_label).reshape(-1).detach().abs().mean().cpu())
             train_achor_diff_neg.append((anchor_label-neg_label).reshape(-1).detach().abs().mean().cpu())
             
-            # if i > 100: break
-            
         scheduler.step()
         train_avg_loss = np.mean(train_loss)
         train_avg_anchor_loss = np.mean(train_anchor_loss)
@@ -191,9 +210,7 @@ def train():
                 anchor, anchor_label, pos, pos_label, neg, neg_label = normalize(anchor, anchor_label, pos, pos_label, neg, neg_label)
                 
                 anchor_feat, anchor_score, pos_feat, pos_score, neg_feat, neg_score = model(anchor, pos, neg)
-                # print(anchor_feat[0])
                 loss, anchor_reg, pos_reg, neg_reg, triplet = criterion(anchor_feat, anchor_score, anchor_label, pos_feat, pos_score, pos_label, neg_feat, neg_score, neg_label)
-                # print(anchor_reg)
                 val_loss.append(loss.data.item())
                 val_anchor_loss.append(anchor_reg.data.item())
                 val_pos_loss.append(pos_reg.data.item())

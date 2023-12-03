@@ -51,13 +51,13 @@ class CosineTripletLoss(nn.Module):
         # print(positive_similarity.mean(), negative_similarity.mean())
 
         return loss.mean()
-    
-class CosineTripletLossWithL1(nn.Module):
-    def __init__(self, margin=0.5, reg_weight=1.0, triplet_weight=10.0, device="cuda") -> None:
+       
+class TripletWrapLoss(nn.Module):
+    def __init__(self, margin=0.5, loss=nn.L1Loss(), loss_weight=1.0, triplet_weight=10.0, device="cuda", method="cosine") -> None:
         super().__init__()
-        self.triplet_loss = CosineTripletLoss(margin=margin)
-        self.reg_loss = nn.L1Loss()
-        self.reg_weight = reg_weight
+        self.triplet_loss = CosineTripletLoss(margin=margin) if method == "cosine" else TripletLoss(margin=margin, device=device)
+        self.reg_loss = loss
+        self.loss_weight = loss_weight
         self.triplet_weight = triplet_weight
     
     def forward(self, anchor_feat, anchor_score, anchor_label, pos_feat, pos_score, pos_label, neg_feat, neg_score, neg_label):
@@ -65,8 +65,9 @@ class CosineTripletLossWithL1(nn.Module):
         pos_reg = self.reg_loss(pos_score, pos_label)
         neg_reg = self.reg_loss(neg_score, neg_label)
         triplet = self.triplet_loss(anchor_feat, pos_feat, neg_feat)
-        return (anchor_reg + pos_reg + neg_reg) * self.reg_weight + triplet * self.triplet_weight, anchor_reg, pos_reg, neg_reg, triplet
-        
+        return (anchor_reg + pos_reg + neg_reg) * self.loss_weight + triplet * self.triplet_weight, anchor_reg, pos_reg, neg_reg, triplet
+    
+     
 if __name__ == "__main__":
     # 示例使用
     triplet_loss = CosineTripletLoss(margin=0.05)
