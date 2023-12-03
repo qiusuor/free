@@ -35,20 +35,11 @@ class CosineTripletLoss(nn.Module):
         self.margin = margin
 
     def forward(self, anchor, positive, negative):
-        # 计算余弦相似度
         cos_similarity = nn.CosineSimilarity(dim=1, eps=1e-6)
-        # print(anchor[0])
-        # print(positive[0])
-        # print(negative[0])
-        # 计算anchor和positive之间的余弦相似度
         positive_similarity = cos_similarity(anchor, positive)
-
-        # 计算anchor和negative之间的余弦相似度
         negative_similarity = cos_similarity(anchor, negative)
 
-        # 计算损失
         loss = F.relu(self.margin - positive_similarity + negative_similarity)
-        # print(positive_similarity.mean(), negative_similarity.mean())
 
         return loss.mean()
        
