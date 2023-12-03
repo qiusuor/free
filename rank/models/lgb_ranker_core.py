@@ -219,13 +219,9 @@ def prepare_data(update=False):
     remove_dir(EXP_RANK_DIR)
     remove_dir(EXP_RANK_PRED_DIR)
     inject_features()
-    # inject_embedding()
     inject_labels()
     generate_ltr_data()
-    generate_style_learning_info()
-    generate_ltr_data()
     
-    # inject_minute_feature()
 
 def get_n_val_day(label):
     if "y_next_1d_up_to_limit" in label:

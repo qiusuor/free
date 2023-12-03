@@ -17,22 +17,7 @@ def inject_one(path):
     df = joblib.load(path)
     df = df[df["volume"] != 0]
     
-    date = df.index
-    close = df.close.values
-    high = df.high.values
-    open = df.open.values
-    low = df.low.values
-    price = df.price.values
-    volume = df.volume.values
-    amount = df.amount.values
-    turn = df.turn.values
-    
-    for label in labels:
-        up, nday, ratio = explain_label(label=label)
-        df[label] = get_labels(open, close, high, low, price, turn, hold_day=nday, expect_gain=ratio, tolerent_pay=ratio, up=up)
-        
     future_n_day_high_low = [2]
-    # future_n_day_high_low = [2, 3, 5, 10, 22]
     df["y_next_1d_close_rate"] = df["close"].shift(-1) / df["open"].shift(-1)
     df["y_next_1d_close_rate"].fillna(0, inplace=True)
     df["y_next_1d_ret"] = df["close"].shift(-1) / df["close"]
@@ -53,7 +38,6 @@ def inject_one(path):
         df["y_next_{}_d_low".format(n_day)] = df["low"].rolling(n_day).apply(lambda x:min(x[1:])).shift(-n_day)
         df["y_next_{}_d_low_ratio".format(n_day)] = df["y_next_{}_d_low".format(n_day)] / df["open"].shift(-1)
         
-    inject_industry_and_name(df)
     df.to_csv(path.replace(".pkl", ".csv"))
     dump(df, path)
     
