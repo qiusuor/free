@@ -30,7 +30,7 @@ from query.tripletLoss import CosineTripletLossWithL1
 
 batch_size = 32
 epochs = 5000
-max_train_days = 30
+max_train_days = 250
 n_val_day = 5
 val_delay_day = 5
 device = torch.device("mps") if platform.machine() == 'arm64' else torch.device("cuda")
@@ -43,12 +43,12 @@ def train_val_data_filter(df):
 def load_data(n_val_day=n_val_day, val_delay_day=val_delay_day):
     feature_cols = ["open", "high", "low", "close", "price", "turn", "volume"]
     # feature_cols = ["open", "high", "low", "close", "price", "turn", "volume", "peTTM", "pbMRQ", "psTTM", "pcfNcfTTM", "style_feat_shif1_of_y_next_1d_ret_mean_limit_up", "style_feat_shif1_of_y_next_1d_ret_std_limit_up", "style_feat_shif1_of_y_next_1d_ret_mean_limit_up_and_high_price_60", "style_feat_shif1_of_y_next_1d_ret_std_limit_up_and_high_price_60"]
-    label_col = ["y_next_2_d_ret"]
-    # label_col = ["y_next_2_d_ret_04"]
+    # label_col = ["y_next_2_d_ret"]
+    label_col = ["y_next_2_d_ret_04"]
 
     all_cols = feature_cols + label_col
-    min_hist_len = 30
-    max_hist_len = 30
+    min_hist_len = 250
+    max_hist_len = 350
     
 
     train_data, val_data = [], []
@@ -75,11 +75,11 @@ def load_data(n_val_day=n_val_day, val_delay_day=val_delay_day):
         # print(df[label_col].describe())
         df = df[all_cols].iloc[-500:]
         df = df.fillna(0)
-        df[label_col[0]] = df[label_col[0]] - 1
+        # df[label_col[0]] = df[label_col[0]] - 1
         # df["value"] = df["value"].apply(np.log)
         # print(df)
         # df[df.isna()] = 0
-        df = df.iloc[:-2]
+        # df = df.iloc[:-2]
         whole_data.append(df)
         Xs.append(df[feature_cols].astype(np.float32))
         # print(len(df))
