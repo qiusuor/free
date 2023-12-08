@@ -25,14 +25,14 @@ from collections import Counter
 import platform
 import gc
 from query_model import TCN_LSTM
-from query.dataset import TripletDataset
-from query.tripletLoss import CosineTripletLossWithL1
+from query.dataset import TripletRegDataset
+from query.tripletLoss import TripletWrapLoss
 
-batch_size = 32
+batch_size = 128
 epochs = 5000
 max_train_days = 250
-n_val_day = 5
-val_delay_day = 5
+n_val_day = 60
+val_delay_day = 30
 device = torch.device("mps") if platform.machine() == 'arm64' else torch.device("cuda")
 
 
@@ -41,19 +41,16 @@ def train_val_data_filter(df):
 
 @hard_disk_cache(force_update=False)
 def load_data(n_val_day=n_val_day, val_delay_day=val_delay_day):
-    feature_cols = ["open", "high", "low", "close", "price", "turn", "volume"]
-    # feature_cols = ["open", "high", "low", "close", "price", "turn", "volume", "peTTM", "pbMRQ", "psTTM", "pcfNcfTTM", "style_feat_shif1_of_y_next_1d_ret_mean_limit_up", "style_feat_shif1_of_y_next_1d_ret_std_limit_up", "style_feat_shif1_of_y_next_1d_ret_mean_limit_up_and_high_price_60", "style_feat_shif1_of_y_next_1d_ret_std_limit_up_and_high_price_60"]
-    # label_col = ["y_next_2_d_ret"]
-    label_col = ["y_next_2_d_ret_04"]
+    feature_cols = ["open", "high", "low", "close", "price", "turn", "volume", "value"]
+    label_col = ["y_next_2_d_ret"]
 
     all_cols = feature_cols + label_col
     min_hist_len = 250
-    max_hist_len = 350
+    max_hist_len = 250
     
 
     train_data, val_data = [], []
     Xs = []
-    whole_data = []
     for file in tqdm(os.listdir(DAILY_DIR)):
         code = file.split("_")[0]
         if not_concern(code) or is_index(code):
@@ -70,43 +67,21 @@ def load_data(n_val_day=n_val_day, val_delay_day=val_delay_day):
             continue
         if df.price[-1] > 50: continue
         
-        # df["date"] = df.index
-        # print(df)
-        # print(df[label_col].describe())
         df = df[all_cols].iloc[-500:]
         df = df.fillna(0)
-        # df[label_col[0]] = df[label_col[0]] - 1
-        # df["value"] = df["value"].apply(np.log)
-        # print(df)
-        # df[df.isna()] = 0
-        # df = df.iloc[:-2]
-        whole_data.append(df)
         Xs.append(df[feature_cols].astype(np.float32))
-        # print(len(df))
         for i, data_i in enumerate(list(df.rolling(max_hist_len))[::-1]):
             if i > n_val_day + val_delay_day + max_train_days: break
             feat = data_i[feature_cols].astype(np.float32)
-            if (len(feat) < min_hist_len): continue
+            if (len(feat) < min_hist_len): break
             feat["mask"] = list(range(1, len(feat)+1))[::-1]
-            # print(len(feat))
-            
             feat = np.pad(feat.values, pad_width=((max_hist_len-len(feat), 0), (0, 0)), mode="constant", constant_values=0.0)
-            # print(feat.shape)
-            # print(feat)
             label = data_i[label_col].iloc[-1].astype(np.float32).values
-            # print(data_i[label_col], label)
             assert not np.isnan(label), data_i[label_col]
             if i < n_val_day:
                 val_data.append([feat, label])
             elif i >= n_val_day + val_delay_day:
                 train_data.append([feat, label])
-        # if (len(train_data) > 10000):
-        #     break
-    #     print(file)
-    #     print(label)
-    # exit(0)
-    whole_data = pd.concat(whole_data)
-    cPickle.dump(whole_data, open("whole_data.pkl", 'wb'))
     Xs = pd.concat(Xs)
     mean = Xs.mean(0).values
     std = Xs.std(0).values
@@ -119,9 +94,9 @@ def train():
     global batch_size, epochs
     best_val_loss = 1e9
     train_data, val_data = load_data()
-    train_data_set = TripletDataset(train_data)
-    val_data_set = TripletDataset(val_data)
-    print(len(train_data))
+    train_data_set = TripletRegDataset(train_data)
+    val_data_set = TripletRegDataset(val_data)
+    print("Tota train sample:", len(train_data))
     
     model = TCN_LSTM(input_size=len(train_data[0][0][0]))
     model = model.to(device)
@@ -129,9 +104,8 @@ def train():
     train_loader = DataLoader(train_data_set, batch_size=batch_size, drop_last=True, shuffle=True)
     test_loader = DataLoader(val_data_set, batch_size=batch_size, drop_last=True)
 
-    criterion = CosineTripletLossWithL1(margin=0.5, reg_weight=10, triplet_weight=1, device=device)
+    criterion = TripletWrapLoss(margin=0.5, loss=nn.L1Loss(), loss_weight=10, triplet_weight=1, device=device)
     
-    # criterion = nn.BCELoss()
     binary_cls_task = criterion == nn.BCELoss()
     optimizer = torch.optim.Adam(model.parameters(),
                                 lr=0.0001,
