@@ -81,7 +81,7 @@ def agg_prediction_info(ana_dir=EXP_CLS_DIR, last_n_day=TEST_N_LAST_DAY):
                         topk_miss = meta["daily"][val_day]["top{}_miss".format(topk)]
                         topk_ret_mean = meta["daily"][val_day]["top{}_watch".format(topk)]["y_next_2_d_ret_topk_{}_mean".format(topk)]
                         
-                        topk_sharp_mean = topk_high_mean * topk_low_mean
+                        topk_sharp_mean = (topk_high_mean + topk_low_mean) / 2
                         
                         topk_high_means[val_day].append(topk_high_mean)
                         topk_low_means[val_day].append(topk_low_mean)

@@ -104,7 +104,7 @@ def train():
     train_loader = DataLoader(train_data_set, batch_size=batch_size, drop_last=True, shuffle=True)
     test_loader = DataLoader(val_data_set, batch_size=batch_size, drop_last=True)
 
-    criterion = TripletWrapLoss(margin=0.5, loss=nn.L1Loss(), loss_weight=10, triplet_weight=1, device=device)
+    criterion = TripletWrapLoss(margin=0.5, loss=nn.L1Loss(), loss_weight=1, triplet_weight=0, device=device)
     
     binary_cls_task = criterion == nn.BCELoss()
     optimizer = torch.optim.Adam(model.parameters(),
