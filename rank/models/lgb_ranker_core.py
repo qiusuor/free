@@ -219,7 +219,6 @@ def prepare_data(update=False):
     remove_dir(EXP_RANK_DIR)
     remove_dir(EXP_RANK_PRED_DIR)
     inject_features()
-    inject_labels()
     generate_ltr_data()
     
 
