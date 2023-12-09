@@ -1,8 +1,6 @@
 from utils import *
 from config import *
 from multiprocessing import Pool
-from ydata_profiling import ProfileReport
-import platform
 
 
 def agg_groups(df):
@@ -21,6 +19,7 @@ def stats_values(df, group_name, group):
     agg_methods = {
         "mean": np.mean, 
         "std": np.std, 
+        "num": len
     }
     
     group = df[group]
@@ -65,7 +64,7 @@ def generate_style_learning_info():
     df.sort_index(inplace=True)
     df = df.shift(1).fillna(0)
     joblib.dump(df, STYLE_FEATS)
-    df.to_csv("style_learning_info.csv")
+    df.to_csv(STYLE_FEATS.replace(".pkl", ".csv"))
     merge_style_info()
     
 def merge_style_info_one(path):

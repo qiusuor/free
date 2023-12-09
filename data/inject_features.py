@@ -182,6 +182,9 @@ def inject_style_feature(df):
     df["limit_down_2d"] = is_limit_down(df) & (df["limit_down_1d"].shift(1))
     df["limit_down_3d"] = is_limit_down(df) & (df["limit_down_2d"].shift(1))
      
+    df["limit_up_line"] = is_limit_up_line(df)
+    df["limit_down_line"] = is_limit_down_line(df)
+    
 def inject_one(path):
     df = joblib.load(path)
     
@@ -189,7 +192,7 @@ def inject_one(path):
     inject_chip_features(df)
     inject_price_turn_features(df)
     inject_alpha_features(df)
-    # inject_style_feature(df)
+    inject_style_feature(df)
 
     df.to_csv(path.replace(".pkl", ".csv"))
     dump(df, path)
