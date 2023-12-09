@@ -69,6 +69,7 @@ def load_data(n_val_day=n_val_day, val_delay_day=val_delay_day):
         
         df = df[all_cols].iloc[-500:]
         df = df.fillna(0)
+        df = df.iloc[:-2, :]
         Xs.append(df[feature_cols].astype(np.float32))
         for i, data_i in enumerate(list(df.rolling(max_hist_len))[::-1]):
             if i > n_val_day + val_delay_day + max_train_days: break
