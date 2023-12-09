@@ -189,8 +189,7 @@ def inject_one(path):
     inject_chip_features(df)
     inject_price_turn_features(df)
     inject_alpha_features(df)
-    inject_industry_and_name(df)
-    inject_style_feature(df)
+    # inject_style_feature(df)
 
     df.to_csv(path.replace(".pkl", ".csv"))
     dump(df, path)

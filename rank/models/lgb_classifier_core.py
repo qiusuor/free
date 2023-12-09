@@ -11,7 +11,6 @@ from multiprocessing import Process
 from utils import *
 from data.fetch_daily import fetch_daily
 from data.inject_features import inject_features
-from data.inject_labels import inject_labels
 from data.inject_embedding import inject_embedding
 from data.inject_minute_feature import inject_minute_feature
 from matplotlib import pyplot as plt
