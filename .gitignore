@@ -2,3 +2,5 @@ data/data
 *.pyc
 rank/exp*
 */checkpoint
+*.csv
+*.pkl
