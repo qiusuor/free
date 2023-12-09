@@ -5,10 +5,10 @@ from multiprocessing import Pool
 
 def agg_groups(df):
     groups = {
-        "limit_up": is_limit_up(df),
-        "limit_down": is_limit_down(df),
-        "limit_up_line": is_limit_up_line(df),
-        "limit_down_line": is_limit_down_line(df),
+        "limit_up": df["limit_up_1d"],
+        "limit_down": df["limit_down_1d"],
+        "limit_up_line": df["limit_up_line"],
+        "limit_down_line": df["limit_down_line"],
         "high_price_60": df["price_div_chip_avg_60"] > 1.5,
         "high_turn_60": df["turn_div_mean_turn_60"] > 2.5,
     }
