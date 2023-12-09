@@ -19,6 +19,7 @@ import shutil
 import json
 import gc
 from data.generate_ltr_data import generate_ltr_data
+from data.inject_labels import inject_labels
 
 
 def topk_shot(data, label, k=10, watch_list=[]):
@@ -218,6 +219,7 @@ def prepare_data(update=False):
     remove_dir(EXP_RANK_DIR)
     remove_dir(EXP_RANK_PRED_DIR)
     inject_features()
+    inject_labels()
     generate_ltr_data()
     
 
