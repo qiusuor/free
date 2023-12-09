@@ -9,8 +9,8 @@ def agg_groups(df):
         "limit_down": df["limit_down_1d"],
         "limit_up_line": df["limit_up_line"],
         "limit_down_line": df["limit_down_line"],
-        "high_price_60": df["price_div_chip_avg_60"] > 1.5,
-        "high_turn_60": df["turn_div_mean_turn_60"] > 2.5,
+        "high_price_60": df["price_div_chip_avg_60"] > 1.25,
+        "high_turn_60": df["turn_div_mean_turn_60"] > 3.5,
     }
     return groups
 
@@ -65,7 +65,7 @@ def generate_style_learning_info():
     df = df.shift(1).fillna(0)
     joblib.dump(df, STYLE_FEATS)
     df.to_csv(STYLE_FEATS.replace(".pkl", ".csv"))
-    merge_style_info()
+    # merge_style_info()
     
 def merge_style_info_one(path):
     style_feat = joblib.load(STYLE_FEATS)
