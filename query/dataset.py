@@ -47,6 +47,8 @@ class TripleBinarytDataset(Dataset):
     def preprocess(self):
         self.labels = [it[1] for it in self.data]
         self.feats = [it[0] for it in self.data]
+        self.date = [it[2] for it in self.data]
+        self.code_int = [it[3] for it in self.data]
         self.pos_set = [i for i, y in enumerate(self.labels) if y]
         self.neg_set = [i for i, y in enumerate(self.labels) if not y]
         
@@ -56,14 +58,21 @@ class TripleBinarytDataset(Dataset):
     def __getitem__(self, index):
         anchor = self.feats[index].astype(np.float32)
         anchor_label = self.labels[index].astype(np.float32)
+        anchor_date = self.date[index]
+        anchor_code_int = self.code_int[index]
         pos_set = self.pos_set if anchor_label else self.neg_set
         neg_set = self.neg_set if anchor_label else self.pos_set
-        pos_index = np.random.choice(pos_set, 1)
+        pos_index = np.random.choice(pos_set, 1)[0]
+        # print(pos_index)
         pos = self.feats[pos_index].astype(np.float32)
         pos_label = self.labels[pos_index].astype(np.float32)
-        neg_index = np.random.choice(neg_set, 1)
+        pos_date = self.date[pos_index]
+        pos_code_int = self.code_int[pos_index]
+        neg_index = np.random.choice(neg_set, 1)[0]
         neg = self.feats[neg_index].astype(np.float32)
         neg_label = self.labels[neg_index].astype(np.float32)
+        neg_date = self.date[neg_index]
+        neg_code_int = self.code_int[neg_index]
         
-        return anchor, anchor_label, pos, pos_label, neg, neg_label
+        return anchor, anchor_label, anchor_date, anchor_code_int, pos, pos_label, pos_date, pos_code_int, neg, neg_label, neg_date, neg_code_int
     

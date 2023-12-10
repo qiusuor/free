@@ -65,7 +65,7 @@ def generate_style_learning_info():
     df = df.shift(1).fillna(0)
     joblib.dump(df, STYLE_FEATS)
     df.to_csv(STYLE_FEATS.replace(".pkl", ".csv"))
-    # merge_style_info()
+    merge_style_info()
     
 def merge_style_info_one(path):
     style_feat = joblib.load(STYLE_FEATS)

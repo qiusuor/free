@@ -41,7 +41,7 @@ def train_val_data_filter(df):
 
 @hard_disk_cache(force_update=False)
 def load_data(n_val_day=n_val_day, val_delay_day=val_delay_day):
-    feature_cols = ["open", "high", "low", "close", "price", "turn", "volume", "value"]
+    feature_cols = get_feature_cols()
     label_col = ["y_next_2_d_ret"]
 
     all_cols = feature_cols + label_col

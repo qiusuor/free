@@ -52,6 +52,8 @@ class TripletWrapLoss(nn.Module):
     
     def forward(self, anchor_feat, anchor_score, anchor_label, pos_feat, pos_score, pos_label, neg_feat, neg_score, neg_label):
         anchor_reg = self.reg_loss(anchor_score, anchor_label)
+        # return torch.tensor([anchor_reg * self.loss_weight])
+        # return anchor_reg
         pos_reg = self.reg_loss(pos_score, pos_label)
         neg_reg = self.reg_loss(neg_score, neg_label)
         triplet = self.triplet_loss(anchor_feat, pos_feat, neg_feat)
