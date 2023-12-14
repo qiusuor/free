@@ -111,6 +111,7 @@ def inject_price_turn_features(df):
     min_name = ["close", "low"]
     
     for period in max_min_period:
+        df["mean_price_{}".format(period)] = df["price"].rolling(period).mean()
         for name in max_name:
             df["max_{}_{}".format(name, period)] = df[name].rolling(period).max() / df[name]
         for name in min_name:
