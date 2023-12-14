@@ -110,18 +110,17 @@ def fetch_one(code, login, frequency, adjustflag, start_date="2020-01-01", save_
         result.replace("", "0", inplace=True)
         dealTime(result)
 
-        rs_list = []
-        rs_factor = bs.query_adjust_factor(code=code, start_date="1900-01-01")
-        while (rs_factor.error_code == '0') & rs_factor.next():
-            rs_list.append(rs_factor.get_row_data())
-        result_factor = pd.DataFrame(rs_list, columns=rs_factor.fields)
-            
-        if not is_index(code):
+        if adjustflag != '3' and not is_index(code):
+            rs_list = []
+            rs_factor = bs.query_adjust_factor(code=code, start_date="1900-01-01")
+            while (rs_factor.error_code == '0') & rs_factor.next():
+                rs_list.append(rs_factor.get_row_data())
+            result_factor = pd.DataFrame(rs_list, columns=rs_factor.fields)
+                
             dealTime(result_factor)
             calRehab(result, result_factor, adjustflag=adjustflag)
         else:
             result["factor"] = 1.0
-        
         for col in list(fields.split(",")) + ["factor"]:
             if col in ["date", "code", "time"]: continue
             result[col] = pd.to_numeric(result[col])
@@ -158,7 +157,7 @@ def fetch(adjustflag='2', freqs=['m', 'w', 'd', '60', '30', '15', '5'], code_lis
         for code in tqdm(code_list or stockes.code):
             if not_concern(code): continue
             code_list.append([code, False, freq, adjustflag, start_date, save_dir])
-    # fetch_one("sz.002815", False, freq, adjustflag, start_date, save_dir)
+    # fetch_one(*code_list[0])
     pool = Pool(num_thread)
     pool.imap_unordered(fetch_one_wrapper, code_list)
     pool.close()
