@@ -6,39 +6,67 @@ import platform
 
 LAT_SIZE = 16
 
-def get_handcraft_feat(day_prices):
-    feat = []
-    for day_price in day_prices:
-        day_price = np.array([x/day_price[0] for x in day_price])
-        day_price_diff = day_price[1:] - day_price[:-1]
-        pos = sum(filter(lambda x:x>0, day_price_diff) or [0])
-        neg = sum(filter(lambda x:x<0, day_price_diff) or [0])
-        wave = pos * neg
-        feat.append([wave, max(day_price), min(day_price)])
-    return feat
+def inject_limit(df):
+    df["limit_up_price"] = (df["preclose_day"] * 1.1).apply(floor2)
+    df["limit_down_price"] = (df["preclose_day"] * 0.9).apply(ceil2)
+
+def get_handcraft_feat(df):
+    "first_up_to_limit_time"
+    "first_down_to_limit_time"
+    "times_break_and_back_to_up_limit"
+    "times_break_and_back_to_down_limit"
+    "turn_on_limit_up_line"
+    "turn_on_limit_down_line"
+    "len_of_upper_shadow_line"
+    "len_of_lower_shadow_line"
+    "div_price"
+    "div_chip"
+    "max_turn",
+    "min_turn",
+    ""
+    
+    # feat = []
+    # for day_price in day_prices:
+    #     day_price = np.array([x/day_price[0] for x in day_price])
+    #     day_price_diff = day_price[1:] - day_price[:-1]
+    #     pos = sum(filter(lambda x:x>0, day_price_diff) or [0])
+    #     neg = sum(filter(lambda x:x<0, day_price_diff) or [0])
+    #     wave = pos * neg
+    #     feat.append([wave, max(day_price), min(day_price)])
+    # return feat
         
         
 
 def prepare_one(path):
-    device = torch.device("mps") if platform.machine() == 'arm64' else torch.device("cuda")
+    "first_up_to_limit_time"
+    "first_down_to_limit_time"
+    "times_break_and_back_to_up_limit"
+    "times_break_and_back_to_down_limit"
+    "turn_on_limit_up_line"
+    "turn_on_limit_down_line"
+    "len_of_upper_shadow_line"
+    "len_of_lower_shadow_line"
+    "div_price"
+    "div_chip"
+    "max_turn",
+    "min_turn",
+    ""
+    
     data = joblib.load(path)
-    torch.set_default_dtype(torch.float32)
+    #TODO
+    
+    reference_daily_df = joblib.load()
+    "date", "day", "code", "open", "high", "low", "close", "amount", "volume", "price", "preclose_day", "amount_day"
+    inject_limit(data)
+    
+    # norlize
+    for col in ["open", "high", "low", "close"]:
+        data[col] = data[col] / data["preclose_day"]
+    data["amount"] = data["amount"] / data["amount_day"]
+    
+    
     df = pd.DataFrame([x[1][["price", "amount"]].values.reshape(-1) for x in data.groupby("day")])
     date = [x[0] for x in data.groupby("day")]
-    model = MLPAutoEncoder(input_size=96, lat_size=LAT_SIZE, hidden_size=32)
-    model_path = "embedding/checkpoint/minutes_mlp_autoencoder_{}.pth".format(LAT_SIZE)
-    model.load_state_dict(torch.load(model_path))
-    model.to(device)
-    model.eval()
-    mean, std = joblib.load("embedding/checkpoint/minutes_mean_std_{}.pkl".format(LAT_SIZE))
-    mean = mean.to(device)
-    std = std.to(device)
-    df = torch.tensor(df.values).cuda().float()
-    df = (df -mean) / (std + 1e-9)
-    names = ["minutes_emb_{}_of_{}".format(i, LAT_SIZE) for i in range(LAT_SIZE)]
-    with torch.no_grad():
-        lat_i = model(df)[1]
-        feat = pd.DataFrame(lat_i.cpu().numpy(), columns=names)
     feat["date"] = date
     feat[["minutes_wave", "minutes_max", "minutes_min"]] = get_handcraft_feat([x[1]["price"].values.reshape(-1) for x in data.groupby("day")])
     feat_path = os.path.join(MINUTE_FEAT, os.path.basename(path))
