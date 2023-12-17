@@ -53,18 +53,25 @@ def prepare_one(path):
     ""
     
     data = joblib.load(path)
-    #TODO
-    
-    reference_daily_df = joblib.load()
-    "date", "day", "code", "open", "high", "low", "close", "amount", "volume", "price", "preclose_day", "amount_day"
+    data["day"] = data["day"].apply(to_date)
+    print(data.day)
+    reference_daily_path = os.path.join(DAILY_DOWLOAD_DIR_NO_ADJUST, os.path.basename(path).replace("_5_3", "_d_3"))
+    reference_daily_df = joblib.load(reference_daily_path)
+    reference_daily_df["day"] = reference_daily_df.index
+    reference_daily_df["preclose_day"] = reference_daily_df["preclose"]
+    reference_daily_df["volume_day"] = reference_daily_df["volume"]
+    reference_daily_df["turn_day"] = reference_daily_df["turn"]
+    data = data.join(reference_daily_df[["day", "preclose_day", "volume_day", "turn_day"]], how="left", on="day", rsuffix="r")
+    "date", "day", "code", "open", "high", "low", "close", "volume", "preclose_day", "volume_day", "turn_day"
     inject_limit(data)
     
     # norlize
     for col in ["open", "high", "low", "close"]:
         data[col] = data[col] / data["preclose_day"]
-    data["amount"] = data["amount"] / data["amount_day"]
+    data["volume"] = data["volume"] / data["volume_day"]
     
-    
+    print(data)
+    exit(0)
     df = pd.DataFrame([x[1][["price", "amount"]].values.reshape(-1) for x in data.groupby("day")])
     date = [x[0] for x in data.groupby("day")]
     feat["date"] = date
@@ -82,7 +89,7 @@ def prepare_one(path):
     
     
 def prepare():
-    data_dir = TDX_MINUTE_DIR if not os.path.exists(os.path.join(MINUTE_FEAT, "sh.600000_5_2.csv")) else TDX_MINUTE_RECENT_DIR
+    data_dir = MINUTE_DIR
     make_dir(MINUTE_FEAT)
     paths = []
     for file in tqdm(os.listdir(data_dir)):
@@ -93,8 +100,8 @@ def prepare():
             continue
         path = os.path.join(data_dir, file)
         paths.append(path)
-    # prepare_one(paths[0])
-    # exit(0)
+    prepare_one(paths[0])
+    exit(0)
     pool = Pool(8)
     pool.imap_unordered(prepare_one, paths)
     pool.close()

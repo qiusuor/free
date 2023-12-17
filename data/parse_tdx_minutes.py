@@ -18,7 +18,7 @@ def day2csv_data(argv):
     no = num / 32
     b = 0
     e = 32
-    cols = ["date", "day", "code", "open", "high", "low", "close", "amount", "volume", "price"]
+    cols = ["date", "day", "code", "open", "high", "low", "close", "volume"]
     data = []
     for i in range(int(no)):
         a = unpack('HHfffffII', buf[b:e])
@@ -27,16 +27,15 @@ def day2csv_data(argv):
         month = (num % 2048) // 100
         day = (num % 2048) %100
         dt=datetime.datetime(year=year, month=month, day=day, hour=a[1]//60, minute=a[1]%60)
-        price =  a[6]/(a[7]) if a[7] > 0 else a[2]
-        data.append([dt, dt.strftime("%Y-%m-%d"), fname[:2]+'.'+fname[2:-4], a[2], a[3], a[4], a[5], a[6], a[7], price])
+        data.append([dt, to_date(dt.strftime("%Y-%m-%d")), fname[:2]+'.'+fname[2:-4], a[2], a[3], a[4], a[5], a[7]])
         b = b + 32
         e = e + 32
     df = pd.DataFrame(data, columns=cols)
     df['date'] = pd.to_datetime(df['date'])
     df.set_index("date", inplace=True)
     df.sort_index(inplace=True)
-    df.to_csv(targetDir + os.sep + fname[:2]+'.'+fname[2:-4]+'_'+freq+ '_2' + '.csv')
-    joblib.dump(df, targetDir + os.sep + fname[:2]+'.'+fname[2:-4]+'_'+freq+ '_2' + '.pkl')
+    df.to_csv(targetDir + os.sep + fname[:2]+'.'+fname[2:-4]+'_'+freq+ '_3' + '.csv')
+    joblib.dump(df, targetDir + os.sep + fname[:2]+'.'+fname[2:-4]+'_'+freq+ '_3' + '.pkl')
 
 def parse(targetDir):
     pathdir1 = r'C:\new_tdx\vipdoc\sh\fzline'
@@ -52,11 +51,9 @@ def parse(targetDir):
     pool.join()
 
 def parse_recent():
-    parse(TDX_MINUTE_RECENT_DIR)
+    parse(MINUTE_DIR)
     
-def parse_history():
-    parse(TDX_MINUTE_DIR)
-    
+
 if __name__ == "__main__":
     parse_recent()
 

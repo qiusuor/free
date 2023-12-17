@@ -66,10 +66,18 @@ def check_feature_importance():
         print(list(zip(model.feature_importance(), model.feature_name())))
     print_model_feature_importance(model_a)
     print_model_feature_importance(model_b)
+    
+    
+def mv():
+    for src in os.listdir(MINUTE_DIR):
+        trt = src.replace("_5_2", "_5_3")
+        os.system("mv {} {}".format(os.path.join(MINUTE_DIR, src), os.path.join(MINUTE_DIR, trt)))
 
 if __name__ == "__main__":
     # dir_a = "/home/qiusuo/free/data/data/daily"
     # dir_b = "/home/qiusuo/free/data/data/daily_20231110"
     # compare(dir_a, dir_b)
     # check_feature_importance()
-    upload_data()
+    # upload_data()
+    mv()
+    

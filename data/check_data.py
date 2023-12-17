@@ -54,7 +54,7 @@ if __name__ == "__main__":
     no_last_day_data_codes = check_daily()
     # if os.path.exists(TDX_MINUTE_DIR):
     #     no_last_fzline_codes = check_minutes(no_last_day_data_codes, TDX_MINUTE_DIR)
-    # if os.path.exists(TDX_MINUTE_RECENT_DIR):
-    #     check_minutes(no_last_fzline_codes, TDX_MINUTE_RECENT_DIR)
+    # if os.path.exists(MINUTE_DIR):
+    #     check_minutes(no_last_fzline_codes, MINUTE_DIR)
     
     

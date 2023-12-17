@@ -79,8 +79,10 @@ def get_offset_trade_day(day, n):
 def to_str_date(int_date):
     return datetime.datetime.strptime(str(int_date), "%Y%m%d").strftime("%Y-%m-%d")
     
-def to_date(int_date):
-    return datetime.datetime.strptime(str(int_date), "%Y%m%d")
+def to_date(date):
+    if isinstance(date, str) and "-" in date:
+        return datetime.datetime.strptime(str(date), "%Y-%m-%d")
+    return datetime.datetime.strptime(str(date), "%Y%m%d")
 
 def to_int_date(date):
     return int(date.strftime("%Y%m%d"))
