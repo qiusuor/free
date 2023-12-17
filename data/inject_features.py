@@ -172,6 +172,8 @@ def inject_industry_and_name(df):
 
     
 def inject_style_feature(df):
+    df["up_shadow"] = (df["high"] - df["close"]) / (df["close"] + 1e-6)
+    df["down_shadow"] = (df["loe"] - df["close"]) / (df["close"] + 1e-6)
     df["limit_up_1d"] = is_limit_up(df)
     df["limit_up_2d"] = is_limit_up(df) & (df["limit_up_1d"].shift(1))
     df["limit_up_3d"] = is_limit_up(df) & (df["limit_up_2d"].shift(1))
