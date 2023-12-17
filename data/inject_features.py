@@ -173,7 +173,7 @@ def inject_industry_and_name(df):
     
 def inject_style_feature(df):
     df["up_shadow"] = (df["high"] - df["close"]) / (df["close"] + 1e-6)
-    df["down_shadow"] = (df["loe"] - df["close"]) / (df["close"] + 1e-6)
+    df["down_shadow"] = (df["low"] - df["close"]) / (df["close"] + 1e-6)
     df["limit_up_1d"] = is_limit_up(df)
     df["limit_up_2d"] = is_limit_up(df) & (df["limit_up_1d"].shift(1))
     df["limit_up_3d"] = is_limit_up(df) & (df["limit_up_2d"].shift(1))
@@ -196,6 +196,11 @@ def inject_one(path):
     inject_price_turn_features(df)
     inject_alpha_features(df)
     inject_style_feature(df)
+    
+    minu_feat_path = os.path.join(MINUTE_FEAT, os.path.basename(path).replace("_d_2", "_1_3"))
+    minu_feat = joblib.load(minu_feat_path)
+    minu_feat = minu_feat.set_index("date")
+    df = df.join(minu_feat, how="left")
 
     df.to_csv(path.replace(".pkl", ".csv"))
     dump(df, path)
@@ -213,6 +218,7 @@ def inject_features():
         path = os.path.join(DAILY_DIR, file)
         paths.append(path)
     # inject_one(paths[0])
+    # exit(0)
     pool.imap_unordered(inject_one, paths)
     pool.close()
     pool.join()
