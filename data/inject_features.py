@@ -197,10 +197,10 @@ def inject_one(path):
     inject_alpha_features(df)
     inject_style_feature(df)
     
-    minu_feat_path = os.path.join(MINUTE_FEAT, os.path.basename(path).replace("_d_2", "_1_3"))
-    minu_feat = joblib.load(minu_feat_path)
-    minu_feat = minu_feat.set_index("date")
-    df = df.join(minu_feat, how="left")
+    # minu_feat_path = os.path.join(MINUTE_FEAT, os.path.basename(path).replace("_d_2", "_1_3"))
+    # minu_feat = joblib.load(minu_feat_path)
+    # minu_feat = minu_feat.set_index("date")
+    # df = df.join(minu_feat, how="left")
 
     df.to_csv(path.replace(".pkl", ".csv"))
     dump(df, path)
