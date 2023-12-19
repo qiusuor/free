@@ -20,6 +20,12 @@ def inject_one(path):
     future_n_day_high_low = [2]
     df["y_next_1d_close_rate"] = df["close"].shift(-1) / df["open"].shift(-1)
     df["y_next_1d_close_rate"].fillna(0, inplace=True)
+    df["y_next_1d_close_rate_02"] = df["y_next_1d_close_rate"] >= 1.02
+    df["y_next_1d_close_rate_03"] = df["y_next_1d_close_rate"] >= 1.03
+    df["y_next_1d_close_rate_04"] = df["y_next_1d_close_rate"] >= 1.04
+    df["y_next_1d_close_rate_05"] = df["y_next_1d_close_rate"] >= 1.05
+    df["y_next_1d_close_rate_08"] = df["y_next_1d_close_rate"] >= 1.08
+    df["y_next_1d_close_rate_095"] = df["y_next_1d_close_rate"] >= 1.095
     df["y_next_1d_ret"] = df["close"].shift(-1) / df["close"]
     df["y_next_1d_up_to_limit"] =  is_limit_up(df).shift(-1)
     df["y_next_1d_up_to_limit"].fillna(0, inplace=True)

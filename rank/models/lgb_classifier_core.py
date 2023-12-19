@@ -40,7 +40,7 @@ def topk_shot(data, label, k=10, watch_list=[]):
     return miss_cnt, shot_cnt, watches
 
 def train_val_data_filter(df):
-    return df[reserve_n_last(not_limit_line(df).shift(-1)) & (df.isST != 1) & (df["price_div_chip_avg_120"] > 1.1)]
+    return df[not_limit_line(df) & (df.isST != 1) & (df["price_div_chip_avg_120"] > 1.1)]
 
 def train_lightgbm(argv):
     features, label, train_start_day, train_end_day, val_start_day, val_end_day, n_day, train_len, num_leaves, max_depth, min_data_in_leaf, cache_data, epoch = argv
@@ -245,7 +245,7 @@ def prepare_data(update=False):
     # inject_minute_feature()
 
 def get_n_val_day(label):
-    if "y_next_1d_up_to_limit" in label:
+    if "y_next_1d_up_to_limit" in label or "y_next_1d_close_rate" in label:
         n_day = 1
     elif "y_2_d" in label or "1d_close_2d_open" in label or "y_02" in label or "y_next_2_d" in label:
         n_day = 2
