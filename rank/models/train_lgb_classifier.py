@@ -31,6 +31,7 @@ if __name__ == "__main__":
         # "y_02_109",
         # "y_next_1d_up_to_limit",
         
+        "y_next_2_d_ret_00",
         "y_next_2_d_ret_01",
         "y_next_2_d_ret_02",
         "y_next_2_d_ret_03",
