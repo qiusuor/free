@@ -20,6 +20,7 @@ def inject_one(path):
     future_n_day_high_low = [2]
     df["y_next_1d_close_rate"] = df["close"].shift(-1) / df["open"].shift(-1)
     df["y_next_1d_close_rate"].fillna(0, inplace=True)
+    df["y_next_1d_close_rate_01"] = df["y_next_1d_close_rate"] >= 1.01
     df["y_next_1d_close_rate_02"] = df["y_next_1d_close_rate"] >= 1.02
     df["y_next_1d_close_rate_03"] = df["y_next_1d_close_rate"] >= 1.03
     df["y_next_1d_close_rate_04"] = df["y_next_1d_close_rate"] >= 1.04
@@ -32,6 +33,7 @@ def inject_one(path):
     df["y_next_1d_close_2d_open_rate"] = df["open"].shift(-2) / df["close"].shift(-1)
     for n_day in future_n_day_high_low:
         df["y_next_{}_d_ret".format(n_day)] = df["close"].shift(-n_day) / df["open"].shift(-1)
+        df["y_next_{}_d_ret_01".format(n_day)] = df["y_next_{}_d_ret".format(n_day)] > 1.01
         df["y_next_{}_d_ret_02".format(n_day)] = df["y_next_{}_d_ret".format(n_day)] > 1.02
         df["y_next_{}_d_ret_03".format(n_day)] = df["y_next_{}_d_ret".format(n_day)] > 1.03
         df["y_next_{}_d_ret_04".format(n_day)] = df["y_next_{}_d_ret".format(n_day)] > 1.04
@@ -51,7 +53,7 @@ def inject_one(path):
     
 
 def inject_labels():
-    pool = Pool(8)
+    pool = Pool(THREAD_NUM)
     paths = []
     for file in tqdm(os.listdir(DAILY_DIR)):
         code = file.split("_")[0]

@@ -10,7 +10,7 @@ import math
 
 def parse_best_opts():
     opts = set()
-    fields = ["topk_miss_exp"]
+    fields = ["sharp_exp"]
     topk = 5
     # fields = ["topk_miss_exp", "topk_ret_exp", "sharp_exp", "high_exp"]
     

@@ -2,7 +2,7 @@ import joblib
 import numpy as np
 from multiprocessing import Pool
 from utils import *
-from rank.models.lgb_classifier_core import *
+from rank.models.lgb_classifier_core_oc import *
 from rank.models.agg_prediction_info import agg_prediction_info
 import bisect
 import platform

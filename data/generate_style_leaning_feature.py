@@ -84,7 +84,7 @@ def merge_style_info():
             continue
         path = os.path.join(DAILY_DIR, file)
         paths.append(path)
-    pool = Pool(8)
+    pool = Pool(THREAD_NUM)
     pool.imap_unordered(merge_style_info_one, paths)
     pool.close()
     pool.join()
