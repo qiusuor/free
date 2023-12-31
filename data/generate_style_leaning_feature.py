@@ -75,15 +75,7 @@ def merge_style_info_one(path):
     dump(df, path)
     
 def merge_style_info():
-    paths = []
-    for file in tqdm(os.listdir(DAILY_DIR)):
-        code = file.split("_")[0]
-        if not_concern(code) or is_index(code):
-            continue
-        if not file.endswith(".pkl"):
-            continue
-        path = os.path.join(DAILY_DIR, file)
-        paths.append(path)
+    paths = main_board_stocks()
     pool = Pool(THREAD_NUM)
     pool.imap_unordered(merge_style_info_one, paths)
     pool.close()

@@ -26,16 +26,7 @@ def inject_one(path):
     
     
 def inject_minute_feature():
-    paths = []
-    with torch.no_grad():
-        for file in tqdm(os.listdir(DAILY_DIR)):
-            code = file.split("_")[0]
-            if not_concern(code) or is_index(code):
-                continue
-            if not file.endswith(".pkl"):
-                continue
-            path = os.path.join(DAILY_DIR, file)
-            paths.append(path)
+    paths = main_board_stocks()
     # print(paths[0])
     # inject_one(paths[0])
     pool = Pool(32)

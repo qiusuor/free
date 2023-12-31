@@ -14,20 +14,14 @@ warnings.filterwarnings("ignore")
 def check_daily():
     last_trade_day = get_last_trade_day(update=False)
     no_last_day_data_codes = set()
-    for file in tqdm(os.listdir(DAILY_DIR)):
-        code = file.split("_")[0]
-        if not_concern(code) or is_index(code):
-            continue
-        if not file.endswith(".pkl"):
-            continue
-        path = os.path.join(DAILY_DIR, file)
+    for path in main_board_stocks():
         df = joblib.load(path)
-        assert len(set(df.index)) == len(df.index), code
+        assert len(set(df.index)) == len(df.index), path
         if "y_next_10_d_high_ratio" in df.columns:
-            assert len(df) < 240 or df["y_next_10_d_high_ratio"].max() < 3, (code, df[df["y_next_10_d_high_ratio"] >=3])
+            assert len(df) < 240 or df["y_next_10_d_high_ratio"].max() < 3, (path, df[df["y_next_10_d_high_ratio"] >=3])
         if to_int_date(df.index[-1]) != last_trade_day:
             # print(code, "no data at last trade day!")
-            no_last_day_data_codes.add(code)
+            no_last_day_data_codes.add(path)
     print(no_last_day_data_codes)
     return no_last_day_data_codes
     

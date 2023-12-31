@@ -24,13 +24,7 @@ def train(argv):
     batch_size, epochs, K, LAT_SIZE = argv
     def load_data(train_val_split=0.7):
         data = []
-        for file in tqdm(os.listdir(DAILY_DIR)):
-            code = file.split("_")[0]
-            if not_concern(code) or is_index(code):
-                continue
-            if not file.endswith(".pkl"):
-                continue
-            path = os.path.join(DAILY_DIR, file)
+        for path in main_board_stocks():
             df = joblib.load(path)[auto_encoder_features]
             data_i = [df]
             for i in range(1, K):

@@ -18,13 +18,7 @@ def generate_ltr_data():
     remove_dir(DAILY_BY_DATE_DIR)
     make_dir(DAILY_BY_DATE_DIR)
     data = []
-    for file in tqdm(os.listdir(DAILY_DIR)):
-        code = file.split("_")[0]
-        if not_concern(code) or is_index(code):
-            continue
-        if not file.endswith(".pkl"):
-            continue
-        path = os.path.join(DAILY_DIR, file)
+    for path in main_board_stocks():
         df = joblib.load(path)
         if "code_name" not in df.columns or not isinstance(df.code_name[-1], str) or "ST" in df.code_name[-1] or "st" in df.code_name[-1] or "sT" in df.code_name[-1]:
                 continue

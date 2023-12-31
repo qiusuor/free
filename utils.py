@@ -210,17 +210,12 @@ def hard_disk_cache(force_update=False):
     return get_result
 
 def get_feature_cols():
-    for file in os.listdir(DAILY_DIR):
-        code = file.split("_")[0]
-        if not_concern(code) or is_index(code):
-            continue
-        if not file.endswith(".pkl"):
-            continue
-        path = os.path.join(DAILY_DIR, file)
-        df = joblib.load(path)
-        no_feature_cols = set(["code", "adjustflag", "tradestatus", "code_name", "shiborON", "shibor1W", "shibor2W", "shibor3M", "shibor9M", "shibor1Y", "industry", 'CDLTHRUSTING', 'CDLDOJI', 'CDLHIKKAKE', 'CDLHARAMICROSS', 'CDLEVENINGSTAR', 'CDLSTICKSANDWICH', 'CDLDRAGONFLYDOJI', 'CDLDOJISTAR', 'CDL3BLACKCROWS', 'CDLSEPARATINGLINES', 'CDLTAKURI', 'CDLEVENINGDOJISTAR', 'CDLLADDERBOTTOM', 'CDLONNECK', 'CDLUNIQUE3RIVER', 'CDLIDENTICAL3CROWS', 'CDLXSIDEGAP3METHODS', 'CDLADVANCEBLOCK', 'CDLCOUNTERATTACK', 'CDLGAPSIDESIDEWHITE', 'CDL3LINESTRIKE', 'CDL3INSIDE', 'CDLTASUKIGAP', 'CDLHIKKAKEMOD', 'CDLTRISTAR', 'CDLRISEFALL3METHODS', 'CDLBREAKAWAY', 'CDLABANDONEDBABY', 'CDLKICKING', 'CDLKICKINGBYLENGTH', 'CDLMATHOLD', 'CDLCONCEALBABYSWALL', 'CDL3STARSINSOUTH', 'isST'] + [col for col in df.columns if col.startswith("y") or col.startswith("dy") or col.startswith("price_div_chip_avg_") or col.startswith("turn_div_mean_turn_") or col.startswith("limit_")])
-        feature_cols = [col for col in df.columns if col not in no_feature_cols]
-        return feature_cols
+    paths = main_board_stocks()
+    df = joblib.load(paths[-5])
+    no_feature_cols = set(["code", "adjustflag", "tradestatus", "code_name", "shiborON", "shibor1W", "shibor2W", "shibor3M", "shibor9M", "shibor1Y", "industry", 'CDLTHRUSTING', 'CDLDOJI', 'CDLHIKKAKE', 'CDLHARAMICROSS', 'CDLEVENINGSTAR', 'CDLSTICKSANDWICH', 'CDLDRAGONFLYDOJI', 'CDLDOJISTAR', 'CDL3BLACKCROWS', 'CDLSEPARATINGLINES', 'CDLTAKURI', 'CDLEVENINGDOJISTAR', 'CDLLADDERBOTTOM', 'CDLONNECK', 'CDLUNIQUE3RIVER', 'CDLIDENTICAL3CROWS', 'CDLXSIDEGAP3METHODS', 'CDLADVANCEBLOCK', 'CDLCOUNTERATTACK', 'CDLGAPSIDESIDEWHITE', 'CDL3LINESTRIKE', 'CDL3INSIDE', 'CDLTASUKIGAP', 'CDLHIKKAKEMOD', 'CDLTRISTAR', 'CDLRISEFALL3METHODS', 'CDLBREAKAWAY', 'CDLABANDONEDBABY', 'CDLKICKING', 'CDLKICKINGBYLENGTH', 'CDLMATHOLD', 'CDLCONCEALBABYSWALL', 'CDL3STARSINSOUTH', 'isST'] + [col for col in df.columns if col.startswith("y") or col.startswith("dy") or col.startswith("price_div_chip_avg_") or col.startswith("turn_div_mean_turn_") or col.startswith("limit_")])
+    feature_cols = [col for col in df.columns if col not in no_feature_cols]
+    assert len(feature_cols) > 0
+    return feature_cols
     
 def get_industry_info():
     lg = bs.login()
@@ -332,3 +327,15 @@ def not_limit_line(df):
 def reserve_n_last(index, n=1):
     index.iloc[-n:] = True
     return index.astype(bool)
+
+def main_board_stocks():
+    paths = []
+    for file in tqdm(os.listdir(DAILY_DIR)):
+        code = file.split("_")[0]
+        if not_concern(code) or is_index(code):
+            continue
+        if not file.endswith(".pkl"):
+            continue
+        path = os.path.join(DAILY_DIR, file)
+        paths.append(path)
+    return paths

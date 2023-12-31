@@ -51,13 +51,7 @@ def load_data(n_val_day=n_val_day, val_delay_day=val_delay_day):
 
     train_data, val_data = [], []
     Xs = []
-    for file in tqdm(os.listdir(DAILY_DIR)):
-        code = file.split("_")[0]
-        if not_concern(code) or is_index(code):
-            continue
-        if not file.endswith(".pkl"):
-            continue
-        path = os.path.join(DAILY_DIR, file)
+    for path in main_board_stocks():
         df = joblib.load(path)
         if len(df) < 300: continue
         df = train_val_data_filter(df)

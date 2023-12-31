@@ -88,13 +88,7 @@ def train_lightgbm(argv):
             dataset = cPickle.load(f)
     else:
         dataset = []
-        for file in os.listdir(DAILY_DIR):
-            code = file.split("_")[0]
-            if not_concern(code) or is_index(code):
-                continue
-            if not file.endswith(".pkl"):
-                continue
-            path = os.path.join(DAILY_DIR, file)
+        for path in main_board_stocks():
             df = joblib.load(path)
             if len(df) < 300: continue
             df = train_val_data_filter(df)
