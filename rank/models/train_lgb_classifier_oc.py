@@ -3,7 +3,7 @@ import numpy as np
 from multiprocessing import Pool
 from utils import *
 from rank.models.lgb_classifier_core_oc import *
-from rank.models.agg_prediction_info import agg_prediction_info
+from rank.models.agg_prediction_info_oc import agg_prediction_info
 import bisect
 import platform
 
@@ -32,11 +32,13 @@ if __name__ == "__main__":
         # "y_next_1d_up_to_limit",
         
         # "y_next_2_d_ret_03",
+        "y_next_1d_close_rate_01",
         "y_next_1d_close_rate_02",
-        # "y_next_1d_close_rate_03",
-        # "y_next_1d_close_rate_04",
-        # "y_next_1d_close_rate_05",
-        # "y_next_1d_close_rate_08"
+        "y_next_1d_close_rate_03",
+        "y_next_1d_close_rate_04",
+        "y_next_1d_close_rate_05",
+        "y_next_1d_close_rate_08",
+        "y_next_1d_close_rate_095"
         # "y_next_2_d_ret_05",
         # "y_next_2_d_ret_07",
         # "y_next_2_d_ret_095",
@@ -97,21 +99,21 @@ if __name__ == "__main__":
                                 features, label, train_start_day, train_end_day, val_start_day,
                                 val_end_day, n_day, train_len, num_leaves, max_depth, min_data_in_leaf, cache_data, -1
                             ]
-                            train_lightgbm(argv)
+                            # train_lightgbm(argv)
                             # print(train_start_day, train_end_day, val_start_day, val_end_day)
-                            # if not os.path.exists(cache_data):
-                            #     # print(argv)
-                            #     train_lightgbm(argv)
-                            #     print("Generate cache file this time, try again.")
-                            #     exit(0)
+                            if not os.path.exists(cache_data):
+                                # print(argv)
+                                train_lightgbm(argv)
+                                print("Generate cache file this time, try again.")
+                                exit(0)
                             argvs.append(argv)
                         # exit(0)
                         
     # exit(0)
     np.random.shuffle(argvs)
-    # pool = Pool(32 if "Linux" in platform.platform() else 2)
-    # pool.imap_unordered(train_lightgbm, argvs)
-    # pool.close()
-    # pool.join()
-    # agg_prediction_info(last_n_day=val_n_day)
+    pool = Pool(32 if "Linux" in platform.platform() else 2)
+    pool.imap_unordered(train_lightgbm, argvs)
+    pool.close()
+    pool.join()
+    agg_prediction_info(last_n_day=val_n_day)
     

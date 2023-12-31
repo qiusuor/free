@@ -193,7 +193,7 @@ def train_lightgbm(argv):
             "top5_miss": top5_miss,
             "top10_miss": top10_miss,
         }
-        if not np.isnan(top3_watch["sharp_3"]):
+        if not np.isnan(top3_watch["y_next_1d_close_rate_topk_3_mean"]):
             labeled_day += 1
         meta["last_val"] = meta["daily"][to_int_date(i)]
         save_file = f"{to_int_date(i)}_T3_{top3_miss}_T5_{top5_miss}_T10_{top10_miss}_AP_{ap}_AUC_{auc_score}.csv"
