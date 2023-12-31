@@ -39,6 +39,9 @@ if __name__ == "__main__":
         "y_next_2_d_ret_05",
         "y_next_2_d_ret_07",
         "y_next_2_d_ret_095",
+        "y_next_2_d_ret_12",
+        "y_next_2_d_ret_15",
+        "y_next_2_d_ret_17",
         
         # "y_2_d_high_rank_10%_safe_1d",
         # "y_2_d_high_rank_20%_safe_1d",
@@ -75,7 +78,7 @@ if __name__ == "__main__":
         # for train_len, num_leaves, max_depth, min_data_in_leaf in [[250, 7, 3, 21]]:
         
         for num_leaves in [3, 7, 15, 31, 63]:
-            for min_data_in_leaf in [11, 21, 41, 81]:
+            for min_data_in_leaf in [5, 11, 21, 41, 81]:
                 for max_depth in [3, 7, 9, 12]:
                     if 2**max_depth <= num_leaves: continue
                     for train_len in [250]:

@@ -41,6 +41,9 @@ def inject_one(path):
         df["y_next_{}_d_ret_05".format(n_day)] = df["y_next_{}_d_ret".format(n_day)] > 1.05
         df["y_next_{}_d_ret_07".format(n_day)] = df["y_next_{}_d_ret".format(n_day)] > 1.07
         df["y_next_{}_d_ret_095".format(n_day)] = df["y_next_{}_d_ret".format(n_day)] >= 1.095
+        df["y_next_{}_d_ret_12".format(n_day)] = df["y_next_{}_d_ret".format(n_day)] >= 1.12
+        df["y_next_{}_d_ret_15".format(n_day)] = df["y_next_{}_d_ret".format(n_day)] >= 1.15
+        df["y_next_{}_d_ret_17".format(n_day)] = df["y_next_{}_d_ret".format(n_day)] >= 1.17
         df["y_next_{}_d_close_high_ratio".format(n_day)] = df["high"].shift(-n_day) / df["close"].shift(-1)
         df["y_next_{}_d_close_low_ratio".format(n_day)] = df["low"].shift(-n_day) / df["close"].shift(-1)
         df["y_next_{}_d_high".format(n_day)] = df["high"].rolling(n_day).apply(lambda x:max(x[1:])).shift(-n_day)
