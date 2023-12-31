@@ -16,12 +16,13 @@ def check_daily():
     no_last_day_data_codes = set()
     for path in main_board_stocks():
         df = joblib.load(path)
-        assert len(set(df.index)) == len(df.index), path
+        code = os.path.basename(path)
+        assert len(set(df.index)) == len(df.index), code
         if "y_next_10_d_high_ratio" in df.columns:
-            assert len(df) < 240 or df["y_next_10_d_high_ratio"].max() < 3, (path, df[df["y_next_10_d_high_ratio"] >=3])
+            assert len(df) < 240 or df["y_next_10_d_high_ratio"].max() < 3, (code, df[df["y_next_10_d_high_ratio"] >=3])
         if to_int_date(df.index[-1]) != last_trade_day:
             # print(code, "no data at last trade day!")
-            no_last_day_data_codes.add(path)
+            no_last_day_data_codes.add(code)
     print(no_last_day_data_codes)
     return no_last_day_data_codes
     

@@ -89,7 +89,6 @@ def train_lightgbm(argv):
     else:
         dataset = []
         for path in main_board_stocks():
-            path = os.path.join(DAILY_DIR, file)
             df = joblib.load(path)
             if len(df) < 300: continue
             df = train_val_data_filter(df)
