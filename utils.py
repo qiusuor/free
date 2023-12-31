@@ -330,7 +330,7 @@ def reserve_n_last(index, n=1):
 
 def main_board_stocks():
     paths = []
-    for file in tqdm(os.listdir(DAILY_DIR)):
+    for file in os.listdir(DAILY_DIR):
         code = file.split("_")[0]
         if not_concern(code) or is_index(code):
             continue
