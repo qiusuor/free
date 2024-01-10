@@ -32,6 +32,7 @@ TRADE_DAYS = os.path.join(DATA_DIR, "market/trade_days.csv")
 TRADE_DAYS_PKL = os.path.join(DATA_DIR, "market/trade_days.pkl")
 ALL_STOCKS = os.path.join(DATA_DIR, "market/all_stocks.csv")
 STYLE_FEATS = os.path.join(DATA_DIR, "market/style_features.pkl")
+COMPANY_INFO = os.path.join(DATA_DIR, "market/company_details.pkl")
 
 HARD_DISK_CACHE_DIR = os.path.join(DATA_DIR, "cache")
 
