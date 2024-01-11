@@ -82,7 +82,7 @@ def fetch_detail():
         company_info = dict()
     all_stocks = [x[-14:-8] for x in main_board_stocks() if x[-14:-8] not in company_info]
     np.random.shuffle(all_stocks)
-    all_stocks = all_stocks[:1000]
+    all_stocks = all_stocks
     pool = Pool(1)
     ret = pool.imap_unordered(fetch_detail_wrapper, all_stocks)
     pool.close()
