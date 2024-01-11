@@ -12,7 +12,7 @@ from pyppeteer_stealth import stealth
 from pyppeteer import launcher
 from multiprocessing import Pool
 from utils import *
-from joblib import dump
+from joblib import dump, load
 
 async def fetch_detail_core(code):
     
@@ -21,7 +21,7 @@ async def fetch_detail_core(code):
     page = await context.newPage()
     await stealth(page)
     await page.evaluateOnNewDocument("() =>{ Object.defineProperties(navigator, { webdriver: { get(): () => false} }) }")
-    time.sleep(5)
+    time.sleep(np.random.randint(0, 3))
     # url = "http://q.10jqka.com.cn/gn/index/field/addtime/order/desc/page/" + str(i+1) + "/ajax/1/"
     url = f"https://stockpage.10jqka.com.cn/{code}/"
     
@@ -34,7 +34,7 @@ async def fetch_detail_core(code):
         soup = soup[0].find_all(["dt", "dd"])
     except Exception as ex:
         print(code, str(ex), soup)
-        return 
+        return None, None
     # print(soup)
     company_details = dict()
     for i in range(0, len(soup)-1):
@@ -64,9 +64,11 @@ async def fetch_detail_core(code):
             company_details["total_share_capital"] = float(soup[i+1].text[:-1])
         elif "流通股" in soup[i].text:
             assert "亿" in soup[i+1].text
-            company_details["outstanding_shares"] = float(soup[i+1].text[:-1]) 
+            company_details["outstanding_shares"] = float(soup[i+1].text[:-1])
+    print(code, company_details)
+    await browser.close()
+     
     return code, company_details 
-    # print(code, company_details)
     
 def fetch_detail_wrapper(code):
     ret = asyncio.get_event_loop().run_until_complete(fetch_detail_core(code))
@@ -74,12 +76,15 @@ def fetch_detail_wrapper(code):
     
     
 def fetch_detail():
-    all_stocks = [x[-14:-8] for x in main_board_stocks()]
+    if os.path.exists(COMPANY_INFO):
+        company_info = load(COMPANY_INFO)
+    else:
+        company_info = dict()
+    all_stocks = [x[-14:-8] for x in main_board_stocks() if x[-14:-8] not in company_info][:100]
     pool = Pool(1)
     ret = pool.imap_unordered(fetch_detail_wrapper, all_stocks)
     pool.close()
     pool.join()
-    
     header = ["code", "concepts", "net_asset_per_share", "profit_per_share", "net_profit", "net_profit_growth_rate", "income", "cash_flow_per_share", "provident_per_share", "undistributed_earning_per_share", "total_share_capital", "outstanding_shares"]
     data = []
     
@@ -89,10 +94,13 @@ def fetch_detail():
                 row = [str(code)]
             else:
                 row.append(info[filed])
+        company_info[code] = row
+        
+    for code, row in company_info.items():
         data.append(row)
     data = pd.DataFrame(data, columns=header)
     data.to_csv(COMPANY_INFO.replace("pkl", "csv"), index=False)
-    dump(data, COMPANY_INFO)
+    dump(company_info, COMPANY_INFO)
     
         
 
