@@ -96,7 +96,8 @@ def fetch_detail():
                 row = [str(code)]
             else:
                 row.append(info[filed])
-        company_info[code] = row
+        if code:
+            company_info[code] = row
         
     for code, row in company_info.items():
         data.append(row)
