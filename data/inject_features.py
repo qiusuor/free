@@ -5,7 +5,6 @@ import talib
 from multiprocessing import Pool
 from config import *
 from utils import *
-from tqdm import tqdm
 from joblib import dump
 import warnings
 
@@ -179,11 +178,33 @@ def inject_style_feature(df):
     df["limit_up_3d"] = is_limit_up(df) & (df["limit_up_2d"].shift(1))
     df["limit_up_4d"] = is_limit_up(df) & (df["limit_up_3d"].shift(1))
     df["limit_up_5d"] = is_limit_up(df) & (df["limit_up_4d"].shift(1))
-    df["limit_up_5_plus_d"] = is_limit_up(df) & (df["limit_up_5d"].shift(1))
+    df["limit_up_6d"] = is_limit_up(df) & (df["limit_up_5d"].shift(1))
+    df["limit_up_7d"] = is_limit_up(df) & (df["limit_up_6d"].shift(1))
+    df["limit_up_8d"] = is_limit_up(df) & (df["limit_up_7d"].shift(1))
+    df["limit_up_9d"] = is_limit_up(df) & (df["limit_up_8d"].shift(1))
+    df["limit_up_9d_plus"] = is_limit_up(df) & (df["limit_up_9d"].shift(1))
+    
+    df["limit_up_1d"] = df["limit_up_1d"] & (~df["limit_up_2d"])
+    df["limit_up_2d"] = df["limit_up_2d"] & (~df["limit_up_3d"])
+    df["limit_up_3d"] = df["limit_up_3d"] & (~df["limit_up_4d"])
+    df["limit_up_4d"] = df["limit_up_4d"] & (~df["limit_up_5d"])
+    df["limit_up_5d"] = df["limit_up_5d"] & (~df["limit_up_6d"])
+    df["limit_up_6d"] = df["limit_up_6d"] & (~df["limit_up_7d"])
+    df["limit_up_7d"] = df["limit_up_7d"] & (~df["limit_up_8d"])
+    df["limit_up_8d"] = df["limit_up_8d"] & (~df["limit_up_9d"])
+    df["limit_up_9d"] = df["limit_up_9d"] & (~df["limit_up_9d_plus"])
     
     df["limit_down_1d"] = is_limit_down(df)
     df["limit_down_2d"] = is_limit_down(df) & (df["limit_down_1d"].shift(1))
     df["limit_down_3d"] = is_limit_down(df) & (df["limit_down_2d"].shift(1))
+    df["limit_down_4d"] = is_limit_down(df) & (df["limit_down_3d"].shift(1))
+    df["limit_down_5d"] = is_limit_down(df) & (df["limit_down_4d"].shift(1))
+    df["limit_down_5d_plus"] = is_limit_down(df) & (df["limit_down_5d"].shift(1))
+    df["limit_down_1d"]  = df["limit_down_1d"] & (~df["limit_down_2d"])
+    df["limit_down_2d"]  = df["limit_down_2d"] & (~df["limit_down_3d"])
+    df["limit_down_3d"]  = df["limit_down_3d"] & (~df["limit_down_4d"])
+    df["limit_down_4d"]  = df["limit_down_4d"] & (~df["limit_down_5d"])
+    df["limit_down_5d"]  = df["limit_down_5d"] & (~df["limit_down_5d_plus"])
      
     df["limit_up_line"] = is_limit_up_line(df)
     df["limit_down_line"] = is_limit_down_line(df)
@@ -191,10 +212,10 @@ def inject_style_feature(df):
 def inject_one(path):
     df = joblib.load(path)
     
-    inject_ta_features(df)
-    inject_chip_features(df)
-    inject_price_turn_features(df)
-    inject_alpha_features(df)
+    # inject_ta_features(df)
+    # inject_chip_features(df)
+    # inject_price_turn_features(df)
+    # inject_alpha_features(df)
     inject_style_feature(df)
     
     # minu_feat_path = os.path.join(MINUTE_FEAT, os.path.basename(path).replace("_d_2", "_1_3"))
