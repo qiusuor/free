@@ -1,41 +1,68 @@
 from utils import *
 from config import *
 from multiprocessing import Pool
+from joblib import dump
 
 
 def agg_groups(df):
+    # print(df.columns)
     groups = {
-        "limit_up": df["limit_up_1d"],
-        "limit_down": df["limit_down_1d"],
+        "limit_up": df["limit_up"],
+        "limit_up_1d": df["limit_up_1d"],
+        "limit_up_2d": df["limit_up_2d"],
+        "limit_up_3d": df["limit_up_3d"],
+        "limit_up_4d": df["limit_up_4d"],
+        "limit_up_5d": df["limit_up_5d"],
+        "limit_up_6d": df["limit_up_6d"],
+        "limit_up_7d": df["limit_up_7d"],
+        "limit_up_8d": df["limit_up_8d"],
+        "limit_up_9d": df["limit_up_9d"],
+        "limit_up_9d_plus": df["limit_up_9d_plus"],
         "limit_up_line": df["limit_up_line"],
+        
+        
+        "limit_down": df["limit_down"],
+        "limit_down_1d": df["limit_down_1d"],
+        "limit_down_2d": df["limit_down_2d"],
+        "limit_down_3d": df["limit_down_3d"],
+        "limit_down_4d": df["limit_down_4d"],
+        "limit_down_5d": df["limit_down_5d"],
+        "limit_down_5d_plus": df["limit_down_5d_plus"],
         "limit_down_line": df["limit_down_line"],
-        "high_price_60": df["price_div_chip_avg_60"] > 1.25,
-        "high_turn_60": df["turn_div_mean_turn_60"] > 3.5,
+        
+        # "high_price_60": df["price_div_chip_avg_60"] > 1.25,
+        # "high_turn_60": df["turn_div_mean_turn_60"] > 3.5,
     }
     return groups
 
 def stats_values(df, group_name, group):
-    observe = ["y_next_1d_ret"]
+    observe = ["y_next_1d_ret", "y_next_1d_close_rate"]
     agg_methods = {
         "mean": np.mean, 
         "std": np.std, 
         "num": len
     }
     
+    default_val = {
+        "mean": 1,
+        "std": 0,
+        "num": 0
+    }
     group = df[group]
     group_agg_names = []
     group_agg_values = []
     for obs_name in observe:
         group_value = group[obs_name]
         for agg_name, agg_func in agg_methods.items():
-            group_agg_names.append("_".join(["style_feat_shif1_of", obs_name, agg_name, group_name]))
-            group_agg_values.append(agg_func(group_value) if len(group_value) else 0)
+            group_agg_names.append("_".join([obs_name, agg_name, group_name]))
+            group_agg_values.append(agg_func(group_value) if len(group_value) else default_val[agg_name])
     return group_agg_names, group_agg_values
         
 
 def generate_style_learning_info_one(argv):
     path, date = argv
     df = joblib.load(path)
+    # print(path)
     groups = agg_groups(df)
     agg_values = [date]
     agg_names = ["date"]
@@ -52,6 +79,7 @@ def generate_style_learning_info():
         if not file.endswith(".pkl"): continue
         path = os.path.join(DAILY_BY_DATE_DIR, file)
         argvs.append((path, to_date(int(file[:-4]))))
+    # generate_style_learning_info_one(argvs[0])
     pool = Pool(THREAD_NUM)
     rets = pool.map(generate_style_learning_info_one, argvs)
     pool.close()
@@ -65,21 +93,21 @@ def generate_style_learning_info():
     df = df.shift(1).fillna(0)
     joblib.dump(df, STYLE_FEATS)
     df.to_csv(STYLE_FEATS.replace(".pkl", ".csv"))
-    merge_style_info()
+    # merge_style_info()
     
-def merge_style_info_one(path):
-    style_feat = joblib.load(STYLE_FEATS)
-    df = joblib.load(path)
-    df = df.join(style_feat, how="left")
-    df.to_csv(path.replace(".pkl", ".csv"))
-    dump(df, path)
+# def merge_style_info_one(path):
+#     style_feat = joblib.load(STYLE_FEATS)
+#     df = joblib.load(path)
+#     df = df.join(style_feat, how="left")
+#     df.to_csv(path.replace(".pkl", ".csv"))
+#     dump(df, path)
     
-def merge_style_info():
-    paths = main_board_stocks()
-    pool = Pool(THREAD_NUM)
-    pool.imap_unordered(merge_style_info_one, paths)
-    pool.close()
-    pool.join()
+# def merge_style_info():
+#     paths = main_board_stocks()
+#     pool = Pool(THREAD_NUM)
+#     pool.imap_unordered(merge_style_info_one, paths)
+#     pool.close()
+#     pool.join()
     
 if __name__ == "__main__":
     generate_style_learning_info()

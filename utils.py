@@ -208,7 +208,7 @@ def hard_disk_cache(force_update=False):
 def get_feature_cols():
     paths = main_board_stocks()
     df = joblib.load(paths[-5])
-    no_feature_cols = set(["code", "open", "high", "low", "close", "preclose", "adjustflag", "tradestatus", "code_name", 'isST'] + [col for col in df.columns if col.startswith("y") or col.startswith("dy")])
+    no_feature_cols = set(["code", "open", "high", "low", "close", "preclose", "adjustflag", "tradestatus", "code_name", 'isST', "industry"] + [col for col in df.columns if col.startswith("y") or col.startswith("dy")])
     feature_cols = [col for col in df.columns if col not in no_feature_cols]
     assert len(feature_cols) > 0
     return feature_cols

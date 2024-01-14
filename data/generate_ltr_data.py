@@ -1,7 +1,8 @@
 from config import *
 from utils import *
-import shutil
+from joblib import dump
 import warnings
+from multiprocessing import Pool
 
 warnings.filterwarnings("ignore")
 
@@ -12,7 +13,7 @@ def dump_ltr_data(argv):
     dump(df_i, path)
     
 def train_val_data_filter(df):
-    return df[reserve_n_last(not_limit_line(df).shift(-1)) & (df.isST != 1)]
+    return df[df["limit_up"] & (df.isST != 1)]
     
 def generate_ltr_data():
     remove_dir(DAILY_BY_DATE_DIR)
@@ -20,24 +21,24 @@ def generate_ltr_data():
     data = []
     for path in main_board_stocks():
         df = joblib.load(path)
-        if "code_name" not in df.columns or not isinstance(df.code_name[-1], str) or "ST" in df.code_name[-1] or "st" in df.code_name[-1] or "sT" in df.code_name[-1]:
-                continue
-        if len(df) < 300: continue
-        df = train_val_data_filter(df)
+        # if "code_name" not in df.columns or not isinstance(df.code_name[-1], str) or "ST" in df.code_name[-1] or "st" in df.code_name[-1] or "sT" in df.code_name[-1]:
+        #     continue
+        if len(df) < 10: continue
+        # df = train_val_data_filter(df)
         data.append(df)
     df = pd.concat(data)
     
     data_by_date = []
     for i, df_i in tqdm(df.groupby("date")):
         
-        df_i["y_ltr_2d_open_high_label"] = df_i["y_next_2_d_high_ratio"] 
-        df_i["y_ltr_2d_open_high_label"][df_i["y_next_2_d_high_ratio"] < 1.02] = 0
-        df_i["y_ltr_2d_open_high_label"][df_i["y_next_2_d_high_ratio"] >= 1.02] = 1
-        df_i["y_ltr_2d_open_high_label"][df_i["y_next_2_d_high_ratio"] >= 1.05] = 2
-        df_i["y_ltr_2d_open_high_label"][df_i["y_next_2_d_high_ratio"] >= 1.09] = 3
-        df_i["y_ltr_2d_open_high_label"][df_i["y_next_2_d_ret"] >= 1.09] = 5
-        df_i["y_ltr_2d_open_high_label"] = df_i["y_ltr_2d_open_high_label"].fillna(0)
-        df_i["y_ltr_2d_open_high_label"] = df_i["y_ltr_2d_open_high_label"].astype(int)
+        # df_i["y_ltr_2d_open_high_label"] = df_i["y_next_2_d_high_ratio"] 
+        # df_i["y_ltr_2d_open_high_label"][df_i["y_next_2_d_high_ratio"] < 1.02] = 0
+        # df_i["y_ltr_2d_open_high_label"][df_i["y_next_2_d_high_ratio"] >= 1.02] = 1
+        # df_i["y_ltr_2d_open_high_label"][df_i["y_next_2_d_high_ratio"] >= 1.05] = 2
+        # df_i["y_ltr_2d_open_high_label"][df_i["y_next_2_d_high_ratio"] >= 1.09] = 3
+        # df_i["y_ltr_2d_open_high_label"][df_i["y_next_2_d_ret"] >= 1.09] = 5
+        # df_i["y_ltr_2d_open_high_label"] = df_i["y_ltr_2d_open_high_label"].fillna(0)
+        # df_i["y_ltr_2d_open_high_label"] = df_i["y_ltr_2d_open_high_label"].astype(int)
         data_by_date.append([to_int_date(i), df_i])
         
     pool = Pool(THREAD_NUM)
