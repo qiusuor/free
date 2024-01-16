@@ -5,10 +5,28 @@ from multiprocessing import Pool
 
 def agg_groups(df):
     groups = {
-        "limit_up": df["limit_up_1d"],
-        "limit_down": df["limit_down_1d"],
+        "limit_up": df["limit_up"],
+        "limit_up_1d": df["limit_up_1d"],
+        "limit_up_2d": df["limit_up_2d"],
+        "limit_up_3d": df["limit_up_3d"],
+        "limit_up_4d": df["limit_up_4d"],
+        "limit_up_5d": df["limit_up_5d"],
+        "limit_up_6d": df["limit_up_6d"],
+        "limit_up_7d": df["limit_up_7d"],
+        "limit_up_8d": df["limit_up_8d"],
+        "limit_up_9d": df["limit_up_9d"],
+        "limit_up_9d_plus": df["limit_up_9d_plus"],
         "limit_up_line": df["limit_up_line"],
+        
+        "limit_down": df["limit_down"],
+        "limit_down_1d": df["limit_down_1d"],
+        "limit_down_2d": df["limit_down_2d"],
+        "limit_down_3d": df["limit_down_3d"],
+        "limit_down_4d": df["limit_down_4d"],
+        "limit_down_5d": df["limit_down_5d"],
+        "limit_down_5d_plus": df["limit_down_5d_plus"],
         "limit_down_line": df["limit_down_line"],
+        
         "high_price_60": df["price_div_chip_avg_60"] > 1.25,
         "high_turn_60": df["turn_div_mean_turn_60"] > 3.5,
     }
