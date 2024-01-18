@@ -40,6 +40,11 @@ def stats_values(df, group_name, group):
         "num": len
     }
     
+    default_value = {
+        "mean": 1,
+        "std": 0,
+        "num": 0
+    }
     group = df[group]
     group_agg_names = []
     group_agg_values = []
@@ -47,7 +52,7 @@ def stats_values(df, group_name, group):
         group_value = group[obs_name]
         for agg_name, agg_func in agg_methods.items():
             group_agg_names.append("_".join(["style_feat_shif1_of", obs_name, agg_name, group_name]))
-            group_agg_values.append(agg_func(group_value) if len(group_value) else 0)
+            group_agg_values.append(agg_func(group_value) if len(group_value) else default_value[agg_name])
     return group_agg_names, group_agg_values
         
 
