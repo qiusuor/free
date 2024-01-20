@@ -76,7 +76,7 @@ def merge_data():
     
 if __name__ == "__main__":
     # parse_recent()
-    upload_data(local_paths=[r'C:\Users\qiusuo\Desktop\free\data\data\minutes_tmp'], target_paths=["/home/qiusuo/free/data/data/minutes/"])
+    upload_data(local_paths=[r'C:\Users\qiusuo\Desktop\free\data\data\minutes_tmp'], target_paths=["/home/qiusuo/free/data/data/minutes_tmp/"])
     # merge_data()
     
 
