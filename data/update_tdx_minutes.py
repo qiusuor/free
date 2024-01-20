@@ -75,7 +75,7 @@ def merge_data():
     pool.join()
     
 if __name__ == "__main__":
-    # parse_recent()
+    parse_recent()
     upload_data(local_paths=[r'C:\Users\qiusuo\Desktop\free\data\data\minutes_tmp'], target_paths=["/home/qiusuo/free/data/data/minutes_tmp/"])
     # merge_data()
     
