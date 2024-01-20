@@ -210,7 +210,19 @@ def inject_style_feature(df):
     df["limit_down_5d"]  = df["limit_down_5d"] & (~df["limit_down_5d_plus"])
      
     df["limit_up_line"] = is_limit_up_line(df)
+    df["limit_up_line_1d"] = is_limit_up_line(df) & df["limit_up_1d"]
+    df["limit_up_line_2d"] = is_limit_up_line(df) & df["limit_up_2d"]
+    df["limit_up_line_3d"] = is_limit_up_line(df) & df["limit_up_3d"]
+    df["limit_up_line_4d"] = is_limit_up_line(df) & df["limit_up_4d"]
+    df["limit_up_line_5d"] = is_limit_up_line(df) & df["limit_up_5d"]
+    df["limit_up_line_6d"] = is_limit_up_line(df) & df["limit_up_6d"]
+    df["limit_up_line_7d"] = is_limit_up_line(df) & df["limit_up_7d"]
+    
     df["limit_down_line"] = is_limit_down_line(df)
+    df["limit_down_line_1d"] = is_limit_down_line(df) & df["limit_down_1d"]
+    df["limit_down_line_2d"] = is_limit_down_line(df) & df["limit_down_2d"]
+    df["limit_down_line_3d"] = is_limit_down_line(df) & df["limit_down_3d"]
+    df["limit_down_line_4d"] = is_limit_down_line(df) & df["limit_down_4d"]
     
 def inject_one(path):
     df = joblib.load(path)

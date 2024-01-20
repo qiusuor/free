@@ -9,7 +9,6 @@ import threading
 import asyncio
 from pyppeteer import launch
 from pyppeteer_stealth import stealth
-from pyppeteer import launcher
 from multiprocessing import Pool
 from utils import *
 from joblib import dump, load
