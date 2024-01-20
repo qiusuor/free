@@ -275,10 +275,10 @@ class SSHConnection(object):
  
  
 def upload_data():
-    ssh = SSHConnection(host='192.168.137.13', port=22, username='qiusuo', pwd='bahksysdd')
+    ssh = SSHConnection(host='192.168.137.13', port=22, username='qiusuo', pwd='bahksysdd', local_paths=None, target_paths=None)
     ssh.connect()
-    local_paths = [r'C:\Users\qiusuo\Desktop\free\data\data\daily_download', r"C:\Users\qiusuo\Desktop\free\data\data\market"]
-    target_paths = ["/home/qiusuo/free/data/data/daily_download/", "/home/qiusuo/free/data/data/market/"]
+    local_paths = local_paths or [r'C:\Users\qiusuo\Desktop\free\data\data\daily_download', r"C:\Users\qiusuo\Desktop\free\data\data\market", ""]
+    target_paths = target_paths or ["/home/qiusuo/free/data/data/daily_download/", "/home/qiusuo/free/data/data/market/"]
     for local_path, target_path in zip(local_paths, target_paths):
         ssh.cmd("rm -rf {}".format(target_path))
         ssh.cmd("mkdir {}".format(target_path))

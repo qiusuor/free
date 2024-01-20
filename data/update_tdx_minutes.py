@@ -35,12 +35,6 @@ def day2csv_data(argv):
     df.set_index("date", inplace=True)
     df.sort_index(inplace=True)
     path = targetDir + os.sep + fname[:2]+'.'+fname[2:-4]+'_'+freq+ '_3' + '.pkl'
-    if os.path.exists(path):
-        old_data = joblib.load(path)
-        if "date" in old_data.columns:
-            old_data.set_index("date", inplace=True)
-        last_day = old_data.day.values[-1]
-        df = pd.concat([old_data, df[df.day > last_day]])
     df.to_csv(path.replace("pkl", "csv"))
     joblib.dump(df, path)
 
@@ -58,11 +52,33 @@ def parse(targetDir):
     pool.join()
 
 def parse_recent():
-    parse(MINUTE_DIR)
-    
+    parse(MINUTE_DIR_TMP)
 
+def merge_data_core(path):
+    old_path = os.path.join(MINUTE_DIR, path)
+    new_path = os.path.join(MINUTE_DIR_TMP, path)
+    df = joblib.load(new_path)
+    if os.path.exists(old_path):
+        old_data = joblib.load(old_path)
+        if "date" in old_data.columns:
+            old_data.set_index("date", inplace=True)
+        last_day = old_data.day.values[-1]
+        df = pd.concat([old_data, df[df.day > last_day]])
+    df.to_csv(old_path.replace("pkl", "csv"))
+    joblib.dump(df, old_path)
+        
+def merge_data():
+    paths = os.listdir(MINUTE_DIR_TMP)
+    pool = Pool(THREAD_NUM)
+    pool.imap_unordered(merge_data_core, paths)
+    pool.close()
+    pool.join()
+    
 if __name__ == "__main__":
-    parse_recent()
+    # parse_recent()
+    upload_data(local_paths=[r'C:\Users\qiusuo\Desktop\free\data\data\minutes_tmp'], target_paths=["/home/qiusuo/free/data/data/minutes/"])
+    # merge_data()
+    
 
 
     

@@ -17,6 +17,7 @@ DAILY_DOWLOAD_DIR_NO_ADJUST = os.path.join(DATA_DIR, "daily_download_no_adjust")
 DAILY_DIR = os.path.join(DATA_DIR, "daily")
 DAILY_BY_DATE_DIR = os.path.join(DATA_DIR, "daily_by_date")
 MINUTE_DIR = os.path.join(DATA_DIR, "minutes")
+MINUTE_DIR_TMP = os.path.join(DATA_DIR, "minutes_tmp")
 MINUTE_FEAT = os.path.join(DATA_DIR, "minutes_features")
 
 EXP_CLS_DIR = os.path.join(ROOT_DIR, "rank/exp_cls")
