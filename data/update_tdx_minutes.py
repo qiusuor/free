@@ -5,6 +5,7 @@ import os
 from multiprocessing import Pool
 from config import *
 from utils import *
+import platform
 
 def day2csv_data(argv):
     path, targetDir = argv
@@ -76,7 +77,8 @@ def merge_data():
     
 if __name__ == "__main__":
     parse_recent()
-    upload_data(local_paths=[r'C:\Users\qiusuo\Desktop\free\data\data\minutes_tmp'], target_paths=["/home/qiusuo/free/data/data/minutes_tmp/"])
+    if "Windows" in platform.platform():
+        upload_data(local_paths=[r'C:\Users\qiusuo\Desktop\free\data\data\minutes_tmp'], target_paths=["/home/qiusuo/free/data/data/minutes_tmp/"])
     # merge_data()
     
 
