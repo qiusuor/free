@@ -1,5 +1,5 @@
 set -x -e
-export SEARCH_END_DAY=20240111
+export SEARCH_END_DAY=21990101
 LOG=run_classifer.log
 rm -rf $LOG
 python data/discard.py >>$LOG
