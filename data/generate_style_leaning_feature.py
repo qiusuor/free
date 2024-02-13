@@ -38,8 +38,8 @@ def agg_groups(df):
         "limit_down_line_3d": df["limit_down_line_3d"],
         "limit_down_line_4d": df["limit_down_line_4d"],
         
-        "high_price_60": df["price_div_chip_avg_60"] > 1.25,
-        "high_turn_60": df["turn_div_mean_turn_60"] > 3.5,
+        # "high_price_60": df["price_div_chip_avg_60"] > 1.25,
+        # "high_turn_60": df["turn_div_mean_turn_60"] > 3.5,
     }
     return groups
 
@@ -63,7 +63,10 @@ def stats_values(df, group_name, group):
         group_value = group[obs_name]
         for agg_name, agg_func in agg_methods.items():
             group_agg_names.append("_".join(["style_feat_shif1_of", obs_name, agg_name, group_name]))
-            group_agg_values.append(agg_func(group_value) if len(group_value) else default_value[agg_name])
+            agg_value = agg_func(group_value) if len(group_value) else default_value[agg_name]
+            if agg_name == "mean":
+                agg_value -= 1
+            group_agg_values.append(agg_value)
     return group_agg_names, group_agg_values
         
 
@@ -96,8 +99,7 @@ def generate_style_learning_info():
     df = pd.DataFrame(values, columns=names)
     df.set_index("date", inplace=True)
     df.sort_index(inplace=True)
-    df = df.shift(1).fillna(0)
-    df = df.iloc[2:]
+    df = df.iloc[1:-1]
     joblib.dump(df, STYLE_FEATS)
     df.to_csv(STYLE_FEATS.replace(".pkl", ".csv"))
     merge_style_info()

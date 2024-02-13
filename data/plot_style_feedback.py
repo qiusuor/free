@@ -1,8 +1,7 @@
 from utils import *
 from ydata_profiling import ProfileReport
 
-
-df = joblib.load("/home/qiusuo/free/data/data/market/style_features.pkl")
+df = joblib.load("data/data/market/style_features.pkl")
 
 # print(df.describe())
 # print(df.columns)
@@ -18,9 +17,9 @@ groups = {
     "limit_up_line": [col for col in df.columns if "limit_up_line" in col],
     "limit_down": [col for col in df.columns if "limit_down" in col and not "limit_down_line" in col],
     "limit_down_line": [col for col in df.columns if "limit_down_line" in col],
-    "high_price": [col for col in df.columns if "high_price" in col],
-    "high_turn": [col for col in df.columns if "high_turn" in col],
+    # "high_price": [col for col in df.columns if "high_price" in col],
+    # "high_turn": [col for col in df.columns if "high_turn" in col],
 }
-for name, group in groups.items():
-    profile = ProfileReport(df[group], title="Profiling Report")
-    profile.to_file("style_feedback_{}.html".format(name))
+# for name, group in groups.items():
+#     profile = ProfileReport(df[group], title="Profiling Report")
+#     profile.to_file("style_feedback_{}.html".format(name))

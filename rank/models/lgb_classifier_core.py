@@ -39,8 +39,6 @@ def topk_shot(data, label, k=10, watch_list=[]):
     watches[f"sharp_{k}"] = (watches[f"y_next_2_d_high_ratio_topk_{k}_mean"] + watches[f"y_next_2_d_low_ratio_topk_{k}_mean"]) / 2
     return miss_cnt, shot_cnt, watches
 
-def train_val_data_filter(df):
-    return df[df["limit_up"] & not_limit_line(df) & (df.isST != 1)]
 
 def train_lightgbm(argv):
     features, label, train_start_day, train_end_day, val_start_day, val_end_day, n_day, train_len, num_leaves, max_depth, min_data_in_leaf, cache_data, epoch = argv
@@ -91,7 +89,6 @@ def train_lightgbm(argv):
         for path in main_board_stocks():
             df = joblib.load(path)
             if len(df) < 300: continue
-            df = train_val_data_filter(df)
             if len(df) <=0 or df.isST[-1]:
                 continue
             if "code_name" not in df.columns or not isinstance(df.code_name[-1], str) or "ST" in df.code_name[-1] or "st" in df.code_name[-1] or "sT" in df.code_name[-1]:

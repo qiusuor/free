@@ -339,3 +339,7 @@ def main_board_stocks():
         path = os.path.join(DAILY_DIR, file)
         paths.append(path)
     return paths
+
+def data_filter(df):
+    return df[not_limit_line(df) & (df.isST != 1) & is_limit_up(df)]
+    

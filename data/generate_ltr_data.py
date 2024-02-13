@@ -11,9 +11,6 @@ def dump_ltr_data(argv):
     df_i.to_csv(path.replace(".pkl", ".csv"))
     dump(df_i, path)
     
-def train_val_data_filter(df):
-    return df[reserve_n_last(not_limit_line(df).shift(-1)) & (df.isST != 1)]
-    
 def generate_ltr_data():
     remove_dir(DAILY_BY_DATE_DIR)
     make_dir(DAILY_BY_DATE_DIR)
@@ -23,7 +20,6 @@ def generate_ltr_data():
         if "code_name" not in df.columns or not isinstance(df.code_name[-1], str) or "ST" in df.code_name[-1] or "st" in df.code_name[-1] or "sT" in df.code_name[-1]:
                 continue
         if len(df) < 300: continue
-        df = train_val_data_filter(df)
         data.append(df)
     df = pd.concat(data)
     
