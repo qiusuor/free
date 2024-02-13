@@ -348,7 +348,7 @@ def inject_industry_and_name(df):
     return df
 
 def data_filter(df):
-    df = df[:to_date(DATA_START_DAY)]
+    df = df[to_date(DATA_START_DAY):]
     return df
     return df[not_limit_line(df) & (df.isST != 1) & is_limit_up(df)]
     
