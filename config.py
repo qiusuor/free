@@ -3,6 +3,7 @@ from multiprocessing import cpu_count
 
 THREAD_NUM = cpu_count()
 SEARCH_END_DAY = 21990101
+DATA_START_DAY = 20220101
 if "SEARCH_END_DAY" in os.environ:
     SEARCH_END_DAY = int(os.environ["SEARCH_END_DAY"])
 VAL_N_LAST_DAY = 5
