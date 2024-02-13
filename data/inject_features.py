@@ -8,6 +8,7 @@ from utils import *
 from tqdm import tqdm
 from joblib import dump
 import warnings
+import platform
 
 warnings.filterwarnings("ignore")
 
@@ -228,9 +229,10 @@ def inject_one(path):
     df = joblib.load(path)
     
     inject_ta_features(df)
-    inject_chip_features(df)
-    inject_price_turn_features(df)
-    inject_alpha_features(df)
+    if "Linux" in platform.platform():
+        inject_chip_features(df)
+        inject_price_turn_features(df)
+        inject_alpha_features(df)
     inject_style_feature(df)
     
     # minu_feat_path = os.path.join(MINUTE_FEAT, os.path.basename(path).replace("_d_2", "_1_3"))
