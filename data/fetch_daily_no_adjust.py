@@ -1,8 +1,6 @@
 from data.fetch_core import fetch
 from utils import *
 import platform
-from data.check_data import check_daily
-from data.discard import discard_labels
 
 def fetch_daily_no_adjust():
     return fetch(freqs=['d'], num_thread=8, adjustflag='3', save_dir=DAILY_DOWLOAD_DIR_NO_ADJUST)

@@ -88,13 +88,7 @@ def train_lightgbm(argv):
         dataset = []
         for path in main_board_stocks():
             df = joblib.load(path)
-            if len(df) < 300: continue
-            if len(df) <=0 or df.isST[-1]:
-                continue
-            if "code_name" not in df.columns or not isinstance(df.code_name[-1], str) or "ST" in df.code_name[-1] or "st" in df.code_name[-1] or "sT" in df.code_name[-1]:
-                continue
             df["date"] = df.index
-            df = df.iloc[-350:]
             dataset.append(df)
         dataset = pd.concat(dataset, axis=0)
         with open(cache_data, 'wb') as f:

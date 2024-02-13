@@ -163,14 +163,6 @@ def inject_alpha_features(df):
     
     return df
 
-def inject_industry_and_name(df):
-    ind = joblib.load(INDUSTRY_INFO)
-    df["industry"] = ind[df.code[-1]]["industry"]
-    df["industry"] = df["industry"].astype('category')
-    df["code_name"] = ind[df.code[-1]]["code_name"]
-    
-    return df
-
     
 def inject_style_feature(df):
     df["up_shadow"] = (df["high"] - df["close"]) / (df["close"] + 1e-6)

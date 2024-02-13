@@ -36,9 +36,6 @@ val_delay_day = 30
 device = torch.device("mps") if platform.machine() == 'arm64' else torch.device("cuda")
 
 
-def train_val_data_filter(df):
-    return df[reserve_n_last(not_limit_line(df).shift(-1)) & (df.isST != 1)]
-
 @hard_disk_cache(force_update=False)
 def load_data(n_val_day=n_val_day, val_delay_day=val_delay_day):
     feature_cols = get_feature_cols()
@@ -54,7 +51,6 @@ def load_data(n_val_day=n_val_day, val_delay_day=val_delay_day):
     for path in main_board_stocks():
         df = joblib.load(path)
         if len(df) < 300: continue
-        df = train_val_data_filter(df)
         if len(df) <=0 or df.isST[-1]:
             continue
         if "code_name" not in df.columns or not isinstance(df.code_name[-1], str) or "ST" in df.code_name[-1] or "st" in df.code_name[-1] or "sT" in df.code_name[-1]:

@@ -9,7 +9,6 @@ from tqdm import tqdm
 from joblib import dump
 import warnings
 import platform
-from data.inject_features import inject_industry_and_name
 
 warnings.filterwarnings("ignore")
 
@@ -51,7 +50,6 @@ def inject_one(path):
         df["y_next_{}_d_low".format(n_day)] = df["low"].rolling(n_day).apply(lambda x:min(x[1:])).shift(-n_day)
         df["y_next_{}_d_low_ratio".format(n_day)] = df["y_next_{}_d_low".format(n_day)] / df["open"].shift(-1)
         
-    inject_industry_and_name(df)
     df = data_filter(df)
     df.to_csv(path.replace(".pkl", ".csv"))
     dump(df, path)

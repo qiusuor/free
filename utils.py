@@ -340,6 +340,14 @@ def main_board_stocks():
         paths.append(path)
     return paths
 
+def inject_industry_and_name(df):
+    ind = joblib.load(INDUSTRY_INFO)
+    df["industry"] = ind[df.code[-1]]["industry"]
+    df["industry"] = df["industry"].astype('category')
+    df["code_name"] = ind[df.code[-1]]["code_name"]
+    return df
+
 def data_filter(df):
+    df = df.iloc[-350:]
     return df[not_limit_line(df) & (df.isST != 1) & is_limit_up(df)]
     

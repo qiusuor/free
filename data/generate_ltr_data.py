@@ -17,9 +17,6 @@ def generate_ltr_data():
     data = []
     for path in main_board_stocks():
         df = joblib.load(path)
-        if len(df) <= 0 or "code_name" not in df.columns or not isinstance(df.code_name[-1], str) or "ST" in df.code_name[-1] or "st" in df.code_name[-1] or "sT" in df.code_name[-1]:
-                continue
-        if len(df) < 300: continue
         data.append(df)
     df = pd.concat(data)
     

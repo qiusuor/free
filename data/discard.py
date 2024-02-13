@@ -16,6 +16,11 @@ warnings.filterwarnings("ignore")
 def discard_one(path):
     df = pd.read_csv(path)
     dealTime(df)
+    inject_industry_and_name(df)
+    
+    if "code_name" not in df.columns or not isinstance(df.code_name[-1], str) or "ST" in df.code_name[-1] or "st" in df.code_name[-1] or "sT" in df.code_name[-1]:
+        return
+    
     keep_columns = "code,open,high,low,close,preclose,volume,amount,adjustflag,turn,tradestatus,pctChg,peTTM,pbMRQ,psTTM,pcfNcfTTM,isST,factor,price,value".split(",")
     df = df[keep_columns]
     df = df[:to_date(SEARCH_END_DAY)]
@@ -24,12 +29,11 @@ def discard_one(path):
     dump(df, path.replace(".csv", ".pkl"))
     
 
-def discard_labels():
+def discard_info():
     pool = Pool(THREAD_NUM)
     paths = []
     src_dir = DAILY_DOWLOAD_DIR
-    if os.path.exists(DAILY_DIR):
-        shutil.rmtree(DAILY_DIR)
+    remove_dir(DAILY_DIR)
     make_dir(DAILY_DIR)
     for file in tqdm(os.listdir(src_dir)):
         code = file.split("_")[0]
@@ -46,5 +50,5 @@ def discard_labels():
     pool.join()
      
 if __name__ == "__main__":
-    discard_labels()
+    discard_info()
     

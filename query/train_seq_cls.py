@@ -65,8 +65,6 @@ def topk_shot(data, label, k=10, watch_list=[]):
     watches[f"sharp_{k}"] = (watches[f"y_next_2_d_high_ratio_topk_{k}_mean"] + watches[f"y_next_2_d_low_ratio_topk_{k}_mean"]) / 2
     return miss_cnt, shot_cnt, watches
 
-def train_val_data_filter(df):
-    return df[reserve_n_last(not_limit_line(df).shift(-1)) & (df.isST != 1)]
 
 @hard_disk_cache(force_update=False)
 def load_data():
@@ -86,7 +84,6 @@ def load_data():
     for path in main_board_stocks():
         df = joblib.load(path)
         if len(df) < 300: continue
-        df = train_val_data_filter(df)
         if len(df) <=0 or df.isST[-1]:
             continue
         if "code_name" not in df.columns or not isinstance(df.code_name[-1], str) or "ST" in df.code_name[-1] or "st" in df.code_name[-1] or "sT" in df.code_name[-1]:
