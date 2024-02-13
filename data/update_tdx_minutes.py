@@ -53,6 +53,7 @@ def parse(targetDir):
     pool.join()
 
 def parse_recent():
+    remove_dir(MINUTE_DIR_TMP)
     parse(MINUTE_DIR_TMP)
 
 def merge_data_core(path):
