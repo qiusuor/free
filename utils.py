@@ -349,5 +349,5 @@ def inject_industry_and_name(df):
 
 def data_filter(df):
     df = df.iloc[-350:]
-    return df[not_limit_line(df) & (df.isST != 1) & is_limit_up(df)]
+    return df[not_limit_line(df) & (df.isST != 1)]
     

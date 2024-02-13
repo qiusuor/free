@@ -21,7 +21,7 @@ def discard_one(path):
     if "code_name" not in df.columns or not isinstance(df.code_name[-1], str) or "ST" in df.code_name[-1] or "st" in df.code_name[-1] or "sT" in df.code_name[-1]:
         return
     
-    keep_columns = "code,open,high,low,close,preclose,volume,amount,adjustflag,turn,tradestatus,pctChg,peTTM,pbMRQ,psTTM,pcfNcfTTM,isST,factor,price,value".split(",")
+    keep_columns = "code,open,high,low,close,preclose,volume,amount,adjustflag,turn,tradestatus,pctChg,peTTM,pbMRQ,psTTM,pcfNcfTTM,isST,factor,price,value,industry,code_name".split(",")
     df = df[keep_columns]
     df = df[:to_date(SEARCH_END_DAY)]
     path = os.path.join(DAILY_DIR, os.path.basename(path))
