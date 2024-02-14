@@ -30,4 +30,4 @@ for filed in fileds:
     df["y_next_1d_ret_mean_{}".format(filed)+"_cum"] = (1 + df["style_feat_y_next_1d_ret_mean_"+filed]).cumprod()
     
 keys = [col for col in df.columns if "_cum" in col]
-render_html(df[keys], filed, "cum_retr.html")
+render_html(df[keys], "cum_retr", "cum_retr.html")
