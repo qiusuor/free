@@ -26,7 +26,7 @@ def inject_one(path):
     df["y_next_1d_close_rate_05"] = df["y_next_1d_close_rate"] >= 1.05
     df["y_next_1d_close_rate_08"] = df["y_next_1d_close_rate"] >= 1.08
     df["y_next_1d_close_rate_095"] = df["y_next_1d_close_rate"] >= 1.095
-    df["y_next_1d_ret"] = df["close"].shift(-1) / df["close"]
+    df["y_next_1d_ret"] = df["open"].shift(-1) / df["close"]
     df["y_next_1d_up_to_limit"] =  is_limit_up(df).shift(-1).astype(bool)
     df["y_next_1d_up_to_limit"].fillna(False, inplace=True)
     df["y_next_1d_close_2d_open_rate"] = df["open"].shift(-2) / df["close"].shift(-1)
