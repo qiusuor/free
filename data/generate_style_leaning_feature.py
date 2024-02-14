@@ -5,45 +5,45 @@ from multiprocessing import Pool
 
 def agg_groups(df):
     groups = {
-        "limit_up": df["limit_up"],
-        "limit_up_1d": df["limit_up_1d"],
-        "limit_up_2d": df["limit_up_2d"],
-        "limit_up_3d": df["limit_up_3d"],
-        "limit_up_4d": df["limit_up_4d"],
-        "limit_up_5d": df["limit_up_5d"],
-        "limit_up_6d": df["limit_up_6d"],
-        "limit_up_7d": df["limit_up_7d"],
-        "limit_up_8d": df["limit_up_8d"],
-        "limit_up_9d": df["limit_up_9d"],
-        "limit_up_9d_plus": df["limit_up_9d_plus"],
-        "limit_up_line": df["limit_up_line"],
-        "limit_up_line_1d": df["limit_up_line_1d"],
-        "limit_up_line_2d": df["limit_up_line_2d"],
-        "limit_up_line_3d": df["limit_up_line_3d"],
-        "limit_up_line_4d": df["limit_up_line_4d"],
-        "limit_up_line_5d": df["limit_up_line_5d"],
-        "limit_up_line_6d": df["limit_up_line_6d"],
-        "limit_up_line_7d": df["limit_up_line_7d"],
+        # "limit_up": (df["limit_up"], 1),
+        "limit_up_1d": (df["limit_up_1d"], ~df["limit_up_pre_day"].astype(bool)),
+        "limit_up_2d": (df["limit_up_2d"], df["limit_up_1d_pre_day"]),
+        "limit_up_3d": (df["limit_up_3d"], df["limit_up_2d_pre_day"]),
+        "limit_up_4d": (df["limit_up_4d"], df["limit_up_3d_pre_day"]),
+        "limit_up_5d": (df["limit_up_5d"], df["limit_up_4d_pre_day"]),
+        "limit_up_6d": (df["limit_up_6d"], df["limit_up_5d_pre_day"]),
+        "limit_up_7d": (df["limit_up_7d"], df["limit_up_6d_pre_day"]),
+        "limit_up_8d": (df["limit_up_8d"], df["limit_up_7d_pre_day"]),
+        "limit_up_9d": (df["limit_up_9d"], df["limit_up_8d_pre_day"]),
+        # "limit_up_9d_plus": (df["limit_up_9d_plus"], 1),
+        # "limit_up_line": (df["limit_up_line"], 1),
+        "limit_up_line_1d": (df["limit_up_line_1d"], ~df["limit_up_pre_day"].astype(bool)),
+        "limit_up_line_2d": (df["limit_up_line_2d"], df["limit_up_line_1d_pre_day"]),
+        "limit_up_line_3d": (df["limit_up_line_3d"], df["limit_up_line_2d_pre_day"]),
+        "limit_up_line_4d": (df["limit_up_line_4d"], df["limit_up_line_3d_pre_day"]),
+        "limit_up_line_5d": (df["limit_up_line_5d"], df["limit_up_line_4d_pre_day"]),
+        "limit_up_line_6d": (df["limit_up_line_6d"], df["limit_up_line_5d_pre_day"]),
+        "limit_up_line_7d": (df["limit_up_line_7d"], df["limit_up_line_6d_pre_day"]),
         
-        "limit_down": df["limit_down"],
-        "limit_down_1d": df["limit_down_1d"],
-        "limit_down_2d": df["limit_down_2d"],
-        "limit_down_3d": df["limit_down_3d"],
-        "limit_down_4d": df["limit_down_4d"],
-        "limit_down_5d": df["limit_down_5d"],
-        "limit_down_5d_plus": df["limit_down_5d_plus"],
-        "limit_down_line": df["limit_down_line"],
-        "limit_down_line_1d": df["limit_down_line_1d"],
-        "limit_down_line_2d": df["limit_down_line_2d"],
-        "limit_down_line_3d": df["limit_down_line_3d"],
-        "limit_down_line_4d": df["limit_down_line_4d"],
+        # "limit_down": (df["limit_down"], 1),
+        "limit_down_1d": (df["limit_down_1d"], ~df["limit_down_pre_day"].astype(bool)),
+        "limit_down_2d": (df["limit_down_2d"], df["limit_down_1d_pre_day"]),
+        "limit_down_3d": (df["limit_down_3d"], df["limit_down_2d_pre_day"]),
+        "limit_down_4d": (df["limit_down_4d"], df["limit_down_3d_pre_day"]),
+        "limit_down_5d": (df["limit_down_5d"], df["limit_down_4d_pre_day"]),
+        # "limit_down_5d_plus": df["limit_down_5d_plus"],
+        # "limit_down_line": (df["limit_down_line"], 1),
+        "limit_down_line_1d": (df["limit_down_line_1d"], ~df["limit_down_line_pre_day"].astype(bool)),
+        "limit_down_line_2d": (df["limit_down_line_2d"], df["limit_down_line_1d_pre_day"]),
+        "limit_down_line_3d": (df["limit_down_line_3d"], df["limit_down_line_2d_pre_day"]),
+        "limit_down_line_4d": (df["limit_down_line_4d"], df["limit_down_line_3d_pre_day"]),
         
         # "high_price_60": df["price_div_chip_avg_60"] > 1.25,
         # "high_turn_60": df["turn_div_mean_turn_60"] > 3.5,
     }
     return groups
 
-def stats_values(df, group_name, group):
+def stats_values(df, group_name, group, date, mask):
     observe = ["y_next_1d_ret"]
     agg_methods = {
         "mean": np.mean, 
@@ -61,12 +61,15 @@ def stats_values(df, group_name, group):
     group_agg_values = []
     for obs_name in observe:
         group_value = group[obs_name]
-        limit_value = df["limit_up"]
-        limit_value = limit_value[df.reach_limit_up & (df[group_name].shift((1)))]
+        limit_value = df[group_name]
+        limit_value = limit_value[df.reach_limit_up & mask]
         group_agg_names.append("_".join(["style_feat", obs_name, "close_rate", group_name]))
         agg_value = (limit_value.astype(float).mean() - 1)
+        if np.isnan(agg_value):
+            agg_value = 0
         group_agg_values.append(agg_value)
-        print(group_name, agg_value)
+        # if np.isnan(agg_value) and group_name == "limit_up_1d":
+        #     print(group_name, agg_value, limit_value, date)
         for agg_name, agg_func in agg_methods.items():
             group_agg_names.append("_".join(["style_feat", obs_name, agg_name, group_name]))
             agg_value = agg_func(group_value) if len(group_value) else default_value[agg_name]
@@ -83,8 +86,8 @@ def generate_style_learning_info_one(argv):
     groups = agg_groups(df)
     agg_values = [date]
     agg_names = ["date"]
-    for group_name, group in groups.items():
-        group_agg_names, group_agg_values = stats_values(df, group_name, group)
+    for group_name, (group, mask) in groups.items():
+        group_agg_names, group_agg_values = stats_values(df, group_name, group, date, mask)
         agg_values.extend(group_agg_values)
         agg_names.extend(group_agg_names)
     return agg_names, agg_values

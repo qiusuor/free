@@ -219,6 +219,11 @@ def inject_style_feature(df):
     df["limit_down_line_3d"] = is_limit_down_line(df) & df["limit_down_3d"]
     df["limit_down_line_4d"] = is_limit_down_line(df) & df["limit_down_4d"]
     
+    pre_day_values = ["limit_up", "limit_up_1d", "limit_up_2d", "limit_up_3d", "limit_up_4d", "limit_up_5d", "limit_up_6d", "limit_up_7d", "limit_up_8d", "limit_up_9d", "limit_up_9d_plus", "limit_up_line", "limit_up_line_1d", "limit_up_line_2d", "limit_up_line_3d", "limit_up_line_4d", "limit_up_line_5d", "limit_up_line_6d", "limit_up_line_7d", "limit_down", "limit_down_1d", "limit_down_2d", "limit_down_3d", "limit_down_4d", "limit_down_5d", "limit_down_5d_plus", "limit_down_line", "limit_down_line_1d", "limit_down_line_2d", "limit_down_line_3d", "limit_down_line_4d"]
+    for col in pre_day_values:
+        df[col+"_pre_day"] = df[col].shift(1)
+        df[col+"_pre_2_day"] = df[col].shift(2)
+    
 def inject_one(path):
     df = joblib.load(path)
     

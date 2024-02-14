@@ -6,7 +6,7 @@ df = joblib.load("data/data/market/style_features.pkl")
 # print(df.describe())
 # print(df.columns)
 # exit(0)
-fileds = ["limit_up", "limit_up_1d", "limit_up_2d", "limit_up_3d", "limit_up_4d", "limit_up_5d", "limit_up_6d", "limit_up_7d", "limit_up_8d"]
+fileds = ["limit_up_1d", "limit_up_2d", "limit_up_3d", "limit_up_4d", "limit_up_5d", "limit_up_6d", "limit_up_7d", "limit_up_8d"]
 
 for filed in fileds:
     keys = ["style_feat_y_next_1d_ret_mean_"+filed, "style_feat_y_next_1d_ret_std_"+filed, "style_feat_y_next_1d_ret_close_rate_"+filed]
