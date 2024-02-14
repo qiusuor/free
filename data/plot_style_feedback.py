@@ -2,7 +2,7 @@ from utils import *
 from ydata_profiling import ProfileReport
 
 df = joblib.load("data/data/market/style_features.pkl")
-
+df = df.iloc[-120:]
 # print(df.describe())
 # print(df.columns)
 # exit(0)
@@ -25,7 +25,6 @@ for name, group in groups.items():
     profile = ProfileReport(df[group], title="Profiling Report")
     profile.to_file("style_feedback_{}.html".format(name))
 
-df = df.iloc[-120:]
 for filed in fileds:
     df["y_next_1d_ret_mean_{}".format(filed)+"_cum"] = (1 + df["style_feat_y_next_1d_ret_mean_"+filed]).cumprod()
     
