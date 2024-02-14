@@ -168,6 +168,7 @@ def inject_style_feature(df):
     df["up_shadow"] = (df["high"] - df["close"]) / (df["close"] + 1e-6)
     df["down_shadow"] = (df["low"] - df["close"]) / (df["close"] + 1e-6)
     df["limit_up"] = is_limit_up(df)
+    df["reach_limit_up"] = is_reach_limit_up(df)
     df["limit_up_1d"] = is_limit_up(df)
     df["limit_up_2d"] = is_limit_up(df) & (df["limit_up_1d"].shift(1))
     df["limit_up_3d"] = is_limit_up(df) & (df["limit_up_2d"].shift(1))
@@ -190,6 +191,7 @@ def inject_style_feature(df):
     df["limit_up_9d"] = df["limit_up_9d"] & (~df["limit_up_9d_plus"])
     
     df["limit_down"] = is_limit_down(df)
+    df["reach_limit_down"] = is_reach_limit_down(df)
     df["limit_down_1d"] = is_limit_down(df)
     df["limit_down_2d"] = is_limit_down(df) & (df["limit_down_1d"].shift(1))
     df["limit_down_3d"] = is_limit_down(df) & (df["limit_down_2d"].shift(1))

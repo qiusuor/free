@@ -61,12 +61,19 @@ def stats_values(df, group_name, group):
     group_agg_values = []
     for obs_name in observe:
         group_value = group[obs_name]
+        limit_value = df["limit_up"]
+        limit_value = limit_value[df.reach_limit_up & (df[group_name].shift((1)))]
+        group_agg_names.append("_".join(["style_feat", obs_name, "close_rate", group_name]))
+        agg_value = (limit_value.astype(float).mean() - 1)
+        group_agg_values.append(agg_value)
+        print(group_name, agg_value)
         for agg_name, agg_func in agg_methods.items():
-            group_agg_names.append("_".join(["style_feat_shif1_of", obs_name, agg_name, group_name]))
+            group_agg_names.append("_".join(["style_feat", obs_name, agg_name, group_name]))
             agg_value = agg_func(group_value) if len(group_value) else default_value[agg_name]
             if agg_name == "mean":
                 agg_value -= 1
             group_agg_values.append(agg_value)
+
     return group_agg_names, group_agg_values
         
 
