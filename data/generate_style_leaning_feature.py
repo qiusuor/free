@@ -66,7 +66,7 @@ def stats_values(df, group_name, group, date, mask):
         group_agg_names.append("_".join(["style_feat", obs_name, "close_rate", group_name]))
         agg_value = (limit_value.astype(float).mean() - 1)
         if np.isnan(agg_value):
-            agg_value = 0
+            agg_value = 0.5
         group_agg_values.append(agg_value)
         # if np.isnan(agg_value) and group_name == "limit_up_1d":
         #     print(group_name, agg_value, limit_value, date)
