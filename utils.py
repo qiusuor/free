@@ -295,13 +295,13 @@ def ceil2(x):
     return (math.ceil(x * 100)) / 100
     
 def is_reach_limit_up(df):
-    return (df.high >= (df.close.shift(1) * 1.1).apply(floor2))
+    return (df.high >= (df.close.shift(1) * 1.1).apply(floor2)) & (df.open < df .high)
 
 def is_limit_up(df):
     return (df.close >= (df.close.shift(1) * 1.1).apply(floor2))
 
 def is_reach_limit_down(df):
-    return (df.low <= (df.close.shift(1) * 0.9).apply(ceil2))
+    return (df.low <= (df.close.shift(1) * 0.9).apply(ceil2)) & (df.open > df .low)
 
 def is_limit_down(df):
     return (df.close <= (df.close.shift(1) * 0.9).apply(ceil2))
