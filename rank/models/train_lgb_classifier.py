@@ -11,7 +11,7 @@ import platform
 if __name__ == "__main__":
     
     df = joblib.load(os.path.join(DAILY_DIR, "sh.600000_d_2.pkl"))
-    if "code_name" not in df.columns:
+    if "adx_2" not in df.columns:
         prepare_data(update=False)
     
     search_labels = [
@@ -109,7 +109,7 @@ if __name__ == "__main__":
                         
 
     np.random.shuffle(argvs)
-    pool = Pool(32 if "Linux" in platform.platform() else 2)
+    pool = Pool(16 if "Linux" in platform.platform() else 2)
     pool.imap_unordered(train_lightgbm, argvs)
     pool.close()
     pool.join()

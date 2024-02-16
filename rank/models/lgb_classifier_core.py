@@ -59,7 +59,7 @@ def train_lightgbm(argv):
         "num_iterations": 5000,
         "early_stopping_rounds": 20,
         "min_gain_to_split": 0,
-        "num_threads": 8,
+        "num_threads": 16,
     }
     
     pred_mode = False
