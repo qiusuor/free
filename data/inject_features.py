@@ -167,7 +167,7 @@ def inject_alpha_features(df):
 def inject_style_feature(df):
     df["up_shadow"] = (df["high"] - df["close"]) / (df["close"] + 1e-6)
     df["down_shadow"] = (df["low"] - df["close"]) / (df["close"] + 1e-6)
-    df["open_close"] = (df["open"] - df["close"]) / df["close"] + 1
+    df["open_close"] = (df["close"] - df["open"]) / df["close"] + 1
     df["limit_up"] = is_limit_up(df)
     df["reach_limit_up"] = is_reach_limit_up(df)
     df["limit_up_1d"] = is_limit_up(df)

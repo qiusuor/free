@@ -212,7 +212,7 @@ def hard_disk_cache(force_update=False):
 def get_feature_cols():
     paths = main_board_stocks()
     df = joblib.load(paths[-5])
-    no_feature_cols = set(["code", "adjustflag", "tradestatus", "code_name", "shiborON", "shibor1W", "shibor2W", "shibor3M", "shibor9M", "shibor1Y", "industry", 'CDLTHRUSTING', 'CDLDOJI', 'CDLHIKKAKE', 'CDLHARAMICROSS', 'CDLEVENINGSTAR', 'CDLSTICKSANDWICH', 'CDLDRAGONFLYDOJI', 'CDLDOJISTAR', 'CDL3BLACKCROWS', 'CDLSEPARATINGLINES', 'CDLTAKURI', 'CDLEVENINGDOJISTAR', 'CDLLADDERBOTTOM', 'CDLONNECK', 'CDLUNIQUE3RIVER', 'CDLIDENTICAL3CROWS', 'CDLXSIDEGAP3METHODS', 'CDLADVANCEBLOCK', 'CDLCOUNTERATTACK', 'CDLGAPSIDESIDEWHITE', 'CDL3LINESTRIKE', 'CDL3INSIDE', 'CDLTASUKIGAP', 'CDLHIKKAKEMOD', 'CDLTRISTAR', 'CDLRISEFALL3METHODS', 'CDLBREAKAWAY', 'CDLABANDONEDBABY', 'CDLKICKING', 'CDLKICKINGBYLENGTH', 'CDLMATHOLD', 'CDLCONCEALBABYSWALL', 'CDL3STARSINSOUTH', 'isST'] + [col for col in df.columns if col.startswith("y") or col.startswith("dy") or col.startswith("price_div_chip_avg_") or col.startswith("turn_div_mean_turn_") ])
+    no_feature_cols = set(["code", "adjustflag", "tradestatus", "code_name", 'isST'] + [col for col in df.columns if col.startswith("y") or col.startswith("dy")])
     feature_cols = [col for col in df.columns if col not in no_feature_cols]
     assert len(feature_cols) > 0
     return feature_cols
@@ -355,6 +355,6 @@ def inject_industry_and_name(df):
 
 def data_filter(df):
     df = df[to_date(DATA_START_DAY):]
-    return df
-    return df[not_limit_line(df) & (df.isST != 1) & is_limit_up(df)]
+    # return df
+    return df[not_limit_line(df) & (df.isST != 1) & df["limit_up"]]
     
