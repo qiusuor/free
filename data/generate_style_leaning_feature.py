@@ -44,7 +44,7 @@ def agg_groups(df):
     return groups
 
 def stats_values(df, group_name, group, date, mask):
-    observe = ["y_next_1d_ret"]
+    observe = ["y_next_1d_ret", "y_open_close"]
     agg_methods = {
         "mean": np.mean, 
         "std": np.std, 

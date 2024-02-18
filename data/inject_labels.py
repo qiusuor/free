@@ -17,6 +17,7 @@ def inject_one(path):
     df = df[df["volume"] != 0]
     
     future_n_day_high_low = [2]
+    df["y_open_close"] = df["open_close"].shift(-1)
     df["y_next_1d_close_rate"] = df["close"].shift(-1) / df["open"].shift(-1)
     df["y_next_1d_close_rate"].fillna(0, inplace=True)
     df["y_next_1d_close_rate_01"] = df["y_next_1d_close_rate"] >= 1.01

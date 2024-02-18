@@ -9,7 +9,7 @@ df = df.iloc[-120:]
 fileds = ["limit_up_1d", "limit_up_2d", "limit_up_3d", "limit_up_4d", "limit_up_5d", "limit_up_6d", "limit_up_7d", "limit_up_8d"]
 
 for filed in fileds:
-    keys = ["style_feat_y_next_1d_ret_mean_"+filed, "style_feat_y_next_1d_ret_std_"+filed, "style_feat_y_next_1d_ret_close_rate_"+filed]
+    keys = ["style_feat_y_next_1d_ret_mean_"+filed, "style_feat_y_next_1d_ret_std_"+filed, "style_feat_y_next_1d_ret_close_rate_"+filed, "style_feat_y_open_close_mean_"+filed]
     render_html(df[keys], filed, "{}.html".format(filed))
 
 groups = {
@@ -18,6 +18,7 @@ groups = {
     "limit_down": [col for col in df.columns if "limit_down" in col and not "limit_down_line" in col],
     "limit_down_line": [col for col in df.columns if "limit_down_line" in col],
     "close_rate": [col for col in df.columns if "close_rate" in col],
+    "open_close": [col for col in df.columns if "open_close" in col],
     # "high_price": [col for col in df.columns if "high_price" in col],
     # "high_turn": [col for col in df.columns if "high_turn" in col],
 }
