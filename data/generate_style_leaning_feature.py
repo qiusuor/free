@@ -109,7 +109,8 @@ def generate_style_learning_info():
     df = pd.DataFrame(values, columns=names)
     df.set_index("date", inplace=True)
     df.sort_index(inplace=True)
-    df = df.iloc[1:-1]
+    df = df.shift(1)
+    df = df.iloc[2:]
     joblib.dump(df, STYLE_FEATS)
     df.to_csv(STYLE_FEATS.replace(".pkl", ".csv"))
     merge_style_info()
