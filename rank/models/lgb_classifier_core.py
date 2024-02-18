@@ -226,7 +226,7 @@ def prepare_data(update=False):
     inject_features()
     inject_labels()
     # inject_embedding()
-    # join_style_info()
+    join_style_info()
     # inject_minute_feature()
 
 def get_n_val_day(label):
