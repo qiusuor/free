@@ -354,6 +354,7 @@ def inject_industry_and_name(df):
     return df
 
 def data_filter(df):
+    df = df[df["volume"] != 0]
     df = df[to_date(DATA_START_DAY):]
     # return df
     return df[not_limit_line(df) & (df.isST != 1) & df["limit_up"]]

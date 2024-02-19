@@ -14,7 +14,6 @@ warnings.filterwarnings("ignore")
 
 def inject_one(path):
     df = joblib.load(path)
-    df = df[df["volume"] != 0]
     
     future_n_day_high_low = [2]
     df["y_open_close"] = df["open_close"].shift(-1)
