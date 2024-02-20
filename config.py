@@ -38,4 +38,5 @@ COMPANY_INFO = os.path.join(DATA_DIR, "market/company_details.pkl")
 
 HARD_DISK_CACHE_DIR = os.path.join(DATA_DIR, "cache")
 
+SH_INDEX = os.path.join(DAILY_DOWLOAD_DIR, "sh.000001_d_2.pkl")
 

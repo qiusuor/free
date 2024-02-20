@@ -13,6 +13,8 @@ def inject_limit(df):
 def get_handcraft_feat(df):
     first_up_to_limit_time = 1e6
     first_down_to_limit_time = 1e6
+    last_no_limit_up = -1
+    last_no_limit_down = -1
     times_break_and_back_to_up_limit = 0
     times_break_and_back_to_down_limit = 0
     turn_on_limit_up_line = 0
@@ -35,6 +37,14 @@ def get_handcraft_feat(df):
     close = df.close.values
     N = len(minu_limit_up)
     
+    limit_up_len = sum(minu_limit_up)
+    limit_down_len = sum(minu_limit_down)
+    max_turn_on_limit_up = 0
+    max_turn_on_limit_down = 0
+    
+    last_limit_up_fail = -1
+    last_limit_up_back = -1
+    
     for i in range(N):
         div_price_minu += (close[i] - day_price) ** 2
         div_chip_minu += (close[i] - day_price) ** 2 * turn[i] * 1000
@@ -42,10 +52,15 @@ def get_handcraft_feat(df):
             first_up_to_limit_time = min(i, first_up_to_limit_time)
             if not cur_open_up_limit_state:
                 times_break_and_back_to_up_limit += 1
+                last_limit_up_back = i
             cur_open_up_limit_state = True
             turn_on_limit_up_line += turn[i]
+            max_turn_on_limit_up = max(turn[i], max_turn_on_limit_up)
         else:
+            if cur_open_up_limit_state:
+                last_limit_up_fail = i
             cur_open_up_limit_state = False
+            last_no_limit_up = max(i, last_no_limit_up)
             
         if minu_limit_down[i]:
             first_down_to_limit_time = min(i, first_down_to_limit_time)
@@ -53,9 +68,18 @@ def get_handcraft_feat(df):
                 times_break_and_back_to_down_limit += 1
             cur_open_down_limit_state = True
             turn_on_limit_down_line += turn[i]
+            max_turn_on_limit_down = max(turn[i], max_turn_on_limit_down)
         else:
             cur_open_down_limit_state = False
-    return max_turn_minu, mean_turn_minu, div_chip_minu, div_price_minu, turn_on_limit_down_line, turn_on_limit_up_line, times_break_and_back_to_down_limit, times_break_and_back_to_up_limit, first_down_to_limit_time, first_up_to_limit_time
+            last_no_limit_down = max(i, last_no_limit_down)
+            
+    time_back_to_limit_up = 1e6
+    if last_limit_up_fail != -1 and last_limit_up_back != -1 and last_limit_up_back > last_limit_up_fail:
+        time_back_to_limit_up = last_limit_up_back - last_limit_up_fail
+    elif cur_open_up_limit_state:
+        time_back_to_limit_up = 0
+        
+    return max_turn_minu, mean_turn_minu, div_chip_minu, div_price_minu, turn_on_limit_down_line, turn_on_limit_up_line, times_break_and_back_to_down_limit, times_break_and_back_to_up_limit, first_down_to_limit_time, first_up_to_limit_time, open_up_limit_state, open_down_limit_state, last_no_limit_up, last_no_limit_down, limit_up_len, limit_down_len, max_turn_on_limit_up, max_turn_on_limit_down, time_back_to_limit_up
 
 
 def prepare_one(path):
@@ -82,7 +106,9 @@ def prepare_one(path):
         feat.append(get_handcraft_feat(df_i))
         
         
-    feat = pd.DataFrame(feat, columns=["max_turn_minu", "mean_turn_minu", "div_chip_minu", "div_price_minu", "turn_on_limit_down_line", "turn_on_limit_up_line", "times_break_and_back_to_down_limit", "times_break_and_back_to_up_limit", "first_down_to_limit_time", "first_up_to_limit_time"])
+    feat = pd.DataFrame(feat, columns=["max_turn_minu", "mean_turn_minu", "div_chip_minu", "div_price_minu", "turn_on_limit_down_line", "turn_on_limit_up_line", "times_break_and_back_to_down_limit", "times_break_and_back_to_up_limit", "first_down_to_limit_time", "first_up_to_limit_time", "open_up_limit_state", "open_down_limit_state", "last_no_limit_up", "last_no_limit_down", "limit_up_len", "limit_down_len", "max_turn_on_limit_up", "max_turn_on_limit_down", "time_back_to_limit_up"
+])
+    feat = feat.astype(float)
     feat["date"] = days
     feat_path = os.path.join(MINUTE_FEAT, os.path.basename(path))
     feat.to_csv(feat_path.replace(".pkl", ".csv"), index=False)

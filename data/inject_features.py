@@ -168,6 +168,10 @@ def inject_style_feature(df):
     df["up_shadow"] = (df["high"] - df["close"]) / (df["close"] + 1e-6)
     df["down_shadow"] = (df["low"] - df["close"]) / (df["close"] + 1e-6)
     df["open_close"] = (df["close"] - df["open"]) / df["close"] + 1
+    df["open_rate"] = df["open"] / df["preclose"]
+    df["high_rate"] = df["high"] / df["preclose"]
+    df["low_rate"] = df["low"] / df["preclose"]
+    df["close_rate"] = df["close"] / df["preclose"]
     df["limit_up"] = is_limit_up(df)
     df["reach_limit_up"] = is_reach_limit_up(df)
     df["limit_up_1d"] = is_limit_up(df)
@@ -225,20 +229,30 @@ def inject_style_feature(df):
         df[col+"_pre_day"] = df[col].shift(1).astype(bool)
         df[col+"_pre_2_day"] = df[col].shift(2).astype(bool)
     
+   
+def join_index(df):
+    sh_index = joblib.load(SH_INDEX)
+    sh_index["close_rate"] = sh_index["close"] / sh_index["open"]
+    sh_index.rename(columns={'close': 'sh_index_close', "close_rate": "sh_index_close_rate", "amount": "sh_index_amount"}, inplace=True)
+    sh_index = sh_index[['sh_index_close', "sh_index_close_rate", "sh_index_amount"]]
+    df = df.join(sh_index, how="left")
+    return df
+    
 def inject_one(path):
     df = joblib.load(path)
     
-    inject_ta_features(df)
+    df = inject_ta_features(df)
     if "Linux" in platform.platform():
-        inject_chip_features(df)
-        inject_price_turn_features(df)
-        inject_alpha_features(df)
+        df = inject_chip_features(df)
+        df = inject_price_turn_features(df)
+        df = inject_alpha_features(df)
+        df = join_index(df)
     inject_style_feature(df)
     
-    # minu_feat_path = os.path.join(MINUTE_FEAT, os.path.basename(path).replace("_d_2", "_1_3"))
-    # minu_feat = joblib.load(minu_feat_path)
-    # minu_feat = minu_feat.set_index("date")
-    # df = df.join(minu_feat, how="left")
+    minu_feat_path = os.path.join(MINUTE_FEAT, os.path.basename(path).replace("_d_2", "_1_3"))
+    minu_feat = joblib.load(minu_feat_path)
+    minu_feat = minu_feat.set_index("date")
+    df = df.join(minu_feat, how="left")
 
     df.to_csv(path.replace(".pkl", ".csv"))
     dump(df, path)
