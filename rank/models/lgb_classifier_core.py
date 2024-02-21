@@ -20,7 +20,7 @@ import gc
 from data.generate_ltr_data import generate_ltr_data
 from data.generate_style_leaning_feature import generate_style_learning_info
 from data.inject_labels import inject_labels
-
+import bisect
 
 def topk_shot(data, label, k=10, watch_list=[]):
     gt_labels = data[label].values[:k]
@@ -39,7 +39,15 @@ def topk_shot(data, label, k=10, watch_list=[]):
     watches[f"sharp_{k}"] = (watches[f"y_next_2_d_high_ratio_topk_{k}_mean"] + watches[f"y_next_2_d_low_ratio_topk_{k}_mean"]) / 2
     return miss_cnt, shot_cnt, watches
 
-
+def style_filter(train_set, val_set):
+    filed = "style_feat_y_open_close_mean_limit_up_high"
+    thresh = [-1e6, -0.036716, 0.000000, 0.022565, 1e6]
+    mean_val = val_set[filed].mean()
+    cut_index = bisect.bisect_left(thresh, mean_val)
+    left_bound, right_bound = thresh[cut_index], thresh[cut_index+1]
+    train_set = train_set[(train_set[filed] >= left_bound) & (train_set[filed] <= right_bound)]
+    return train_set
+    
 def train_lightgbm(argv):
     features, label, train_start_day, train_end_day, val_start_day, val_end_day, n_day, train_len, num_leaves, max_depth, min_data_in_leaf, cache_data, epoch = argv
     params = {
@@ -96,6 +104,7 @@ def train_lightgbm(argv):
     train_dataset = dataset[(dataset.date >= train_start_day) & (dataset.date <= train_end_day)]
     val_dataset = dataset[(dataset.date >= val_start_day) & (dataset.date <= val_end_day)]
     del dataset
+    train_dataset = style_filter(train_dataset, val_dataset)
     gc.collect()
     train_x, train_y = train_dataset[features], train_dataset[label]
     val_x, val_y = val_dataset[features], val_dataset[label]

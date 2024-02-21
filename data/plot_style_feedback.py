@@ -5,6 +5,9 @@ import warnings
 warnings.filterwarnings("ignore")
 
 df = joblib.load("data/data/market/style_features.pkl")
+# print(df["style_feat_y_open_close_mean_limit_up_high"].describe())
+# print(df["style_feat_y_open_close_std_limit_up_high"].describe())
+# exit(0)
 df = df.iloc[-120:]
 # print(df.describe())
 # print(df.columns)
