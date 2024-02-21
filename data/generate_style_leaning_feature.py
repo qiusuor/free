@@ -5,7 +5,7 @@ from multiprocessing import Pool
 
 def agg_groups(df):
     groups = {
-        # "limit_up": (df["limit_up"], 1),
+        "limit_up": (df["limit_up"], 1),
         "limit_up_1d": (df["limit_up_1d"] & (~df["limit_up_line"]), ~df["limit_up_pre_day"].astype(bool)),
         "limit_up_2d": (df["limit_up_2d"] & (~df["limit_up_line"]), df["limit_up_1d_pre_day"]),
         "limit_up_3d": (df["limit_up_3d"] & (~df["limit_up_line"]), df["limit_up_2d_pre_day"]),
@@ -15,6 +15,7 @@ def agg_groups(df):
         "limit_up_7d": (df["limit_up_7d"] & (~df["limit_up_line"]), df["limit_up_6d_pre_day"]),
         "limit_up_8d": (df["limit_up_8d"] & (~df["limit_up_line"]), df["limit_up_7d_pre_day"]),
         "limit_up_9d": (df["limit_up_9d"] & (~df["limit_up_line"]), df["limit_up_8d_pre_day"]),
+        "limit_up_high": (df["limit_up_high"] & (~df["limit_up_line"]), df["limit_up_pre_day"].astype(bool) & ~df["limit_up_1d_pre_day"]),
         # "limit_up_9d_plus": (df["limit_up_9d_plus"], 1),
         # "limit_up_line": (df["limit_up_line"], 1),
         "limit_up_line_1d": (df["limit_up_line_1d"], ~df["limit_up_pre_day"].astype(bool)),
@@ -44,7 +45,7 @@ def agg_groups(df):
     return groups
 
 def stats_values(df, group_name, group, date, mask):
-    observe = ["y_next_1d_ret", "y_open_close"]
+    observe = ["y_next_1d_ret", "y_open_close", "y_next_1d_ret_close"]
     agg_methods = {
         "mean": np.mean, 
         "std": np.std, 

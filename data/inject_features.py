@@ -195,6 +195,8 @@ def inject_style_feature(df):
     df["limit_up_8d"] = df["limit_up_8d"] & (~df["limit_up_9d"])
     df["limit_up_9d"] = df["limit_up_9d"] & (~df["limit_up_9d_plus"])
     
+    df["limit_up_high"] = df["limit_up"] & ~(df["limit_up_1d"] | df["limit_up_2d"])
+    
     df["limit_down"] = is_limit_down(df)
     df["reach_limit_down"] = is_reach_limit_down(df)
     df["limit_down_1d"] = is_limit_down(df)
@@ -247,13 +249,13 @@ def inject_one(path):
         df = inject_price_turn_features(df)
         df = inject_alpha_features(df)
         df = join_index(df)
+    
+        minu_feat_path = os.path.join(MINUTE_FEAT, os.path.basename(path).replace("_d_2", "_1_3"))
+        minu_feat = joblib.load(minu_feat_path)
+        minu_feat = minu_feat.set_index("date")
+        df = df.join(minu_feat, how="left")
     inject_style_feature(df)
     
-    minu_feat_path = os.path.join(MINUTE_FEAT, os.path.basename(path).replace("_d_2", "_1_3"))
-    minu_feat = joblib.load(minu_feat_path)
-    minu_feat = minu_feat.set_index("date")
-    df = df.join(minu_feat, how="left")
-
     df.to_csv(path.replace(".pkl", ".csv"))
     dump(df, path)
     
