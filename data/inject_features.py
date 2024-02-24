@@ -196,6 +196,8 @@ def inject_style_feature(df):
     df["limit_up_9d"] = df["limit_up_9d"] & (~df["limit_up_9d_plus"])
     
     df["limit_up_high"] = df["limit_up"] & ~(df["limit_up_1d"] | df["limit_up_2d"])
+    df["limit_up_high_pre"] = (df["limit_up"] & ~(df["limit_up_1d"])).shift(1)
+    df["limit_up_high_pre_no_limit_up"] = df["limit_up_high_pre"] & ~(df["limit_up"])
     
     df["limit_down"] = is_limit_down(df)
     df["reach_limit_down"] = is_reach_limit_down(df)

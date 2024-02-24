@@ -5,19 +5,18 @@ from multiprocessing import Pool
 
 def agg_groups(df):
     groups = {
-        "limit_up": (df["limit_up"], 1),
-        "limit_up_1d": (df["limit_up_1d"] & (~df["limit_up_line"]), ~df["limit_up_pre_day"].astype(bool)),
-        "limit_up_2d": (df["limit_up_2d"] & (~df["limit_up_line"]), df["limit_up_1d_pre_day"]),
-        "limit_up_3d": (df["limit_up_3d"] & (~df["limit_up_line"]), df["limit_up_2d_pre_day"]),
-        "limit_up_4d": (df["limit_up_4d"] & (~df["limit_up_line"]), df["limit_up_3d_pre_day"]),
-        "limit_up_5d": (df["limit_up_5d"] & (~df["limit_up_line"]), df["limit_up_4d_pre_day"]),
-        "limit_up_6d": (df["limit_up_6d"] & (~df["limit_up_line"]), df["limit_up_5d_pre_day"]),
-        "limit_up_7d": (df["limit_up_7d"] & (~df["limit_up_line"]), df["limit_up_6d_pre_day"]),
-        "limit_up_8d": (df["limit_up_8d"] & (~df["limit_up_line"]), df["limit_up_7d_pre_day"]),
-        "limit_up_9d": (df["limit_up_9d"] & (~df["limit_up_line"]), df["limit_up_8d_pre_day"]),
-        "limit_up_high": (df["limit_up_high"] & (~df["limit_up_line"]), df["limit_up_pre_day"].astype(bool) & ~df["limit_up_1d_pre_day"]),
-        # "limit_up_9d_plus": (df["limit_up_9d_plus"], 1),
-        # "limit_up_line": (df["limit_up_line"], 1),
+        "limit_up": (df["limit_up"], df["limit_up"] | 1),
+        "limit_up_1d": (df["limit_up_1d"], ~df["limit_up_pre_day"].astype(bool)),
+        "limit_up_2d": (df["limit_up_2d"], df["limit_up_1d_pre_day"]),
+        "limit_up_3d": (df["limit_up_3d"], df["limit_up_2d_pre_day"]),
+        "limit_up_4d": (df["limit_up_4d"], df["limit_up_3d_pre_day"]),
+        "limit_up_5d": (df["limit_up_5d"], df["limit_up_4d_pre_day"]),
+        "limit_up_6d": (df["limit_up_6d"], df["limit_up_5d_pre_day"]),
+        "limit_up_7d": (df["limit_up_7d"], df["limit_up_6d_pre_day"]),
+        "limit_up_8d": (df["limit_up_8d"], df["limit_up_7d_pre_day"]),
+        "limit_up_9d": (df["limit_up_9d"], df["limit_up_8d_pre_day"]),
+        "limit_up_high": (df["limit_up_high"], df["limit_up_pre_day"].astype(bool) & ~df["limit_up_1d_pre_day"]),
+        "limit_up_high_pre_no_limit_up": (df["limit_up_high_pre_no_limit_up"], df["limit_up_high_pre_no_limit_up"] | 1),
         "limit_up_line_1d": (df["limit_up_line_1d"], ~df["limit_up_pre_day"].astype(bool)),
         "limit_up_line_2d": (df["limit_up_line_2d"], df["limit_up_line_1d_pre_day"]),
         "limit_up_line_3d": (df["limit_up_line_3d"], df["limit_up_line_2d_pre_day"]),
@@ -26,14 +25,11 @@ def agg_groups(df):
         "limit_up_line_6d": (df["limit_up_line_6d"], df["limit_up_line_5d_pre_day"]),
         "limit_up_line_7d": (df["limit_up_line_7d"], df["limit_up_line_6d_pre_day"]),
         
-        # "limit_down": (df["limit_down"], 1),
-        "limit_down_1d": (df["limit_down_1d"] & (~df["limit_down_line"]), ~df["limit_down_pre_day"].astype(bool)),
-        "limit_down_2d": (df["limit_down_2d"] & (~df["limit_down_line"]), df["limit_down_1d_pre_day"]),
-        "limit_down_3d": (df["limit_down_3d"] & (~df["limit_down_line"]), df["limit_down_2d_pre_day"]),
-        "limit_down_4d": (df["limit_down_4d"] & (~df["limit_down_line"]), df["limit_down_3d_pre_day"]),
-        "limit_down_5d": (df["limit_down_5d"] & (~df["limit_down_line"]), df["limit_down_4d_pre_day"]),
-        # "limit_down_5d_plus": df["limit_down_5d_plus"],
-        # "limit_down_line": (df["limit_down_line"], 1),
+        "limit_down_1d": (df["limit_down_1d"], ~df["limit_down_pre_day"].astype(bool)),
+        "limit_down_2d": (df["limit_down_2d"], df["limit_down_1d_pre_day"]),
+        "limit_down_3d": (df["limit_down_3d"], df["limit_down_2d_pre_day"]),
+        "limit_down_4d": (df["limit_down_4d"], df["limit_down_3d_pre_day"]),
+        "limit_down_5d": (df["limit_down_5d"], df["limit_down_4d_pre_day"]),
         "limit_down_line_1d": (df["limit_down_line_1d"], ~df["limit_down_line_pre_day"].astype(bool)),
         "limit_down_line_2d": (df["limit_down_line_2d"], df["limit_down_line_1d_pre_day"]),
         "limit_down_line_3d": (df["limit_down_line_3d"], df["limit_down_line_2d_pre_day"]),
@@ -45,7 +41,7 @@ def agg_groups(df):
     return groups
 
 def stats_values(df, group_name, group, date, mask):
-    observe = ["y_next_1d_ret", "y_open_close", "y_next_1d_ret_close"]
+    observe = ["y_next_1d_ret", "y_open_close", "y_next_1d_ret_close", "open_close"]
     agg_methods = {
         "mean": np.mean, 
         "std": np.std, 
@@ -58,23 +54,29 @@ def stats_values(df, group_name, group, date, mask):
         "num": 0
     }
     group = df[group]
+    # print(group[["code_name", "open_close"]])
+    # exit(0)
     group_agg_names = []
     group_agg_values = []
     for obs_name in observe:
         group_value = group[obs_name]
+        # print(group_value)
+        # exit(0)
         limit_value = df[group_name]
-        limit_value = limit_value[df.reach_limit_up & mask]
+        # print(limit_value)
+        limit_value = limit_value[mask]
         group_agg_names.append("_".join(["style_feat", obs_name, "close_rate", group_name]))
         agg_value = (limit_value.astype(float).mean() - 1)
         # if np.isnan(agg_value):
         #     agg_value = -0.5
         group_agg_values.append(agg_value)
         # if np.isnan(agg_value) and group_name == "limit_up_1d":
-        #     print(group_name, agg_value, limit_value, date)
+        # print(group_name, agg_value, limit_value, date)
         for agg_name, agg_func in agg_methods.items():
             group_agg_names.append("_".join(["style_feat", obs_name, agg_name, group_name]))
             agg_value = agg_func(group_value) if len(group_value) else default_value[agg_name]
             if agg_name == "mean":
+                # print(agg_value)
                 agg_value -= 1
             group_agg_values.append(agg_value)
 
@@ -88,6 +90,7 @@ def generate_style_learning_info_one(argv):
     agg_values = [date]
     agg_names = ["date"]
     for group_name, (group, mask) in groups.items():
+        # print(df[group][["code_name", "open_close"]])
         group_agg_names, group_agg_values = stats_values(df, group_name, group, date, mask)
         agg_values.extend(group_agg_values)
         agg_names.extend(group_agg_names)
@@ -98,8 +101,11 @@ def generate_style_learning_info():
     argvs = []
     for file in os.listdir(DAILY_BY_DATE_DIR):
         if not file.endswith(".pkl"): continue
+        # if "20240208" not in file: continue
         path = os.path.join(DAILY_BY_DATE_DIR, file)
         argvs.append((path, to_date(int(file[:-4]))))
+    # generate_style_learning_info_one(argvs[23])
+    # exit(0)
     pool = Pool(THREAD_NUM)
     rets = pool.map(generate_style_learning_info_one, argvs)
     pool.close()
@@ -110,7 +116,10 @@ def generate_style_learning_info():
     df = pd.DataFrame(values, columns=names)
     df.set_index("date", inplace=True)
     df.sort_index(inplace=True)
+    no_shift_cols = [col for col in df.columns if "limit_up_high_pre_no_limit_up" in col]
+    df_no_shift = df[no_shift_cols].copy()
     df = df.shift(1)
+    df[no_shift_cols] = df_no_shift
     df = df.iloc[2:]
     joblib.dump(df, STYLE_FEATS)
     df.to_csv(STYLE_FEATS.replace(".pkl", ".csv"))
