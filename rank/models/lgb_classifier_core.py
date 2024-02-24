@@ -103,9 +103,10 @@ def train_lightgbm(argv):
         with open(cache_data, 'wb') as f:
             cPickle.dump(dataset, f)
     train_dataset = dataset[(dataset.date >= train_start_day) & (dataset.date <= train_end_day)]
+    # train_dataset = train_dataset[train_dataset.style_feat_open_close_mean_limit_up_high_pre_no_limit_up > -0.045655402518364696]
     val_dataset = dataset[(dataset.date >= val_start_day) & (dataset.date <= val_end_day)]
     del dataset
-    train_dataset = style_filter(train_dataset, val_dataset)
+    # train_dataset = style_filter(train_dataset, val_dataset)
     gc.collect()
     train_x, train_y = train_dataset[features], train_dataset[label]
     val_x, val_y = val_dataset[features], val_dataset[label]
