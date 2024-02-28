@@ -101,6 +101,7 @@ def train_lightgbm(argv):
             if not file.endswith(".pkl"): continue
             path = os.path.join(DAILY_BY_DATE_DIR, file)
             df = joblib.load(path)
+            df = df[df["limit_up_1d"]]
             dataset.append(df)
             groups.append(len(df))
             dates.append(int(file[:-4]))
