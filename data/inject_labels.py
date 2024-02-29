@@ -15,7 +15,6 @@ warnings.filterwarnings("ignore")
 def inject_one(path):
     df = joblib.load(path)
     
-    future_n_day_high_low = [2]
     df["y_open_close"] = df["open_close"].shift(-1)
     df["y_next_1d_close_rate"] = df["close"].shift(-1) / df["open"].shift(-1)
     df["y_next_1d_close_rate"].fillna(0, inplace=True)
@@ -30,27 +29,12 @@ def inject_one(path):
     df["y_next_1d_ret_close"] = df["close"].shift(-1) / df["close"]
     df["y_next_1d_up_to_limit"] =  is_limit_up(df).shift(-1).astype(bool)
     df["y_next_1d_up_to_limit"].fillna(False, inplace=True)
-    df["y_next_1d_close_2d_open_rate"] = df["open"].shift(-2) / df["close"].shift(-1)
-    for n_day in future_n_day_high_low:
-        df["y_next_{}_d_ret".format(n_day)] = df["close"].shift(-n_day) / df["open"].shift(-1)
-        df["y_next_{}_d_ret_00".format(n_day)] = df["y_next_{}_d_ret".format(n_day)] > 1.00
-        df["y_next_{}_d_ret_01".format(n_day)] = df["y_next_{}_d_ret".format(n_day)] > 1.01
-        df["y_next_{}_d_ret_02".format(n_day)] = df["y_next_{}_d_ret".format(n_day)] > 1.02
-        df["y_next_{}_d_ret_03".format(n_day)] = df["y_next_{}_d_ret".format(n_day)] > 1.03
-        df["y_next_{}_d_ret_04".format(n_day)] = df["y_next_{}_d_ret".format(n_day)] > 1.04
-        df["y_next_{}_d_ret_05".format(n_day)] = df["y_next_{}_d_ret".format(n_day)] > 1.05
-        df["y_next_{}_d_ret_07".format(n_day)] = df["y_next_{}_d_ret".format(n_day)] > 1.07
-        df["y_next_{}_d_ret_095".format(n_day)] = df["y_next_{}_d_ret".format(n_day)] >= 1.095
-        df["y_next_{}_d_ret_12".format(n_day)] = df["y_next_{}_d_ret".format(n_day)] >= 1.12
-        df["y_next_{}_d_ret_15".format(n_day)] = df["y_next_{}_d_ret".format(n_day)] >= 1.15
-        df["y_next_{}_d_ret_17".format(n_day)] = df["y_next_{}_d_ret".format(n_day)] >= 1.17
-        df["y_next_{}_d_close_high_ratio".format(n_day)] = df["high"].shift(-n_day) / df["close"].shift(-1)
-        df["y_next_{}_d_close_low_ratio".format(n_day)] = df["low"].shift(-n_day) / df["close"].shift(-1)
-        df["y_next_{}_d_high".format(n_day)] = df["high"].rolling(n_day).apply(lambda x:max(x[1:])).shift(-n_day)
-        df["y_next_{}_d_high_ratio".format(n_day)] = df["y_next_{}_d_high".format(n_day)] / df["open"].shift(-1)
-        df["y_next_{}_d_low".format(n_day)] = df["low"].rolling(n_day).apply(lambda x:min(x[1:])).shift(-n_day)
-        df["y_next_{}_d_low_ratio".format(n_day)] = df["y_next_{}_d_low".format(n_day)] / df["open"].shift(-1)
-        
+    
+    df["y_rank_1d_label"] = df["y_next_1d_up_to_limit"].astype(int)
+    df["y_rank_1d_label"][(df["y_next_1d_close_rate"] > 1.07) & df["y_next_1d_up_to_limit"]] = 4
+    df["y_rank_1d_label"][(df["y_next_1d_close_rate"] > 1.05) & df["y_next_1d_up_to_limit"]] = 3
+    df["y_rank_1d_label"][(df["y_next_1d_close_rate"] > 1.02) & df["y_next_1d_up_to_limit"]] = 2
+    
     df = data_filter(df)
     df.to_csv(path.replace(".pkl", ".csv"))
     dump(df, path)

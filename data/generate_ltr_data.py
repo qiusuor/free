@@ -22,15 +22,6 @@ def generate_ltr_data():
     
     data_by_date = []
     for i, df_i in tqdm(df.groupby("date")):
-        
-        df_i["y_ltr_2d_open_high_label"] = df_i["y_next_2_d_high_ratio"] 
-        df_i["y_ltr_2d_open_high_label"][df_i["y_next_2_d_high_ratio"] < 1.02] = 0
-        df_i["y_ltr_2d_open_high_label"][df_i["y_next_2_d_high_ratio"] >= 1.02] = 1
-        df_i["y_ltr_2d_open_high_label"][df_i["y_next_2_d_high_ratio"] >= 1.05] = 2
-        df_i["y_ltr_2d_open_high_label"][df_i["y_next_2_d_high_ratio"] >= 1.09] = 3
-        df_i["y_ltr_2d_open_high_label"][df_i["y_next_2_d_ret"] >= 1.09] = 5
-        df_i["y_ltr_2d_open_high_label"] = df_i["y_ltr_2d_open_high_label"].fillna(0)
-        df_i["y_ltr_2d_open_high_label"] = df_i["y_ltr_2d_open_high_label"].astype(int)
         data_by_date.append([to_int_date(i), df_i])
         
     pool = Pool(THREAD_NUM)

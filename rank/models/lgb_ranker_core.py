@@ -49,8 +49,43 @@ def pred(gbm, data, groups):
         idx += g
     return preds
     
+def style_filter(train_set, train_gps, train_dates, train_start_day, train_end_day, pred_set):
+    train_val_split = 0.6
+    skip_days = 10
+    filed = "style_feat_y_open_close_mean_limit_up_1d"
+    style_feat = joblib.load(STYLE_FEATS)[to_date(train_start_day):to_date(train_end_day)]
+    style_feat["day"] = style_feat.index
+    thresh = list(style_feat[filed].quantile(np.linspace(0, 1, 5)).values)
+    mean_val = pred_set[filed].mean()
+    cut_index = bisect.bisect_left(thresh, mean_val)
+    if cut_index >= len(thresh)-1:
+        cut_index = len(thresh)-2
+    
+    left_bound, right_bound = thresh[cut_index], thresh[cut_index+1]
+    
+    filtered_date = list(sorted(style_feat[(style_feat[filed] >= left_bound) & (style_feat[filed] <= right_bound)]["day"].apply(to_int_date).values))
+    N = len(filtered_date) - skip_days
+    train_days = set(filtered_date[:int(N*train_val_split)])
+    val_days = set(filtered_date[-int(N-N*train_val_split):])
+    splited_train_set, splited_train_gps = [], []
+    splited_val_set, splited_val_gps = [], []
+    print(sorted(train_days))
+    print(sorted(val_days))
+    for data, gp, day in zip(train_set, train_gps, train_dates):
+        # print(day)
+        if day in train_days:
+            splited_train_set.append(data)
+            splited_train_gps.append(gp)
+        elif day in val_days:
+            splited_val_set.append(data)
+            splited_val_gps.append(gp)
+    splited_train_set = pd.concat(splited_train_set)
+    splited_val_set = pd.concat(splited_val_set)
+    
+    return splited_train_set, splited_train_gps, splited_val_set, splited_val_gps
+
 def train_lightgbm(argv):
-    features, label, train_start_day, train_end_day, val_start_day, val_end_day, n_day, train_len, num_leaves, max_depth, min_data_in_leaf, cache_data, epoch = argv
+    features, label, train_start_day, train_end_day, pred_start_day, pred_end_day, n_day, train_len, num_leaves, max_depth, min_data_in_leaf, cache_data, epoch = argv
     params = {
         'task': 'train',  # 执行的任务类型
         'boosting_type': 'gbrt',  # 基学习器
@@ -58,7 +93,7 @@ def train_lightgbm(argv):
         'metric': 'ndcg',  # 度量的指标(评估函数)
         'metric_freq': 1,  # 每隔多少次输出一次度量结果
         'train_metric': True,  # 训练时就输出度量结果
-        'ndcg_at': [10],
+        'ndcg_at': [3, 10, 30, 50, 100, 200],
         'max_bin': 255,  # 一个整数，表示最大的桶的数量。默认值为 255。lightgbm 会根据它来自动压缩内存。如max_bin=255 时，则lightgbm 将使用uint8 来表示特征的每一个值。
         'num_iterations': 5000,  # 迭代次数，即生成的树的棵数
         'learning_rate': 0.01,  # 学习率
@@ -72,6 +107,7 @@ def train_lightgbm(argv):
         "early_stopping_rounds": 20,
         "min_gain_to_split": 0,
         "num_threads": 16,
+        "max_position": 200,
     }
     
     pred_mode = False
@@ -83,7 +119,7 @@ def train_lightgbm(argv):
         
     param_des = "_".join([str(train_len), str(num_leaves), str(max_depth), str(min_data_in_leaf)])
     root_dir = EXP_RANK_PRED_DIR if pred_mode else EXP_RANK_DIR
-    save_dir = "{}/{}/{}/{}".format(root_dir, label, param_des, to_int_date(val_start_day))
+    save_dir = "{}/{}/{}/{}".format(root_dir, label, param_des, to_int_date(pred_start_day))
     if os.path.exists(os.path.join(save_dir, "meta.json")):
         return
     if os.path.exists(save_dir):
@@ -109,110 +145,101 @@ def train_lightgbm(argv):
             cPickle.dump((dataset, groups, dates), f)
     train_start_day = to_int_date(train_start_day)
     train_end_day = to_int_date(train_end_day)
-    val_start_day = to_int_date(val_start_day)
-    val_end_day = to_int_date(val_end_day)
+    pred_start_day = to_int_date(pred_start_day)
+    pred_end_day = to_int_date(pred_end_day)
     
-    train_dataset, val_dataset = [], []
-    train_groups, val_groups = [], []
+    train_dataset, pred_dataset = [], []
+    train_groups, pred_groups = [], []
+    train_dates = []
     for data_day, g, date in zip(dataset, groups, dates):
         if train_start_day <= date <= train_end_day:
             train_dataset.append(data_day)
             train_groups.append(g)
-        elif val_start_day <= date <= val_end_day:
-            val_dataset.append(data_day)
-            val_groups.append(g)
-    train_dataset = pd.concat(train_dataset)
-    val_dataset = pd.concat(val_dataset)
+            train_dates.append(date)
+        elif pred_start_day <= date <= pred_end_day:
+            pred_dataset.append(data_day)
+            pred_groups.append(g)
+    pred_dataset = pd.concat(pred_dataset)
+    splited_train_set, splited_train_gps, splited_val_set, splited_val_gps = style_filter(train_dataset, train_groups, train_dates, train_start_day, train_end_day, pred_dataset)
     del dataset, groups, dates
     gc.collect()
-    train_x, train_y = train_dataset[features], train_dataset[label]
-    val_x, val_y = val_dataset[features], val_dataset[label]
-    lgb_train = lgb.Dataset(train_x, train_y, group=train_groups)
-    lgb_eval = lgb.Dataset(val_x, val_y, group=val_groups, reference=lgb_train)
+    train_x, train_y = splited_train_set[features], splited_train_set[label]
+    val_x, val_y = splited_val_set[features], splited_val_set[label]
+    pred_x, pred_y = pred_dataset[features], pred_dataset[label]
+    
+    lgb_train = lgb.Dataset(train_x, train_y, group=splited_train_gps)
+    lgb_val = lgb.Dataset(val_x, val_y, group=splited_val_gps, reference=lgb_train)
+    lgb_pred = lgb.Dataset(pred_x, pred_y, group=pred_groups, reference=lgb_train)
 
     gbm = lgb.train(params,
                     lgb_train,
-                    valid_sets=(lgb_train, lgb_eval),
+                    valid_sets=(lgb_train, lgb_val),
                     # categorical_feature=["industry"]
                     )
-
+    train_ndcg_3 = gbm.best_score['training']['ndcg@3']
+    train_ndcg_10 = gbm.best_score['training']['ndcg@10']
+    train_ndcg_30 = gbm.best_score['training']['ndcg@30']
+    train_ndcg_50 = gbm.best_score['training']['ndcg@50']
+    train_ndcg_100 = gbm.best_score['training']['ndcg@100']
+    train_ndcg_200 = gbm.best_score['training']['ndcg@200']
+    
+    val_ndcg_3 = gbm.best_score['valid_1']['ndcg@3']
+    val_ndcg_10 = gbm.best_score['valid_1']['ndcg@10']
+    val_ndcg_30 = gbm.best_score['valid_1']['ndcg@30']
+    val_ndcg_50 = gbm.best_score['valid_1']['ndcg@50']
+    val_ndcg_100 = gbm.best_score['valid_1']['ndcg@100']
+    val_ndcg_200 = gbm.best_score['valid_1']['ndcg@200']
+    
     gbm.save_model(os.path.join(save_dir, "model.txt"))
     joblib.dump(gbm, os.path.join(save_dir, "model.pkl"))
     if epoch <= 0:
         epoch = gbm.best_iteration
 
-    val_y_pred = pred(gbm, val_x, val_groups)
-    train_y_pred = pred(gbm, train_x, train_groups)
-    train_dataset["pred"] = train_y_pred
-    train_dataset.sort_values(by="pred", inplace=True, ascending=False)
-    if pred_mode:
-        train_dataset[["code", "code_name", "pred", label, "y_next_1d_close_rate", f"y_next_{2}_d_high_ratio", f"y_next_{2}_d_low_ratio", "y_next_{}_d_ret".format(2), "y_next_1d_close_2d_open_rate", "price"]].to_csv(os.path.join(save_dir, "train_set_EPOCH_{}.csv".format(epoch)))
+    pred_y_pred = pred(gbm, pred_x, pred_groups)
+    train_y_pred = pred(gbm, train_x, splited_train_gps)
+    splited_train_set["pred"] = train_y_pred
+    splited_train_set.sort_values(by="pred", inplace=True, ascending=False)
+    # if pred_mode:
+    splited_train_set[["code", "code_name", "pred", label, "price"]].to_csv(os.path.join(save_dir, "train_set_EPOCH_{}.csv".format(epoch)))
 
 
-    val_dataset["pred"] = val_y_pred
-    res_val = val_dataset[["code", "code_name", "pred", label, "y_next_1d_close_rate", f"y_next_{2}_d_high_ratio", f"y_next_{2}_d_low_ratio", "y_next_{}_d_ret".format(2), "y_next_1d_close_2d_open_rate", "price"]]
+    pred_dataset["pred"] = pred_y_pred
+    pred_dataset.sort_values(by="pred", inplace=True, ascending=False)
+    res_pred = pred_dataset[["code", "code_name", "pred", label, "price"]]
     meta = dict()
     meta["config"] = {
         "label": label,
         "train_len": train_len,
-        "val_start_day": val_start_day,
-        "val_end_day": val_end_day,
+        "pred_start_day": pred_start_day,
+        "pred_end_day": pred_end_day,
         "num_leaves": num_leaves,
         "max_depth": max_depth,
         "min_data_in_leaf": min_data_in_leaf,
     }
     meta["info"] = {
         "epoch": epoch,
+        "train_ndcg_10": train_ndcg_10,
+        "val_ndcg_10": val_ndcg_10,
+        "train_ndcg_30": train_ndcg_30,
+        "val_ndcg_30": val_ndcg_30,
+        "train_ndcg_50": train_ndcg_50,
+        "val_ndcg_50": val_ndcg_50,
+        "train_ndcg_100": train_ndcg_100,
+        "val_ndcg_100": val_ndcg_100,
+        "train_ndcg_200": train_ndcg_200,
+        "val_ndcg_200": val_ndcg_200,
     }
-    meta["daily"] = dict()
-    watch_list = [f"y_next_{2}_d_high_ratio", f"y_next_{2}_d_low_ratio", "y_next_1d_close_2d_open_rate", "y_next_1d_close_rate", "y_next_{}_d_ret".format(2)]
+    date = to_int_date(res_pred.index[0])
     
-    labeled_day = 0
-    for i, res_i in res_val.groupby("date"):
-        res_i.sort_values(by="pred", inplace=True, ascending=False)
-        top3_miss, top3_shot, top3_watch = topk_shot(res_i, label, k=3, watch_list=watch_list)
-        top5_miss, top5_shot, top5_watch = topk_shot(res_i, label, k=5, watch_list=watch_list)
-        top10_miss, top10_shot, top10_watch = topk_shot(res_i, label, k=10, watch_list=watch_list)
-        meta["daily"][to_int_date(i)] = {
-            "top3_watch": top3_watch,
-            "top5_watch": top5_watch,
-            "top10_watch": top10_watch,
-            "top3_miss": top3_miss,
-            "top5_miss": top5_miss,
-            "top10_miss": top10_miss,
-        }
-        if not np.isnan(top3_watch["sharp_3"]):
-            labeled_day += 1
-        meta["last_val"] = meta["daily"][to_int_date(i)]
-        save_file = f"{to_int_date(i)}_T3_{top3_miss}_T5_{top5_miss}_T10_{top10_miss}.csv"
-        res_i.to_csv(os.path.join(save_dir, save_file))
-    
-    def get_topk_watch_templet(which="top3_watch"):
-        return {k:0.0 for k in meta["last_val"][which].keys()}
-    
-    meta["mean_val"] = {
-        "top3_watch": get_topk_watch_templet("top3_watch"),
-        "top5_watch": get_topk_watch_templet("top5_watch"),
-        "top10_watch": get_topk_watch_templet("top10_watch"),
-        "top3_miss": 0,
-        "top5_miss": 0,
-        "top10_miss": 0,
-    }
-    mean_val = meta["mean_val"]
-    # print(meta["daily"])
-    
-    for daily in meta["daily"].values():
-        if np.isnan(daily["top3_watch"]["sharp_3"]): continue
-        mean_val["top3_miss"] += daily["top3_miss"] / labeled_day
-        mean_val["top5_miss"] += daily["top5_miss"] / labeled_day
-        mean_val["top10_miss"] += daily["top10_miss"] / labeled_day
-        for watch_key in ["top3_watch", "top5_watch", "top10_watch"]:
-            for key in mean_val[watch_key]:
-                mean_val[watch_key][key] += daily[watch_key][key] / labeled_day
-        
+    save_file = f"{date}_T30_{val_ndcg_30}_T50_{val_ndcg_50}_T100_{val_ndcg_100}.csv"
+    res_pred.to_csv(os.path.join(save_dir, save_file))
         
     json.dump(meta, open(os.path.join(save_dir, "meta.json"), 'w'), indent=4)
     
+def join_style_info():
+    generate_ltr_data()
+    generate_style_learning_info()
+    generate_ltr_data()
 
 def prepare_data(update=False):
     if update:
@@ -222,15 +249,12 @@ def prepare_data(update=False):
     inject_features()
     inject_labels()
     generate_ltr_data()
+    join_style_info()
     
 
 def get_n_val_day(label):
-    if "y_next_1d_up_to_limit" in label:
+    if "y_rank_1d_label" in label:
         n_day = 1
-    elif "y_2_d" in label or "1d_close_2d_open" in label or "y_02" in label or "2d" in label:
-        n_day = 2
-    elif "y_5_d" in label:
-        n_day = 5
     else:
         assert False
     return n_day

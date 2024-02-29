@@ -253,9 +253,10 @@ def inject_one(path):
         df = join_index(df)
     
         minu_feat_path = os.path.join(MINUTE_FEAT, os.path.basename(path).replace("_d_2", "_1_3"))
-        minu_feat = joblib.load(minu_feat_path)
-        minu_feat = minu_feat.set_index("date")
-        df = df.join(minu_feat, how="left")
+        if os.path.exists(minu_feat_path):
+            minu_feat = joblib.load(minu_feat_path)
+            minu_feat = minu_feat.set_index("date")
+            df = df.join(minu_feat, how="left")
     inject_style_feature(df)
     
     df.to_csv(path.replace(".pkl", ".csv"))

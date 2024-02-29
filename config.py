@@ -6,9 +6,9 @@ SEARCH_END_DAY = 21990101
 DATA_START_DAY = 20210101
 if "SEARCH_END_DAY" in os.environ:
     SEARCH_END_DAY = int(os.environ["SEARCH_END_DAY"])
-VAL_N_LAST_DAY = 5
-TEST_N_LAST_DAY = 5
-val_delay_day = 30
+VAL_N_LAST_DAY = 2
+TEST_N_LAST_DAY = 2
+val_delay_day = 0
 
 ROOT_DIR = os.path.dirname(os.path.realpath(__file__))
 DATA_DIR = os.path.join(ROOT_DIR, "data/data")

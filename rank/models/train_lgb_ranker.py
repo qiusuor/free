@@ -11,45 +11,11 @@ import platform
 if __name__ == "__main__":
     
     df = joblib.load(os.path.join(DAILY_DIR, "sh.600000_d_2.pkl"))
-    if "code_name" not in df.columns:
+    if "adx_2" not in df.columns:
         prepare_data(update=False)
     
     search_labels = [
-        # "y_next_1d_close_2d_open_rate_rank_10%",
-        # "y_next_1d_close_2d_open_rate_rank_20%",
-        # "y_next_1d_close_2d_open_rate_rank_30%",
-        # "y_next_1d_close_2d_open_rate_rank_50%",
-        
-        # "y_2_d_close_high_rank_10%",
-        # "y_2_d_close_high_rank_20%",
-        # "y_2_d_close_high_rank_30%",
-        # "y_2_d_close_high_rank_50%",
-        
-        # "y_02_103",
-        # "y_02_105",
-        # "y_02_107",
-        "y_ltr_2d_open_high_label",
-        # "y_next_1d_up_to_limit",
-        
-        # "y_2_d_high_rank_10%_safe_1d",
-        # "y_2_d_high_rank_20%_safe_1d",
-        # "y_2_d_high_rank_30%_safe_1d",
-        # "y_2_d_high_rank_50%_safe_1d",
-        
-        # "y_2_d_high_rank_10%",
-        # "y_2_d_high_rank_20%",
-        # "y_2_d_high_rank_30%",
-        # "y_2_d_high_rank_50%",
-        
-        # "y_2_d_ret_rank_10%",
-        # "y_2_d_ret_rank_20%",
-        # "y_2_d_ret_rank_30%",
-        # "y_2_d_ret_rank_50%",
-        
-        # "y_2_d_ret_rank_10%_safe_1d",
-        # "y_2_d_ret_rank_20%_safe_1d",
-        # "y_2_d_ret_rank_30%_safe_1d",
-        # "y_2_d_ret_rank_50%_safe_1d",
+        "y_rank_1d_label",
     
     ]
     
@@ -74,7 +40,7 @@ if __name__ == "__main__":
                         print(len(argvs))
                         # print(trade_days[-val_n_day-2*n_day:-2*n_day])
                         
-                        for train_val_split_day in trade_days[-val_n_day-2*n_day-val_delay_day:-2*n_day-val_delay_day]:
+                        for train_val_split_day in trade_days[-val_n_day-n_day-val_delay_day:-n_day-val_delay_day]:
                             train_start_day = to_date(get_offset_trade_day(train_val_split_day,
                                                                         -train_len))
                             train_end_day = to_date(get_offset_trade_day(train_val_split_day, 0))
@@ -85,6 +51,8 @@ if __name__ == "__main__":
                                 features, label, train_start_day, train_end_day, val_start_day,
                                 val_end_day, n_day, train_len, num_leaves, max_depth, min_data_in_leaf, cache_data, -1
                             ]
+                            # print(argv)
+                            # exit(0)
                             if not os.path.exists(cache_data):
                                 # print(argv)
                                 train_lightgbm(argv)
