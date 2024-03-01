@@ -231,7 +231,7 @@ def train_lightgbm(argv):
     }
     date = to_int_date(res_pred.index[0])
     
-    save_file = f"{date}_T30_{val_ndcg_30}_T50_{val_ndcg_50}_T100_{val_ndcg_100}.csv"
+    save_file = f"{date}_T10_{val_ndcg_10}_T30_{val_ndcg_30}_T50_{val_ndcg_50}_T100_{val_ndcg_100}.csv"
     res_pred.to_csv(os.path.join(save_dir, save_file))
         
     json.dump(meta, open(os.path.join(save_dir, "meta.json"), 'w'), indent=4)

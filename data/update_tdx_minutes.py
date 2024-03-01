@@ -71,7 +71,7 @@ def merge_data_core(path):
         
 def merge_data():
     paths = os.listdir(MINUTE_DIR_TMP)
-    pool = Pool(16)
+    pool = Pool(THREAD_NUM)
     pool.imap_unordered(merge_data_core, paths)
     pool.close()
     pool.join()
