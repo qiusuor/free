@@ -6,4 +6,3 @@ python data/discard.py >>$LOG
 python data/prepare_minutes_features.py >>$LOG
 python rank/models/train_lgb_ranker.py >>$LOG
 python rank/models/train_lgb_ranker.py >>$LOG 
-python rank/models/serve_lgb_ranker.py >>$LOG

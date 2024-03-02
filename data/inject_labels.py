@@ -31,9 +31,9 @@ def inject_one(path):
     df["y_next_1d_up_to_limit"].fillna(False, inplace=True)
     
     df["y_rank_1d_label"] = df["y_next_1d_up_to_limit"].astype(int)
-    df["y_rank_1d_label"][(df["y_next_1d_close_rate"] > 1.07) & df["y_next_1d_up_to_limit"]] = 4
-    df["y_rank_1d_label"][(df["y_next_1d_close_rate"] > 1.05) & df["y_next_1d_up_to_limit"]] = 3
-    df["y_rank_1d_label"][(df["y_next_1d_close_rate"] > 1.02) & df["y_next_1d_up_to_limit"]] = 2
+    # df["y_rank_1d_label"][(df["y_next_1d_close_rate"] > 1.07) & df["y_next_1d_up_to_limit"]] = 4
+    # df["y_rank_1d_label"][(df["y_next_1d_close_rate"] > 1.05) & df["y_next_1d_up_to_limit"]] = 3
+    # df["y_rank_1d_label"][(df["y_next_1d_close_rate"] > 1.02) & df["y_next_1d_up_to_limit"]] = 2
     
     df = data_filter(df)
     df.to_csv(path.replace(".pkl", ".csv"))

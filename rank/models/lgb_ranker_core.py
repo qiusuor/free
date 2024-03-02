@@ -22,23 +22,6 @@ from data.generate_ltr_data import generate_ltr_data
 from data.inject_labels import inject_labels
 
 
-def topk_shot(data, label, k=10, watch_list=[]):
-    gt_labels = data[label].values[:k]
-    shot_cnt = 0
-    miss_cnt = 0
-    for label in gt_labels:
-        if label:
-            shot_cnt += 1
-        else:
-            miss_cnt += 1
-    watches = dict()
-    for watch in watch_list:
-        watches[watch+f"_topk_{k}_max"] = data[watch][:k].max()
-        watches[watch+f"_topk_{k}_min"] = data[watch][:k].min()
-        watches[watch+f"_topk_{k}_mean"] = data[watch][:k].mean()
-    watches[f"sharp_{k}"] = (watches[f"y_next_2_d_high_ratio_topk_{k}_mean"] + watches[f"y_next_2_d_high_ratio_topk_{k}_mean"]) / 2
-    return miss_cnt, shot_cnt, watches
-
 def pred(gbm, data, groups):
     idx = 0
     preds = []
@@ -63,14 +46,14 @@ def style_filter(train_set, train_gps, train_dates, train_start_day, train_end_d
     
     left_bound, right_bound = thresh[cut_index], thresh[cut_index+1]
     
-    filtered_date = list(sorted(style_feat[(style_feat[filed] >= -1e9) & (style_feat[filed] <= 1e9)]["day"].apply(to_int_date).values))
+    filtered_date = list(sorted(style_feat[(style_feat[filed] >= left_bound) & (style_feat[filed] <= right_bound)]["day"].apply(to_int_date).values))
     N = len(filtered_date) - skip_days
     train_days = set(filtered_date[:int(N*train_val_split)])
     val_days = set(filtered_date[-int(N-N*train_val_split):])
     splited_train_set, splited_train_gps = [], []
     splited_val_set, splited_val_gps = [], []
-    print(sorted(train_days))
-    print(sorted(val_days))
+    # print(sorted(train_days))
+    # print(sorted(val_days))
     for data, gp, day in zip(train_set, train_gps, train_dates):
         # print(day)
         if day in train_days:
@@ -107,7 +90,7 @@ def train_lightgbm(argv):
         "early_stopping_rounds": 20,
         "min_gain_to_split": 0,
         "num_threads": 16,
-        "max_position": 100,
+        "max_position": 20,
     }
     
     pred_mode = False
@@ -137,7 +120,8 @@ def train_lightgbm(argv):
             if not file.endswith(".pkl"): continue
             path = os.path.join(DAILY_BY_DATE_DIR, file)
             df = joblib.load(path)
-            df = df[df["limit_up_1d"]]
+            df = df[df["limit_up_1d"] & not_limit_line(df)]
+            if len(df) <=0: continue
             dataset.append(df)
             groups.append(len(df))
             dates.append(int(file[:-4]))
