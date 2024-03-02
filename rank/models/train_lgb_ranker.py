@@ -3,7 +3,7 @@ import numpy as np
 from multiprocessing import Pool
 from utils import *
 from rank.models.lgb_ranker_core import *
-from rank.models.agg_prediction_info import agg_prediction_info
+from rank.models.get_best_result import seach
 import bisect
 import platform
 
@@ -67,5 +67,5 @@ if __name__ == "__main__":
     pool.imap_unordered(train_lightgbm, argvs)
     pool.close()
     pool.join()
-    # agg_prediction_info(ana_dir=EXP_RANK_DIR, last_n_day=val_n_day)
+    seach()
     

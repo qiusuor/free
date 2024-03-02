@@ -63,7 +63,7 @@ def style_filter(train_set, train_gps, train_dates, train_start_day, train_end_d
     
     left_bound, right_bound = thresh[cut_index], thresh[cut_index+1]
     
-    filtered_date = list(sorted(style_feat[(style_feat[filed] >= left_bound) & (style_feat[filed] <= right_bound)]["day"].apply(to_int_date).values))
+    filtered_date = list(sorted(style_feat[(style_feat[filed] >= -1e9) & (style_feat[filed] <= 1e9)]["day"].apply(to_int_date).values))
     N = len(filtered_date) - skip_days
     train_days = set(filtered_date[:int(N*train_val_split)])
     val_days = set(filtered_date[-int(N-N*train_val_split):])
@@ -93,7 +93,7 @@ def train_lightgbm(argv):
         'metric': 'ndcg',  # 度量的指标(评估函数)
         'metric_freq': 1,  # 每隔多少次输出一次度量结果
         'train_metric': True,  # 训练时就输出度量结果
-        'ndcg_at': [3, 10, 30, 50, 100, 200],
+        'ndcg_at': [3, 5, 10, 30, 50, 100, 200],
         'max_bin': 255,  # 一个整数，表示最大的桶的数量。默认值为 255。lightgbm 会根据它来自动压缩内存。如max_bin=255 时，则lightgbm 将使用uint8 来表示特征的每一个值。
         'num_iterations': 5000,  # 迭代次数，即生成的树的棵数
         'learning_rate': 0.01,  # 学习率
@@ -107,7 +107,7 @@ def train_lightgbm(argv):
         "early_stopping_rounds": 20,
         "min_gain_to_split": 0,
         "num_threads": 16,
-        "max_position": 200,
+        "max_position": 100,
     }
     
     pred_mode = False
@@ -177,6 +177,7 @@ def train_lightgbm(argv):
                     # categorical_feature=["industry"]
                     )
     train_ndcg_3 = gbm.best_score['training']['ndcg@3']
+    train_ndcg_5 = gbm.best_score['training']['ndcg@5']
     train_ndcg_10 = gbm.best_score['training']['ndcg@10']
     train_ndcg_30 = gbm.best_score['training']['ndcg@30']
     train_ndcg_50 = gbm.best_score['training']['ndcg@50']
@@ -184,6 +185,7 @@ def train_lightgbm(argv):
     train_ndcg_200 = gbm.best_score['training']['ndcg@200']
     
     val_ndcg_3 = gbm.best_score['valid_1']['ndcg@3']
+    val_ndcg_5 = gbm.best_score['valid_1']['ndcg@5']
     val_ndcg_10 = gbm.best_score['valid_1']['ndcg@10']
     val_ndcg_30 = gbm.best_score['valid_1']['ndcg@30']
     val_ndcg_50 = gbm.best_score['valid_1']['ndcg@50']
@@ -218,6 +220,10 @@ def train_lightgbm(argv):
     }
     meta["info"] = {
         "epoch": epoch,
+        "train_ndcg_3": train_ndcg_3,
+        "val_ndcg_3": val_ndcg_3,
+        "train_ndcg_5": train_ndcg_5,
+        "val_ndcg_5": val_ndcg_5,
         "train_ndcg_10": train_ndcg_10,
         "val_ndcg_10": val_ndcg_10,
         "train_ndcg_30": train_ndcg_30,
