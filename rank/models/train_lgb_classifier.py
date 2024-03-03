@@ -81,16 +81,17 @@ if __name__ == "__main__":
             for min_data_in_leaf in [5, 11, 21, 41, 81]:
                 for max_depth in [3, 7, 9, 12]:
                     if 2**max_depth <= num_leaves: continue
-                    for train_len in [250]:
-                    # for train_len in [30, 50, 120, 180]:
+                    # for train_len in [250]:
+                    for train_len in [3, 5, 10, 20, 30, 50, 120, 240]:
                         n_day = get_n_val_day(label)
                         
                         print(len(argvs))
                         # print(trade_days[-val_n_day-2*n_day:-2*n_day])
                         
-                        for train_val_split_day in trade_days[-val_n_day-2*n_day-val_delay_day:-2*n_day-val_delay_day]:
+                        for train_val_split_day in trade_days[-val_n_day-2*n_day-val_delay_day:-n_day-val_delay_day]:
+                            # print(train_val_split_day)
                             train_start_day = to_date(get_offset_trade_day(train_val_split_day,
-                                                                        -train_len))
+                                                                        -train_len+1))
                             train_end_day = to_date(get_offset_trade_day(train_val_split_day, 0))
                             
                             val_start_day = to_date(get_offset_trade_day(train_val_split_day, 1 + val_delay_day))
@@ -99,8 +100,12 @@ if __name__ == "__main__":
                                 features, label, train_start_day, train_end_day, val_start_day,
                                 val_end_day, n_day, train_len, num_leaves, max_depth, min_data_in_leaf, cache_data, -1
                             ]
+                            print(argv)
+                            train_lightgbm(argv)
+                            print("Generate cache file this time, try again.")
+                            exit(0)
                             if not os.path.exists(cache_data):
-                                # print(argv)
+                                print(argv)
                                 train_lightgbm(argv)
                                 print("Generate cache file this time, try again.")
                                 exit(0)

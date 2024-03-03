@@ -48,6 +48,11 @@ def style_filter(train_set, val_set):
     train_set = train_set[(train_set[filed] >= left_bound) & (train_set[filed] <= right_bound)]
     return train_set
     
+def split_train_val(train_set):
+    train = train_set[train_set["code"].apply(lambda x: int(x[-1])%2==0)]
+    val = train_set[train_set["code"].apply(lambda x: int(x[-1])%2==1)]
+    return train, val
+    
 def train_lightgbm(argv):
     features, label, train_start_day, train_end_day, val_start_day, val_end_day, n_day, train_len, num_leaves, max_depth, min_data_in_leaf, cache_data, epoch = argv
     params = {
@@ -103,19 +108,23 @@ def train_lightgbm(argv):
         with open(cache_data, 'wb') as f:
             cPickle.dump(dataset, f)
     train_dataset = dataset[(dataset.date >= train_start_day) & (dataset.date <= train_end_day)]
+
     # train_dataset = train_dataset[train_dataset.style_feat_open_close_mean_limit_up_high_pre_no_limit_up > -0.045655402518364696]
     val_dataset = dataset[(dataset.date >= val_start_day) & (dataset.date <= val_end_day)]
     del dataset
     # train_dataset = style_filter(train_dataset, val_dataset)
+    train_dataset, model_select_dataset = split_train_val(train_dataset)
     gc.collect()
     train_x, train_y = train_dataset[features], train_dataset[label]
+    select_x, select_y = model_select_dataset[features], model_select_dataset[label]
     val_x, val_y = val_dataset[features], val_dataset[label]
     lgb_train = lgb.Dataset(train_x, train_y)
     lgb_eval = lgb.Dataset(val_x, val_y, reference=lgb_train)
+    lgb_select = lgb.Dataset(select_x, select_y, reference=lgb_train)
 
     gbm = lgb.train(params,
                     lgb_train,
-                    valid_sets=(lgb_train, lgb_eval),
+                    valid_sets=(lgb_train, lgb_select),
                     # categorical_feature=["industry"]
                     )
 
