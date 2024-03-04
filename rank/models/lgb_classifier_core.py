@@ -97,7 +97,7 @@ def train_lightgbm(argv):
         for path in main_board_stocks():
             df = joblib.load(path)
             df["date"] = df.index
-            df = df[df["limit_up_1d"]]
+            df = df[df["limit_up"] & not_limit_line(df)]
             dataset.append(df)
         dataset = pd.concat(dataset, axis=0)
         with open(cache_data, 'wb') as f:
