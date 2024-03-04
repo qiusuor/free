@@ -51,6 +51,8 @@ def parse(targetDir):
     pool.imap_unordered(day2csv_data, argvs)
     pool.close()
     pool.join()
+    remove_dir(pathdir1)
+    remove_dir(pathdir2)
 
 def parse_recent():
     remove_dir(MINUTE_DIR_TMP)
